@@ -1,0 +1,23 @@
+# IntelliJ IDEA / JetBrains IDEs
+.idea/
+*.iml
+out/
+gen/
+
+# User-specific settings (local to the machine)
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries/
+.idea/vcs.xml
+.idea/shelf/
+.idea/deployment.xml
+
+# Build and Target directories
+/target/
+/build/
+/out/
+
+# OS/Miscellaneous files
+.DS_Store
+Thumbs.db
+
