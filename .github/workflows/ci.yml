@@ -10,6 +10,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    # Sets the working directory for all 'run' steps in this job
+    defaults:
+      run:
+        working-directory: ./Banking_System
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -20,7 +25,8 @@ jobs:
           java-version: '25'
           distribution: 'temurin'
           cache: 'maven'
+          # Points the dependency cache to the pom.xml in your subfolder
+          cache-dependency-path: ./Banking_System/pom.xml
 
       - name: Run Tests with Maven
         run: mvn clean test
-
