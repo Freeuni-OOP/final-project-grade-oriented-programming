@@ -1,23 +1,33 @@
-# IntelliJ IDEA / JetBrains IDEs
-.idea/
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
 *.iml
-out/
-gen/
+*.ipr
 
-# User-specific settings (local to the machine)
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/dictionaries/
-.idea/vcs.xml
-.idea/shelf/
-.idea/deployment.xml
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
-# Build and Target directories
-/target/
-/build/
-/out/
-
-# OS/Miscellaneous files
-.DS_Store
-Thumbs.db
-
+### VS Code ###
+.vscode/
