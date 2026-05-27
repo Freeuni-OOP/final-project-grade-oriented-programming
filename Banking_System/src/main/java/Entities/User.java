@@ -4,7 +4,7 @@ package Entities;
 import lombok.*;
 
 import java.math.BigDecimal;
-
+/**This entity is used to maintain user information*/
 @NoArgsConstructor
 @ToString
 @Getter
