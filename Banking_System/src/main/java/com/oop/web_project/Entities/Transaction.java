@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,15 +29,15 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @ManyToOne
+    @Transient
     private TransactionType transactionType;
     @ManyToOne
     private Account account;
     private LocalDateTime timeStamp;
     private BigDecimal amount;
-    @ManyToOne
+    @Transient
     private Currency currency;
-    @ManyToOne
+    @Transient
     private ServiceProvider serviceProvider;
     @ManyToOne
     @JoinColumn(name = "related_transaction_id")
