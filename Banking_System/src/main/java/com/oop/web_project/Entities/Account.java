@@ -1,5 +1,13 @@
 package com.oop.web_project.Entities;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,11 +21,17 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Getter
 @Setter
+@Entity
+@Table(name = "accounts")
 public class Account {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     private String name;
+    @Enumerated(EnumType.STRING)
     private AccountCategory category;
     private BigDecimal balance;
+    @ManyToOne
     private Currency currency;
     private LocalDate dateOpened;
     private boolean isActive;
