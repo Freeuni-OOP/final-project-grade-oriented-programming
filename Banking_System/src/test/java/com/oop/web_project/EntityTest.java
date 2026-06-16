@@ -2,7 +2,7 @@ package com.oop.web_project;
 
 
 
-import com.oop.web_project.Entities.*;
+import com.oop.web_project.entities.*;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -14,9 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class AccountTest {
 
     private Account createAccount() {
-        Currency currency = new Currency(1L, "GEL", "Georgian Lari");
         return new Account(1L, "Main Account", AccountCategory.CHECKING,
-                new BigDecimal("1500.00"), currency, LocalDate.of(2022, 1, 1), true);
+                LocalDate.of(2022, 1, 1), true, null, null, null);
     }
 
     @Test
@@ -68,39 +67,6 @@ class AccountTest {
     }
 
     @Test
-    void testGetBalanceReturnsCorrectValue() {
-        Account account = createAccount();
-
-        assertEquals(new BigDecimal("1500.00"), account.getBalance());
-    }
-
-    @Test
-    void testSetBalanceUpdatesValue() {
-        Account account = createAccount();
-
-        account.setBalance(new BigDecimal("2000.00"));
-
-        assertEquals(new BigDecimal("2000.00"), account.getBalance());
-    }
-
-    @Test
-    void testGetCurrencyReturnsCorrectValue() {
-        Account account = createAccount();
-
-        assertEquals("GEL", account.getCurrency().getCode());
-    }
-
-    @Test
-    void testSetCurrencyUpdatesValue() {
-        Account account = createAccount();
-        Currency usd = new Currency(2L, "USD", "US Dollar");
-
-        account.setCurrency(usd);
-
-        assertEquals("USD", account.getCurrency().getCode());
-    }
-
-    @Test
     void testGetDateOpenedReturnsCorrectValue() {
         Account account = createAccount();
 
@@ -117,7 +83,7 @@ class AccountTest {
     }
 
     @Test
-    void testIsActiveTrueByDefault() {
+    void testIsActiveReturnsTrueByDefault() {
         Account account = createAccount();
 
         assertTrue(account.isActive());
@@ -136,12 +102,11 @@ class AccountTest {
 class CardTest {
 
     private Card createCard() {
-        Currency currency = new Currency(1L, "GEL", "Georgian Lari");
+        CardBrand brand = new CardBrand(1L, "Visa", null);
         Account account = new Account(1L, "Main Account", AccountCategory.CHECKING,
-                new BigDecimal("1000.00"), currency, LocalDate.of(2022, 1, 1), true);
-        CardBrand brand = new CardBrand(1L, "Visa");
+                LocalDate.of(2022, 1, 1), true, null, null, null);
         return new Card(1L, CardType.DEBIT, brand, account, 5000,
-                LocalDate.of(2027, 12, 31), "****1234", "token_abc123", true);
+                LocalDate.of(2027, 12, 31), "****1234", "token_abc123", true, null);
     }
 
     @Test
@@ -186,7 +151,7 @@ class CardTest {
     @Test
     void testSetBrandUpdatesValue() {
         Card card = createCard();
-        CardBrand mastercard = new CardBrand(2L, "Mastercard");
+        CardBrand mastercard = new CardBrand(2L, "Mastercard", null);
 
         card.setBrand(mastercard);
 
@@ -203,9 +168,8 @@ class CardTest {
     @Test
     void testSetAccountUpdatesValue() {
         Card card = createCard();
-        Currency currency = new Currency(2L, "USD", "US Dollar");
         Account newAccount = new Account(2L, "Second Account", AccountCategory.SAVINGS,
-                new BigDecimal("500.00"), currency, LocalDate.of(2023, 1, 1), true);
+                LocalDate.of(2023, 1, 1), true, null, null, null);
 
         card.setAccount(newAccount);
 
@@ -293,18 +257,95 @@ class CardTest {
     }
 }
 
+class CardBalanceTest {
+
+    private CardBalance createCardBalance() {
+        Card card = new Card(1L, CardType.DEBIT, null, null, 5000,
+                LocalDate.of(2027, 12, 31), "****1234", "token_abc", true, null);
+        Currency currency = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
+        return new CardBalance(1L, new BigDecimal("1500.00"), card, currency);
+    }
+
+    @Test
+    void testGetIdReturnsCorrectValue() {
+        CardBalance balance = createCardBalance();
+
+        assertEquals(1L, balance.getId());
+    }
+
+    @Test
+    void testSetIdUpdatesValue() {
+        CardBalance balance = createCardBalance();
+
+        balance.setId(5L);
+
+        assertEquals(5L, balance.getId());
+    }
+
+    @Test
+    void testGetAmountReturnsCorrectValue() {
+        CardBalance balance = createCardBalance();
+
+        assertEquals(new BigDecimal("1500.00"), balance.getAmount());
+    }
+
+    @Test
+    void testSetAmountUpdatesValue() {
+        CardBalance balance = createCardBalance();
+
+        balance.setAmount(new BigDecimal("2000.00"));
+
+        assertEquals(new BigDecimal("2000.00"), balance.getAmount());
+    }
+
+    @Test
+    void testGetCardReturnsCorrectValue() {
+        CardBalance balance = createCardBalance();
+
+        assertEquals(1L, balance.getCard().getId());
+    }
+
+    @Test
+    void testSetCardUpdatesValue() {
+        CardBalance balance = createCardBalance();
+        Card newCard = new Card(2L, CardType.CREDIT, null, null, 3000,
+                LocalDate.of(2026, 6, 30), "****5678", "token_xyz", true, null);
+
+        balance.setCard(newCard);
+
+        assertEquals(2L, balance.getCard().getId());
+    }
+
+    @Test
+    void testGetCurrencyReturnsCorrectValue() {
+        CardBalance balance = createCardBalance();
+
+        assertEquals("GEL", balance.getCurrency().getCode());
+    }
+
+    @Test
+    void testSetCurrencyUpdatesValue() {
+        CardBalance balance = createCardBalance();
+        Currency usd = new Currency(2L, "USD", "US Dollar", null, null, null, null);
+
+        balance.setCurrency(usd);
+
+        assertEquals("USD", balance.getCurrency().getCode());
+    }
+}
+
 class CardBrandTest {
 
     @Test
     void testGetIdReturnsCorrectValue() {
-        CardBrand brand = new CardBrand(1L, "Visa");
+        CardBrand brand = new CardBrand(1L, "Visa", null);
 
         assertEquals(1L, brand.getId());
     }
 
     @Test
     void testSetIdUpdatesValue() {
-        CardBrand brand = new CardBrand(1L, "Visa");
+        CardBrand brand = new CardBrand(1L, "Visa", null);
 
         brand.setId(2L);
 
@@ -313,14 +354,14 @@ class CardBrandTest {
 
     @Test
     void testGetNameReturnsCorrectValue() {
-        CardBrand brand = new CardBrand(1L, "Visa");
+        CardBrand brand = new CardBrand(1L, "Visa", null);
 
         assertEquals("Visa", brand.getName());
     }
 
     @Test
     void testSetNameUpdatesValue() {
-        CardBrand brand = new CardBrand(1L, "Visa");
+        CardBrand brand = new CardBrand(1L, "Visa", null);
 
         brand.setName("Mastercard");
 
@@ -332,14 +373,14 @@ class CurrencyTest {
 
     @Test
     void testGetIdReturnsCorrectValue() {
-        Currency currency = new Currency(1L, "GEL", "Georgian Lari");
+        Currency currency = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
 
         assertEquals(1L, currency.getId());
     }
 
     @Test
     void testSetIdUpdatesValue() {
-        Currency currency = new Currency(1L, "GEL", "Georgian Lari");
+        Currency currency = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
 
         currency.setId(2L);
 
@@ -348,14 +389,14 @@ class CurrencyTest {
 
     @Test
     void testGetCodeReturnsCorrectValue() {
-        Currency currency = new Currency(1L, "GEL", "Georgian Lari");
+        Currency currency = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
 
         assertEquals("GEL", currency.getCode());
     }
 
     @Test
     void testSetCodeUpdatesValue() {
-        Currency currency = new Currency(1L, "GEL", "Georgian Lari");
+        Currency currency = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
 
         currency.setCode("USD");
 
@@ -364,14 +405,14 @@ class CurrencyTest {
 
     @Test
     void testGetNameReturnsCorrectValue() {
-        Currency currency = new Currency(1L, "GEL", "Georgian Lari");
+        Currency currency = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
 
         assertEquals("Georgian Lari", currency.getName());
     }
 
     @Test
     void testSetNameUpdatesValue() {
-        Currency currency = new Currency(1L, "GEL", "Georgian Lari");
+        Currency currency = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
 
         currency.setName("US Dollar");
 
@@ -382,8 +423,8 @@ class CurrencyTest {
 class CurrencyExchangeTest {
 
     private CurrencyExchange createCurrencyExchange() {
-        Currency gel = new Currency(1L, "GEL", "Georgian Lari");
-        Currency usd = new Currency(2L, "USD", "US Dollar");
+        Currency gel = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
+        Currency usd = new Currency(2L, "USD", "US Dollar", null, null, null, null);
         return new CurrencyExchange(1L, gel, usd, new BigDecimal("0.37"),
                 LocalDateTime.of(2024, 1, 1, 12, 0, 0));
     }
@@ -414,7 +455,7 @@ class CurrencyExchangeTest {
     @Test
     void testSetFromUpdatesValue() {
         CurrencyExchange exchange = createCurrencyExchange();
-        Currency eur = new Currency(3L, "EUR", "Euro");
+        Currency eur = new Currency(3L, "EUR", "Euro", null, null, null, null);
 
         exchange.setFrom(eur);
 
@@ -431,7 +472,7 @@ class CurrencyExchangeTest {
     @Test
     void testSetToUpdatesValue() {
         CurrencyExchange exchange = createCurrencyExchange();
-        Currency eur = new Currency(3L, "EUR", "Euro");
+        Currency eur = new Currency(3L, "EUR", "Euro", null, null, null, null);
 
         exchange.setTo(eur);
 
@@ -475,10 +516,10 @@ class CurrencyExchangeTest {
 class CustomerTest {
 
     private Customer createCustomer() {
-        Role role = new Role(1L, RoleName.STANDARD);
+        Role role = new Role(1L, RoleName.STANDARD, null);
         return new Customer(1L, "Giorgi", "Maisuradze", "555123456",
                 "Tbilisi, Rustaveli 1", LocalDate.of(1995, 3, 20),
-                "giorgi@example.com", "hashed_pw_123", role);
+                "giorgi@example.com", "hashed_pw_123", role, null);
     }
 
     @Test
@@ -619,7 +660,7 @@ class CustomerTest {
     @Test
     void testSetRoleUpdatesValue() {
         Customer customer = createCustomer();
-        Role adminRole = new Role(2L, RoleName.ADMIN);
+        Role adminRole = new Role(2L, RoleName.ADMIN, null);
 
         customer.setRole(adminRole);
 
@@ -631,14 +672,14 @@ class PermissionTest {
 
     @Test
     void testGetIdReturnsCorrectValue() {
-        Permission permission = new Permission(1L, "READ");
+        Permission permission = new Permission(1L, "READ", null);
 
         assertEquals(1L, permission.getId());
     }
 
     @Test
     void testSetIdUpdatesValue() {
-        Permission permission = new Permission(1L, "READ");
+        Permission permission = new Permission(1L, "READ", null);
 
         permission.setId(2L);
 
@@ -647,14 +688,14 @@ class PermissionTest {
 
     @Test
     void testGetNameReturnsCorrectValue() {
-        Permission permission = new Permission(1L, "READ");
+        Permission permission = new Permission(1L, "READ", null);
 
         assertEquals("READ", permission.getName());
     }
 
     @Test
     void testSetNameUpdatesValue() {
-        Permission permission = new Permission(1L, "READ");
+        Permission permission = new Permission(1L, "READ", null);
 
         permission.setName("WRITE");
 
@@ -666,14 +707,14 @@ class RoleTest {
 
     @Test
     void testGetIdReturnsCorrectValue() {
-        Role role = new Role(1L, RoleName.ADMIN);
+        Role role = new Role(1L, RoleName.ADMIN, null);
 
         assertEquals(1L, role.getId());
     }
 
     @Test
     void testSetIdUpdatesValue() {
-        Role role = new Role(1L, RoleName.ADMIN);
+        Role role = new Role(1L, RoleName.ADMIN, null);
 
         role.setId(3L);
 
@@ -682,14 +723,14 @@ class RoleTest {
 
     @Test
     void testGetNameReturnsCorrectValue() {
-        Role role = new Role(1L, RoleName.ADMIN);
+        Role role = new Role(1L, RoleName.ADMIN, null);
 
         assertEquals(RoleName.ADMIN, role.getName());
     }
 
     @Test
     void testSetNameUpdatesValue() {
-        Role role = new Role(1L, RoleName.ADMIN);
+        Role role = new Role(1L, RoleName.ADMIN, null);
 
         role.setName(RoleName.MANAGER);
 
@@ -701,14 +742,14 @@ class ServiceCategoryTest {
 
     @Test
     void testGetIdReturnsCorrectValue() {
-        ServiceCategory category = new ServiceCategory(1L, "Utilities");
+        ServiceCategory category = new ServiceCategory(1L, "Utilities", null);
 
         assertEquals(1L, category.getId());
     }
 
     @Test
     void testSetIdUpdatesValue() {
-        ServiceCategory category = new ServiceCategory(1L, "Utilities");
+        ServiceCategory category = new ServiceCategory(1L, "Utilities", null);
 
         category.setId(2L);
 
@@ -717,14 +758,14 @@ class ServiceCategoryTest {
 
     @Test
     void testGetNameReturnsCorrectValue() {
-        ServiceCategory category = new ServiceCategory(1L, "Utilities");
+        ServiceCategory category = new ServiceCategory(1L, "Utilities", null);
 
         assertEquals("Utilities", category.getName());
     }
 
     @Test
     void testSetNameUpdatesValue() {
-        ServiceCategory category = new ServiceCategory(1L, "Utilities");
+        ServiceCategory category = new ServiceCategory(1L, "Utilities", null);
 
         category.setName("Telecom");
 
@@ -735,8 +776,8 @@ class ServiceCategoryTest {
 class ServiceProviderTest {
 
     private ServiceProvider createServiceProvider() {
-        ServiceCategory category = new ServiceCategory(1L, "Utilities");
-        return new ServiceProvider(1L, category, "Telasi", "https://api.telasi.ge", true);
+        ServiceCategory category = new ServiceCategory(1L, "Utilities", null);
+        return new ServiceProvider(1L, category, "Telasi", "https://api.telasi.ge", true, null);
     }
 
     @Test
@@ -765,7 +806,7 @@ class ServiceProviderTest {
     @Test
     void testSetServiceCategoryUpdatesValue() {
         ServiceProvider provider = createServiceProvider();
-        ServiceCategory telecom = new ServiceCategory(2L, "Telecom");
+        ServiceCategory telecom = new ServiceCategory(2L, "Telecom", null);
 
         provider.setServiceCategory(telecom);
 
@@ -824,15 +865,15 @@ class ServiceProviderTest {
 class TransactionTest {
 
     private Transaction createTransaction() {
-        Currency gel = new Currency(1L, "GEL", "Georgian Lari");
+        Currency gel = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
         Account account = new Account(1L, "Main Account", AccountCategory.CHECKING,
-                new BigDecimal("1000.00"), gel, LocalDate.of(2022, 1, 1), true);
-        TransactionType type = new TransactionType(1L, "Transfer");
+                LocalDate.of(2022, 1, 1), true, null, null, null);
+        TransactionType type = new TransactionType(1L, "Transfer", null);
         ServiceProvider provider = new ServiceProvider(1L,
-                new ServiceCategory(1L, "Utilities"), "Telasi", "https://api.telasi.ge", true);
+                new ServiceCategory(1L, "Utilities", null), "Telasi", "https://api.telasi.ge", true, null);
         return new Transaction(1L, type, account,
                 LocalDateTime.of(2024, 6, 1, 10, 30, 0),
-                new BigDecimal("250.00"), gel, provider, null,
+                new BigDecimal("250.00"), gel, provider, null, null,
                 "idem_key_001", "Monthly payment", TransactionStatus.COMPLETE);
     }
 
@@ -862,7 +903,7 @@ class TransactionTest {
     @Test
     void testSetTransactionTypeUpdatesValue() {
         Transaction transaction = createTransaction();
-        TransactionType newType = new TransactionType(2L, "Payment");
+        TransactionType newType = new TransactionType(2L, "Payment", null);
 
         transaction.setTransactionType(newType);
 
@@ -879,9 +920,8 @@ class TransactionTest {
     @Test
     void testSetAccountUpdatesValue() {
         Transaction transaction = createTransaction();
-        Currency usd = new Currency(2L, "USD", "US Dollar");
         Account newAccount = new Account(2L, "Second Account", AccountCategory.SAVINGS,
-                new BigDecimal("500.00"), usd, LocalDate.of(2023, 1, 1), true);
+                LocalDate.of(2023, 1, 1), true, null, null, null);
 
         transaction.setAccount(newAccount);
 
@@ -931,7 +971,7 @@ class TransactionTest {
     @Test
     void testSetCurrencyUpdatesValue() {
         Transaction transaction = createTransaction();
-        Currency usd = new Currency(2L, "USD", "US Dollar");
+        Currency usd = new Currency(2L, "USD", "US Dollar", null, null, null, null);
 
         transaction.setCurrency(usd);
 
@@ -949,7 +989,7 @@ class TransactionTest {
     void testSetServiceProviderUpdatesValue() {
         Transaction transaction = createTransaction();
         ServiceProvider newProvider = new ServiceProvider(2L,
-                new ServiceCategory(2L, "Telecom"), "Magti", "https://api.magti.ge", true);
+                new ServiceCategory(2L, "Telecom", null), "Magti", "https://api.magti.ge", true, null);
 
         transaction.setServiceProvider(newProvider);
 
@@ -972,6 +1012,24 @@ class TransactionTest {
         transaction.setRelatedTransaction(related);
 
         assertEquals(2L, transaction.getRelatedTransaction().getId());
+    }
+
+    @Test
+    void testGetReverseTransactionReturnsNullByDefault() {
+        Transaction transaction = createTransaction();
+
+        assertNull(transaction.getReverseTransaction());
+    }
+
+    @Test
+    void testSetReverseTransactionUpdatesValue() {
+        Transaction transaction = createTransaction();
+        Transaction reverse = new Transaction();
+        reverse.setId(3L);
+
+        transaction.setReverseTransaction(reverse);
+
+        assertEquals(3L, transaction.getReverseTransaction().getId());
     }
 
     @Test
@@ -1027,14 +1085,14 @@ class TransactionTypeTest {
 
     @Test
     void testGetIdReturnsCorrectValue() {
-        TransactionType type = new TransactionType(1L, "Transfer");
+        TransactionType type = new TransactionType(1L, "Transfer", null);
 
         assertEquals(1L, type.getId());
     }
 
     @Test
     void testSetIdUpdatesValue() {
-        TransactionType type = new TransactionType(1L, "Transfer");
+        TransactionType type = new TransactionType(1L, "Transfer", null);
 
         type.setId(2L);
 
@@ -1043,17 +1101,19 @@ class TransactionTypeTest {
 
     @Test
     void testGetNameReturnsCorrectValue() {
-        TransactionType type = new TransactionType(1L, "Transfer");
+        TransactionType type = new TransactionType(1L, "Transfer", null);
 
         assertEquals("Transfer", type.getName());
     }
 
     @Test
     void testSetNameUpdatesValue() {
-        TransactionType type = new TransactionType(1L, "Transfer");
+        TransactionType type = new TransactionType(1L, "Transfer", null);
 
         type.setName("Payment");
 
         assertEquals("Payment", type.getName());
     }
 }
+
+
