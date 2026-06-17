@@ -1,36 +1,30 @@
 package com.oop.web_project.services;
 
-import com.oop.web_project.Entities.Account;
-import com.oop.web_project.Entities.Card;
-import com.oop.web_project.Entities.Customer;
+import com.oop.web_project.entities.Account;
+import com.oop.web_project.entities.Card;
+import com.oop.web_project.entities.Customer;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Service interface defining operations for managing accounts,
+ * including creation, customer registration, and balance retrieval.
+ */
 public interface AccountService {
-    /*
-     * This creates an account, which will be attached to a customer.
-     */
-    public void createAccount(Account account, Customer customer);
 
-    /*
-     * If user calls this method, he will be passed all his cards, on certain account.
+    /**
+     * Creates a new account and attaches it to the given customer.
      */
-    public List<Card> getAllCardsForAccount(Account account);
+    void createAccount(Account account, Customer customer);
 
-    /*
-     * This Method returns all the usernames of the customers that
-     * jointly own some account.
+    /**
+     * Attempts to register the given customer as an owner of the specified account.
      */
-    public List<String> getAccountCustomers(Account account);
+    void registerCustomerToAccount(Account account, Customer customer);
 
-    /*
-     * Attempts to add a user to specified account.
+    /**
+     * Retrieves the current balance of the given account.
      */
-    public void registerCustomerToAccount(Account account, Customer customer);
-
-    /*
-     * self-explanatory
-     */
-    public BigDecimal getAccountBalance(Account account);
+    BigDecimal getAccountBalance(Account account);
 }

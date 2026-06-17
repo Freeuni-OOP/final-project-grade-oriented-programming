@@ -1,41 +1,49 @@
 package com.oop.web_project.services;
 
-import com.oop.web_project.Entities.Card;
+import com.oop.web_project.entities.Account;
+import com.oop.web_project.entities.Card;
 
+import java.util.List;
+
+/**
+ * Service interface defining operations for managing cards,
+ * including activation, deposits, withdrawals, and transfers.
+ */
 public interface CardService {
-    /*
-     * Activates card.
-     */
-    public void activateCard(Card card);
 
-    /*
-     * Deactivates card.
+    /**
+     * Activates the given card.
      */
-    public void deactivateCard(Card card);
+    void activateCard(Card card);
 
-    /*
-     * This method adds money to ones account. if the addition is
-     * correct, then the deposit is successful, so the method returns true.
-     * if it wasn't successful, false is returned.
+    /**
+     * Deactivates the given card.
      */
-    public void depositMoney(Card card, int amountToAdd);
+    void deactivateCard(Card card);
 
-    /*
-     * This method withdraws money from ones account. if the withdrawal is
-     * completed, then the action was successful, so the method returns true.
-     * if it wasn't successful, false is returned.
+    /**
+     * Deposits the specified amount into the account linked to the given card.
      */
-    public void withdrawMoney(Card card, int amountToWithdraw);
+    void depositMoney(Card card, int amountToAdd);
 
-    /*
-     * This method transfers money from one user to another user. If the
-     * Transaction was successful, then the program returns true, else false.
+    /**
+     * Withdraws the specified amount from the account linked to the given card.
      */
-    public void transferMoney(Card senderCard, Card receiverCard, int amount);
+    void withdrawMoney(Card card, int amountToWithdraw);
 
-    /*
-     * This method takes the card, and exchanges the current currency
-     * into the desired one.
+    /**
+     * Transfers the specified amount from the sender's card to the receiver's card.
      */
-    public void changeCurrency(Card card, String desiredCurrency);
+    void transferMoney(Card senderCard, Card receiverCard, int amount);
+
+    /**
+     * Converts the card's current currency into the desired currency.
+     */
+    void changeCurrency(Card card, String desiredCurrency);
+
+    /**
+     * Retrieves all cards associated with the given account.
+     */
+    List<Card> getAllCardsForAccount(Account account);
+
 }
