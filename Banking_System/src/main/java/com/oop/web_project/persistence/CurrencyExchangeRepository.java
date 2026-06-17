@@ -1,6 +1,6 @@
 package com.oop.web_project.persistence;
 
-import com.oop.web_project.Entities.CurrencyExchange;
+import com.oop.web_project.entities.CurrencyExchange;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
