@@ -23,6 +23,7 @@ public class Transaction {
     @Column(name = "Transaction_id")
     private long id;
 
+    @Column(name = "Transaction_type")
     @Enumerated(EnumType.STRING)
     private TransactionType transactionType;
 
@@ -40,7 +41,7 @@ public class Transaction {
     @JoinColumn(name = "Currency_id", nullable = false)
     private Currency currency;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "Service_provider_id")
     private ServiceProvider serviceProvider;
 
