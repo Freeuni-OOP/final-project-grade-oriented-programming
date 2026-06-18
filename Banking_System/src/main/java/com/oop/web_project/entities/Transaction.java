@@ -40,7 +40,7 @@ public class Transaction {
     @JoinColumn(name = "Currency_id", nullable = false)
     private Currency currency;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "Service_provider_id")
     private ServiceProvider serviceProvider;
 
