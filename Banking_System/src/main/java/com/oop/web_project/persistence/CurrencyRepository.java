@@ -3,6 +3,8 @@ package com.oop.web_project.persistence;
 import com.oop.web_project.entities.Currency;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface CurrencyRepository extends JpaRepository<Currency, Long> {
-    Currency findCurrencyByCode(String code);
+    Optional<Currency> findCurrencyByCode(String code);
 }

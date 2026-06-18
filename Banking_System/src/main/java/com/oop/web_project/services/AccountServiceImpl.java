@@ -77,12 +77,16 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<Account> selectAccountsByCustomerEmail(String customerEmail) {
-        return accountRepository.findAllByCustomersEmail(customerEmail);
+        return accountRepository.findAllByCustomersEmail(customerEmail).orElseThrow(
+                () -> new IllegalArgumentException("accounts could not be found!")
+        );
     }
 
     @Override
     public List<Account> selectAccountsByCustomerId(long customerId) {
-        return accountRepository.findAllByCustomersId(customerId);
+        return accountRepository.findAllByCustomersId(customerId).orElseThrow(
+                () -> new IllegalArgumentException("accounts could not be found")
+        );
     }
 
     @Override
@@ -116,11 +120,13 @@ public class AccountServiceImpl implements AccountService {
                 () -> new IllegalArgumentException("such account does not exist!")
         );
 
-        Currency currency = currencyRepository.findCurrencyByCode(currencyCode);
+        Currency currency = currencyRepository.findCurrencyByCode(currencyCode).orElseThrow(
+                () -> new IllegalArgumentException("Currency could not be found!")
+        );
 
-        if(currency == null)throw new IllegalArgumentException("such currency does not exist!");
-
-        return cardRepository.getBalanceForAccount(accountId, currencyCode);
+        return cardRepository.getBalanceForAccount(accountId, currencyCode).orElseThrow(
+                () -> new IllegalArgumentException("Could not determine balance of the account!")
+        );
     }
 
 }
