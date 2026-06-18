@@ -25,17 +25,17 @@ public interface CustomerService {
     /**
      * Retrieves a customer by their unique ID.
      */
-    Customer getCustomerByID(String id);
+    Customer getCustomerById(long id);
 
     /**
      * Activates the given customer.
      */
-    void activateCustomer(Customer customer);
+    void activateCustomer(long customerId);
 
     /**
      * Deactivates the given customer.
      */
-    void deactivateCustomer(Customer customer);
+    void deactivateCustomer(long customerId);
 
     /**
      * finds customer and deletes him/her from database.
@@ -50,5 +50,5 @@ public interface CustomerService {
     /**
      * Returns all customers that jointly own the specified account.
      */
-    List<Customer> getCustomersByAccount(Account account);
+    List<Customer> getCustomersByAccount(long accountId);
 }

@@ -1,7 +1,9 @@
 package com.oop.web_project.persistence;
 
 import com.oop.web_project.entities.Card;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -12,8 +14,9 @@ import java.util.Optional;
 @Repository
 public interface CardRepository extends JpaRepository<Card, Long> {
 
-    @Query("SELECT COALESCE(SUM(b.amount), 0) FROM CardBalance b WHERE b.card.account.id = :accountId AND b.currency = :currencyCode")
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("SELECT SUM(b.amount) FROM CardBalance b WHERE b.card.account.id = :accountId AND b.currency.code = :currencyCode")
     Optional<BigDecimal> getBalanceForAccount(long accountId, String currencyCode);
 
-    Optional<List<Card>> getAllByAccountId(long accountId);
+    List<Card> getAllByAccountId(long accountId);
 }

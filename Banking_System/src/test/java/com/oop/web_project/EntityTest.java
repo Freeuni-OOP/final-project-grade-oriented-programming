@@ -519,7 +519,7 @@ class CustomerTest {
         Role role = new Role(1L, RoleName.STANDARD, null);
         return new Customer(1L, "Giorgi", "Maisuradze", "555123456",
                 "Tbilisi, Rustaveli 1", LocalDate.of(1995, 3, 20),
-                "giorgi@example.com", "hashed_pw_123", role, null);
+                "giorgi@example.com", "hashed_pw_123", true, role, null);
     }
 
     @Test

@@ -1,10 +1,8 @@
 package com.oop.web_project.services;
 import com.oop.web_project.entities.Account;
-import com.oop.web_project.entities.Currency;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.persistence.AccountRepository;
 import com.oop.web_project.persistence.CardRepository;
-import com.oop.web_project.persistence.CurrencyRepository;
 import com.oop.web_project.persistence.CustomerRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -19,16 +17,13 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
     private final CardRepository cardRepository;
-    private final CurrencyRepository currencyRepository;
 
     public AccountServiceImpl(AccountRepository accountRepository,
                               CustomerRepository customerRepository,
-                              CardRepository cardRepository,
-                              CurrencyRepository currencyRepository) {
+                              CardRepository cardRepository) {
         this.accountRepository = accountRepository;
         this.customerRepository = customerRepository;
         this.cardRepository = cardRepository;
-        this.currencyRepository = currencyRepository;
     }
 
     @Override
@@ -77,16 +72,12 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<Account> selectAccountsByCustomerEmail(String customerEmail) {
-        return accountRepository.findAllByCustomersEmail(customerEmail).orElseThrow(
-                () -> new IllegalArgumentException("accounts could not be found!")
-        );
+        return accountRepository.findAllByCustomersEmail(customerEmail);
     }
 
     @Override
     public List<Account> selectAccountsByCustomerId(long customerId) {
-        return accountRepository.findAllByCustomersId(customerId).orElseThrow(
-                () -> new IllegalArgumentException("accounts could not be found")
-        );
+        return accountRepository.findAllByCustomersId(customerId);
     }
 
     @Override
@@ -116,14 +107,6 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public BigDecimal getAccountBalanceByCurrency(long accountId, String currencyCode) {
-        Account account = accountRepository.findById(accountId).orElseThrow(
-                () -> new IllegalArgumentException("such account does not exist!")
-        );
-
-        Currency currency = currencyRepository.findCurrencyByCode(currencyCode).orElseThrow(
-                () -> new IllegalArgumentException("Currency could not be found!")
-        );
-
         return cardRepository.getBalanceForAccount(accountId, currencyCode).orElseThrow(
                 () -> new IllegalArgumentException("Could not determine balance of the account!")
         );

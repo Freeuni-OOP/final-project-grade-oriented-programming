@@ -132,9 +132,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     public List<Card> getAllCardsForAccount(long accountId) {
-        return cardRepository.getAllByAccountId(accountId).orElseThrow(
-                () -> new IllegalArgumentException("Could not find cards for the account!")
-        );
+        return cardRepository.getAllByAccountId(accountId);
     }
 
     /**
