@@ -22,6 +22,11 @@ public interface CardService {
     void deactivateCard(Card card);
 
     /**
+     * Looks for card with cardId in database and deletes it
+     */
+    void deleteCard(long cardId);
+
+    /**
      * Deposits the specified amount into the account linked to the given card.
      */
     void depositMoney(Card card, int amountToAdd);
@@ -44,6 +49,6 @@ public interface CardService {
     /**
      * Retrieves all cards associated with the given account.
      */
-    List<Card> getAllCardsForAccount(Account account);
+    List<Card> getAllCardsForAccount(long accountId);
 
 }

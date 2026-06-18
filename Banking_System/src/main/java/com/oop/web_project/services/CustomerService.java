@@ -11,6 +11,12 @@ import java.util.List;
  */
 public interface CustomerService {
 
+
+    /**
+     * registers new customer
+     */
+    void registerCustomer(Customer customer);
+
     /**
      * Retrieves a customer by their email address.
      */
@@ -30,6 +36,16 @@ public interface CustomerService {
      * Deactivates the given customer.
      */
     void deactivateCustomer(Customer customer);
+
+    /**
+     * finds customer and deletes him/her from database.
+     */
+    void deleteCustomer(long customerId);
+
+    /**
+     * finds customer and updates his/her credentials
+     */
+    void updateCustomer(long customerId, Customer customer);
 
     /**
      * Returns all customers that jointly own the specified account.
