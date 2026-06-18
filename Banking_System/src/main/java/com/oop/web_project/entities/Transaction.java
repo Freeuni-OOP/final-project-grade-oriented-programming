@@ -23,6 +23,7 @@ public class Transaction {
     @Column(name = "Transaction_id")
     private long id;
 
+    @Column(name = "Transaction_type")
     @Enumerated(EnumType.STRING)
     private TransactionType transactionType;
 
