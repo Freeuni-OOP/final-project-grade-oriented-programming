@@ -48,7 +48,7 @@ public class Customer {
     @Column(name = "Is_active", nullable = false)
     private boolean isActive;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "Role_id")
     private Role role;
 

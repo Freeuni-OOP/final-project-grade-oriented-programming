@@ -22,7 +22,7 @@ public class ServiceProvider {
     @Column(name = "Service_provider_id")
     private long id;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "Service_category_id", nullable = false)
     private ServiceCategory serviceCategory;
 

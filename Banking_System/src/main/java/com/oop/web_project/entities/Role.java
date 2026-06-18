@@ -26,7 +26,10 @@ public class Role {
     @Enumerated(EnumType.STRING)
     private RoleName name;
 
-    @ManyToMany()
+    @OneToMany(mappedBy = "role")
+    private List<Customer> customers;
+
+    @ManyToMany
     @JoinTable(name = "Role_permission", joinColumns = @JoinColumn(name = "Role_id"), inverseJoinColumns = @JoinColumn(name = "Permission_id"))
     private List<Permission> permissions;
 }
