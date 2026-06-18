@@ -1,0 +1,250 @@
+package com.oop.web_project;
+
+import com.oop.web_project.entities.Card;
+import com.oop.web_project.entities.CardBalance;
+import com.oop.web_project.entities.CurrencyExchange;
+import com.oop.web_project.persistence.CardBalanceRepository;
+import com.oop.web_project.persistence.CardRepository;
+import com.oop.web_project.persistence.CurrencyExchangeRepository;
+import com.oop.web_project.services.CardServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class CardServiceImplTest {
+
+    @Mock
+    private CardRepository cardRepository;
+
+    @Mock
+    private CardBalanceRepository cardBalanceRepository;
+
+    @Mock
+    private CurrencyExchangeRepository currencyExchangeRepository;
+
+    @InjectMocks
+    private CardServiceImpl cardService;
+
+    private Card card;
+
+    @BeforeEach
+    void setUp() {
+        card = new Card();
+        card.setId(1L);
+        card.setActive(false);
+    }
+
+    @Test
+    void testActivateCardNotFoundThrowsException() {
+        when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> cardService.activateCard(1L));
+    }
+
+    @Test
+    void testActivateCardAlreadyActiveThrowsException() {
+        card.setActive(true);
+        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        assertThrows(IllegalArgumentException.class, () -> cardService.activateCard(1L));
+    }
+
+    @Test
+    void testActivateCardInactiveActivatesCard() {
+        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        cardService.activateCard(1L);
+        assertTrue(card.isActive());
+    }
+
+    @Test
+    void testDeactivateCardNotFoundThrowsException() {
+        when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> cardService.deactivateCard(1L));
+    }
+
+    @Test
+    void testDeactivateCardAlreadyInactiveThrowsException() {
+        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        assertThrows(IllegalArgumentException.class, () -> cardService.deactivateCard(1L));
+    }
+
+    @Test
+    void testDeactivateCardActiveDeactivatesCard() {
+        card.setActive(true);
+        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        cardService.deactivateCard(1L);
+        assertFalse(card.isActive());
+    }
+
+    @Test
+    void testCreateCardSavesCard() {
+        cardService.createCard(card);
+        verify(cardRepository, times(1)).save(card);
+    }
+
+    @Test
+    void testDeleteCardDeletesById() {
+        cardService.deleteCard(1L);
+        verify(cardRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void testDepositMoneyBalanceNotFoundThrowsException() {
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> cardService.depositMoney(1L, BigDecimal.TEN, "USD"));
+    }
+
+    @Test
+    void testDepositMoneyValidAddsAmount() {
+        CardBalance balance = new CardBalance();
+        balance.setAmount(new BigDecimal("100.00"));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.of(balance));
+        cardService.depositMoney(1L, new BigDecimal("50.00"), "USD");
+        assertEquals(new BigDecimal("150.00"), balance.getAmount());
+    }
+
+    @Test
+    void testWithdrawMoneyBalanceNotFoundThrowsException() {
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> cardService.withdrawMoney(1L, BigDecimal.TEN, "USD"));
+    }
+
+    @Test
+    void testWithdrawMoneyInsufficientFundsThrowsException() {
+        CardBalance balance = new CardBalance();
+        balance.setAmount(new BigDecimal("10.00"));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.of(balance));
+        assertThrows(IllegalArgumentException.class, () -> cardService.withdrawMoney(1L, new BigDecimal("20.00"), "USD"));
+    }
+
+    @Test
+    void testWithdrawMoneySufficientFundsWithdraws() {
+        CardBalance balance = new CardBalance();
+        balance.setAmount(new BigDecimal("100.00"));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.of(balance));
+        cardService.withdrawMoney(1L, new BigDecimal("40.00"), "USD");
+        assertEquals(new BigDecimal("60.00"), balance.getAmount());
+    }
+
+    @Test
+    void testTransferMoneySenderLessThanReceiverSourceBalanceNotFoundThrowsException() {
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> cardService.transferMoney(1L, 2L, BigDecimal.TEN, "USD"));
+    }
+
+    @Test
+    void testTransferMoneySenderLessThanReceiverTargetBalanceNotFoundThrowsException() {
+        CardBalance from = new CardBalance();
+        from.setAmount(new BigDecimal("100.00"));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.of(from));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(2L, "USD")).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> cardService.transferMoney(1L, 2L, BigDecimal.TEN, "USD"));
+    }
+
+    @Test
+    void testTransferMoneySenderGreaterThanReceiverTargetBalanceNotFoundThrowsException() {
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> cardService.transferMoney(2L, 1L, BigDecimal.TEN, "USD"));
+    }
+
+    @Test
+    void testTransferMoneySenderGreaterThanReceiverSourceBalanceNotFoundThrowsException() {
+        CardBalance to = new CardBalance();
+        to.setAmount(new BigDecimal("100.00"));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.of(to));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(2L, "USD")).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> cardService.transferMoney(2L, 1L, BigDecimal.TEN, "USD"));
+    }
+
+    @Test
+    void testTransferMoneyInsufficientFundsThrowsException() {
+        CardBalance from = new CardBalance();
+        from.setAmount(new BigDecimal("5.00"));
+        CardBalance to = new CardBalance();
+        to.setAmount(new BigDecimal("0.00"));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.of(from));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(2L, "USD")).thenReturn(Optional.of(to));
+        assertThrows(IllegalArgumentException.class, () -> cardService.transferMoney(1L, 2L, new BigDecimal("10.00"), "USD"));
+    }
+
+    @Test
+    void testTransferMoneySufficientFundsTransfersAmount() {
+        CardBalance from = new CardBalance();
+        from.setAmount(new BigDecimal("100.00"));
+        CardBalance to = new CardBalance();
+        to.setAmount(new BigDecimal("20.00"));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.of(from));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(2L, "USD")).thenReturn(Optional.of(to));
+        cardService.transferMoney(1L, 2L, new BigDecimal("30.00"), "USD");
+        assertEquals(new BigDecimal("70.00"), from.getAmount());
+        assertEquals(new BigDecimal("50.00"), to.getAmount());
+    }
+
+    @Test
+    void testChangeCurrencyFromCurrencyLessThanToCurrencySourceBalanceNotFoundThrowsException() {
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "EUR")).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> cardService.changeCurrency(1L, BigDecimal.TEN, "EUR", "USD"));
+    }
+
+    @Test
+    void testChangeCurrencyFromCurrencyGreaterThanToCurrencyTargetBalanceNotFoundThrowsException() {
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "EUR")).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> cardService.changeCurrency(1L, BigDecimal.TEN, "USD", "EUR"));
+    }
+
+    @Test
+    void testChangeCurrencyInsufficientFundsThrowsException() {
+        CardBalance from = new CardBalance();
+        from.setAmount(new BigDecimal("5.00"));
+        CardBalance to = new CardBalance();
+        to.setAmount(new BigDecimal("0.00"));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "EUR")).thenReturn(Optional.of(from));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.of(to));
+        assertThrows(IllegalArgumentException.class, () -> cardService.changeCurrency(1L, new BigDecimal("10.00"), "EUR", "USD"));
+    }
+
+    @Test
+    void testChangeCurrencyExchangeRateNotFoundThrowsException() {
+        CardBalance from = new CardBalance();
+        from.setAmount(new BigDecimal("100.00"));
+        CardBalance to = new CardBalance();
+        to.setAmount(new BigDecimal("0.00"));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "EUR")).thenReturn(Optional.of(from));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.of(to));
+        when(currencyExchangeRepository.findByCurrencyCodes("EUR", "USD")).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> cardService.changeCurrency(1L, new BigDecimal("10.00"), "EUR", "USD"));
+    }
+
+    @Test
+    void testChangeCurrencySuccessfulChangesCurrency() {
+        CardBalance from = new CardBalance();
+        from.setAmount(new BigDecimal("100.00"));
+        CardBalance to = new CardBalance();
+        to.setAmount(new BigDecimal("0.00"));
+        CurrencyExchange exchange = new CurrencyExchange();
+        exchange.setRate(new BigDecimal("1.15"));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "EUR")).thenReturn(Optional.of(from));
+        when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "USD")).thenReturn(Optional.of(to));
+        when(currencyExchangeRepository.findByCurrencyCodes("EUR", "USD")).thenReturn(Optional.of(exchange));
+        cardService.changeCurrency(1L, new BigDecimal("10.00"), "EUR", "USD");
+        assertEquals(new BigDecimal("90.00"), from.getAmount());
+        assertEquals(new BigDecimal("11.50"), to.getAmount());
+    }
+
+    @Test
+    void testGetAllCardsForAccountReturnsCards() {
+        List<Card> cards = List.of(card);
+        when(cardRepository.getAllByAccountId(1L)).thenReturn(cards);
+        List<Card> result = cardService.getAllCardsForAccount(1L);
+        assertEquals(cards, result);
+    }
+}

@@ -868,10 +868,9 @@ class TransactionTest {
         Currency gel = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
         Account account = new Account(1L, "Main Account", AccountCategory.CHECKING,
                 LocalDate.of(2022, 1, 1), true, null, null, null);
-        TransactionType type = new TransactionType(1L, "Transfer", null);
         ServiceProvider provider = new ServiceProvider(1L,
                 new ServiceCategory(1L, "Utilities", null), "Telasi", "https://api.telasi.ge", true, null);
-        return new Transaction(1L, type, account,
+        return new Transaction(1L, TransactionType.DEPOSIT, account,
                 LocalDateTime.of(2024, 6, 1, 10, 30, 0),
                 new BigDecimal("250.00"), gel, provider, null, null,
                 "idem_key_001", "Monthly payment", TransactionStatus.COMPLETE);
@@ -897,17 +896,7 @@ class TransactionTest {
     void testGetTransactionTypeReturnsCorrectValue() {
         Transaction transaction = createTransaction();
 
-        assertEquals("Transfer", transaction.getTransactionType().getName());
-    }
-
-    @Test
-    void testSetTransactionTypeUpdatesValue() {
-        Transaction transaction = createTransaction();
-        TransactionType newType = new TransactionType(2L, "Payment", null);
-
-        transaction.setTransactionType(newType);
-
-        assertEquals("Payment", transaction.getTransactionType().getName());
+        assertEquals("DEPOSIT", transaction.getTransactionType().name());
     }
 
     @Test
@@ -1078,41 +1067,6 @@ class TransactionTest {
         transaction.setStatus(TransactionStatus.PENDING);
 
         assertEquals(TransactionStatus.PENDING, transaction.getStatus());
-    }
-}
-
-class TransactionTypeTest {
-
-    @Test
-    void testGetIdReturnsCorrectValue() {
-        TransactionType type = new TransactionType(1L, "Transfer", null);
-
-        assertEquals(1L, type.getId());
-    }
-
-    @Test
-    void testSetIdUpdatesValue() {
-        TransactionType type = new TransactionType(1L, "Transfer", null);
-
-        type.setId(2L);
-
-        assertEquals(2L, type.getId());
-    }
-
-    @Test
-    void testGetNameReturnsCorrectValue() {
-        TransactionType type = new TransactionType(1L, "Transfer", null);
-
-        assertEquals("Transfer", type.getName());
-    }
-
-    @Test
-    void testSetNameUpdatesValue() {
-        TransactionType type = new TransactionType(1L, "Transfer", null);
-
-        type.setName("Payment");
-
-        assertEquals("Payment", type.getName());
     }
 }
 

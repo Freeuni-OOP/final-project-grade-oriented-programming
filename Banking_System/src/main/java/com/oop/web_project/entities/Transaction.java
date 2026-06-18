@@ -23,11 +23,9 @@ public class Transaction {
     @Column(name = "Transaction_id")
     private long id;
 
-    @ManyToOne()
-    @JoinColumn(name = "Transaction_type_id", nullable = false)
     private TransactionType transactionType;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "Account_id", nullable = false)
     private Account account;
 
@@ -37,7 +35,7 @@ public class Transaction {
     @Column(name = "Transaction_amount", nullable = false)
     private BigDecimal amount;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "Currency_id", nullable = false)
     private Currency currency;
 
@@ -45,7 +43,7 @@ public class Transaction {
     @JoinColumn(name = "Service_provider_id")
     private ServiceProvider serviceProvider;
 
-    @OneToOne()
+    @OneToOne
     @JoinColumn(name = "Related_Transaction_id", unique = true)
     private Transaction relatedTransaction;
 
