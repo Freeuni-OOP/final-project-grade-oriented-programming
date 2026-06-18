@@ -14,17 +14,62 @@ import java.util.List;
 public interface AccountService {
 
     /**
-     * Creates a new account and attaches it to the given customer.
+     * Creates a new account
      */
-    void createAccount(Account account, Customer customer);
+    void createAccount(Account account);
 
+    /**
+     * activates the account
+     * @param accountId id of the account we need to activate
+     */
+    void activateAccount(long accountId);
+
+    /**
+     * deactivates the account
+     * @param accountId id of the account we need to deactivate
+     */
+    void deactivateAccount(long accountId);
+
+    /**
+     * deletes account from database
+     * @param accountId id of the account we need to delete
+     */
+    void deleteAccount(long accountId);
+
+    /**
+     *
+     * @param accountId for account in the database by id
+     * @return returns appropriate account
+     */
+    Account selectAccountById(long accountId);
+    /**
+     * looks for accounts associated to the email of the particular customer
+     * @param customerEmail email of the customer whose accounts we are looking for
+     * @return list of accounts customer has
+     */
+    List<Account> selectAccountsByCustomerEmail(String customerEmail);
+
+    /**
+     * looks for accounts associated to the customer with id
+     * @param customerId id of the customer whose accounts we are looking for
+     * @return list of accounts customer has
+     */
+    List<Account> selectAccountsByCustomerId(long customerId);
+
+    /**
+     * finds the account in the database and updates its credentials
+     * @param accountId account's id we are looking to update
+     * @param account account's credentials
+     */
+    void updateAccount(long accountId, Account account);
     /**
      * Attempts to register the given customer as an owner of the specified account.
      */
-    void registerCustomerToAccount(Account account, Customer customer);
+    void registerCustomerToAccount(long accountId, long customerId);
 
     /**
-     * Retrieves the current balance of the given account.
+     * Retrieves the total balance of the given account, which is sum of money in each card's
+     * particular currency
      */
-    BigDecimal getAccountBalance(Account account);
+    BigDecimal getAccountBalanceByCurrency(long accountId, String currencyName);
 }

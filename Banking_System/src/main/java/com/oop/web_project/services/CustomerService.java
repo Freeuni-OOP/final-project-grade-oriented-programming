@@ -11,6 +11,12 @@ import java.util.List;
  */
 public interface CustomerService {
 
+
+    /**
+     * registers new customer
+     */
+    void registerCustomer(Customer customer);
+
     /**
      * Retrieves a customer by their email address.
      */
@@ -19,20 +25,30 @@ public interface CustomerService {
     /**
      * Retrieves a customer by their unique ID.
      */
-    Customer getCustomerByID(String id);
+    Customer getCustomerById(long id);
 
     /**
      * Activates the given customer.
      */
-    void activateCustomer(Customer customer);
+    void activateCustomer(long customerId);
 
     /**
      * Deactivates the given customer.
      */
-    void deactivateCustomer(Customer customer);
+    void deactivateCustomer(long customerId);
+
+    /**
+     * finds customer and deletes him/her from database.
+     */
+    void deleteCustomer(long customerId);
+
+    /**
+     * finds customer and updates his/her credentials
+     */
+    void updateCustomer(long customerId, Customer customer);
 
     /**
      * Returns all customers that jointly own the specified account.
      */
-    List<Customer> getCustomersByAccount(Account account);
+    List<Customer> getCustomersByAccount(long accountId);
 }

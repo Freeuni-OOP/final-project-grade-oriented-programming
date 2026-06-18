@@ -45,6 +45,9 @@ public class Customer {
     @Column(name = "Hashed_password", nullable = false, unique = true)
     private String hashedPassword;
 
+    @Column(name = "Is_active", nullable = false)
+    private boolean isActive;
+
     @ManyToOne()
     @JoinColumn(name = "Role_id")
     private Role role;
