@@ -41,7 +41,7 @@ public class Account {
     @OneToMany(mappedBy = "account")
     private List<Card> cards;
 
-    @ManyToMany()
+    @ManyToMany
     @JoinTable(name = "Account_customer", joinColumns = @JoinColumn(name = "Account_id"), inverseJoinColumns = @JoinColumn(name = "Customer_id"))
     private List<Customer> customers;
 }

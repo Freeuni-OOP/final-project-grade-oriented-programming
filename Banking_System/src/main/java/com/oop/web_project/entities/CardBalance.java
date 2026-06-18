@@ -25,11 +25,11 @@ public class CardBalance {
     @Column(name = "Card_balance_amount", nullable = false)
     private BigDecimal amount;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "Card_id", nullable = false)
     private Card card;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "Currency_id", nullable = false)
     private Currency currency;
 }

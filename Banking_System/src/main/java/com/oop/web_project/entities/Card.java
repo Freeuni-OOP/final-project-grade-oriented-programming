@@ -27,11 +27,11 @@ public class Card {
     @Column(name = "Card_type", nullable = false)
     private CardType type;
 
-    @ManyToOne()
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "Brand_id", nullable = false)
     private CardBrand brand;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "Account_id", nullable = false)
     private Account account;
 
