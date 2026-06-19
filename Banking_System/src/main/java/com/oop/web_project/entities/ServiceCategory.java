@@ -21,7 +21,7 @@ public class ServiceCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "Service_category_id")
-    private long id;
+    private Long id;
 
     @Column(name = "Service_category_name", nullable = false, unique = true)
     private String name;

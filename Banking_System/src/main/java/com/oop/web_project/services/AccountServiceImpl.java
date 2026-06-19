@@ -4,6 +4,7 @@ import com.oop.web_project.entities.Customer;
 import com.oop.web_project.persistence.AccountRepository;
 import com.oop.web_project.persistence.CardRepository;
 import com.oop.web_project.persistence.CustomerRepository;
+import com.oop.web_project.persistence.TransactionRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,13 +18,16 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
     private final CardRepository cardRepository;
+    private final TransactionRepository transactionRepository;
 
     public AccountServiceImpl(AccountRepository accountRepository,
                               CustomerRepository customerRepository,
-                              CardRepository cardRepository) {
+                              CardRepository cardRepository,
+                              TransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;
         this.customerRepository = customerRepository;
         this.cardRepository = cardRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     @Override
@@ -60,6 +64,8 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findById(accountId).orElseThrow(
                 () -> new IllegalArgumentException("such account does not exist!")
         );
+        cardRepository.deleteAll(account.getCards());
+        transactionRepository.deleteAll(account.getTransactions());
         accountRepository.delete(account);
     }
 
@@ -82,14 +88,11 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    public void updateAccount(long accountId, Account account) {
+    public void updateAccount(long accountId, String accountName) {
         Account existingAccount = accountRepository.findById(accountId).orElseThrow(
                 () -> new IllegalArgumentException("such account does not exist!")
         );
-        if(account.getId() != accountId) {
-            throw new IllegalStateException("passed long account id must match the id of the passed account");
-        }
-        BeanUtils.copyProperties(account, existingAccount, "id");
+        if(accountName != null)existingAccount.setName(accountName);
     }
 
     @Override

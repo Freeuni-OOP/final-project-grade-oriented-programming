@@ -20,7 +20,7 @@ public class ServiceProvider {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "Service_provider_id")
-    private long id;
+    private Long id;
 
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "Service_category_id", nullable = false)

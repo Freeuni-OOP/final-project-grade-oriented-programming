@@ -138,15 +138,7 @@ class AccountServiceImplTest {
     @Test
     void testUpdateAccountNotFoundThrowsException() {
         when(accountRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> accountService.updateAccount(1L, account));
-    }
-
-    @Test
-    void testUpdateAccountIdMismatchThrowsException() {
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
-        Account mismatched = new Account();
-        mismatched.setId(2L);
-        assertThrows(IllegalStateException.class, () -> accountService.updateAccount(1L, mismatched));
+        assertThrows(IllegalArgumentException.class, () -> accountService.updateAccount(1L, "account name"));
     }
 
     @Test
@@ -155,10 +147,7 @@ class AccountServiceImplTest {
         existingAccount.setId(1L);
         existingAccount.setName("Old Name");
         when(accountRepository.findById(1L)).thenReturn(Optional.of(existingAccount));
-        Account updatedData = new Account();
-        updatedData.setId(1L);
-        updatedData.setName("New Name");
-        accountService.updateAccount(1L, updatedData);
+        accountService.updateAccount(1L, "New Name");
         assertEquals("New Name", existingAccount.getName());
         assertEquals(1L, existingAccount.getId());
     }

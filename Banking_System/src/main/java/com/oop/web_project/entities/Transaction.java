@@ -21,7 +21,7 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "Transaction_id")
-    private long id;
+    private Long id;
 
     @Column(name = "Transaction_type")
     @Enumerated(EnumType.STRING)
@@ -45,7 +45,7 @@ public class Transaction {
     @JoinColumn(name = "Service_provider_id")
     private ServiceProvider serviceProvider;
 
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     @JoinColumn(name = "Related_Transaction_id", unique = true)
     private Transaction relatedTransaction;
 

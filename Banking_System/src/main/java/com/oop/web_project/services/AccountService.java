@@ -59,9 +59,9 @@ public interface AccountService {
     /**
      * finds the account in the database and updates its credentials
      * @param accountId account's id we are looking to update
-     * @param account account's credentials
+     * @param accountName account's name
      */
-    void updateAccount(long accountId, Account account);
+    void updateAccount(long accountId, String accountName);
     /**
      * Attempts to register the given customer as an owner of the specified account.
      */

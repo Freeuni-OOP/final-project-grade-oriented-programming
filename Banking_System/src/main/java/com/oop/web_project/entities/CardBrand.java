@@ -20,7 +20,7 @@ public class CardBrand {
     @Column(name = "Card_brand_id")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
 
     @Column(name = "Card_brand_name", nullable = false, unique = true)
     private String name;

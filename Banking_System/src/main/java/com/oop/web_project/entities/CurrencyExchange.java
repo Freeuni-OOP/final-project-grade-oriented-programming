@@ -21,7 +21,7 @@ public class CurrencyExchange {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "Currency_exchange_id")
-    private long id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "From_currency_id", nullable = false)
