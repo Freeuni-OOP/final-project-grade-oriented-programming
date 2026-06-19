@@ -2,6 +2,11 @@ package com.oop.web_project.services;
 
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Customer;
+import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
+import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyActiveException;
+import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactivatedException;
+import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
+import com.oop.web_project.exceptions.customerExceptions.InvalidCustomerEmailException;
 import com.oop.web_project.persistence.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
@@ -25,7 +30,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public void registerCustomer(Customer customer) {
         if(customer == null) {
-            throw new IllegalArgumentException("customer cannot be null!");
+            throw new CustomerNotFoundException("customer cannot be found!");
         }
         customerRepository.save(customer);
     }
@@ -34,7 +39,7 @@ public class CustomerServiceImpl implements CustomerService {
     public Customer getCustomerByEmail(String email) {
         return customerRepository.getCustomerByEmail(email)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("could not find customer with email!")
+                        () -> new CustomerNotFoundException("could not find customer with email!")
                 );
     }
 
@@ -42,7 +47,7 @@ public class CustomerServiceImpl implements CustomerService {
     public Customer getCustomerById(long id) {
         return customerRepository.findById(id)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("could not find customer with id!")
+                        () -> new CustomerNotFoundException("could not find customer with id!")
                 );
     }
 
@@ -50,9 +55,9 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public void activateCustomer(long customerId) {
         Customer customer = customerRepository.findById(customerId).orElseThrow(
-                () -> new IllegalArgumentException("customer cannot be found!"));
+                () -> new CustomerNotFoundException("customer cannot be found!"));
         if(customer.isActive()) {
-            throw new IllegalArgumentException("customer is already active!");
+            throw new CustomerAlreadyActiveException("customer is already active!");
         }
         customer.setActive(true);
     }
@@ -61,9 +66,9 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public void deactivateCustomer(long customerId) {
         Customer customer = customerRepository.findById(customerId).orElseThrow(
-                () -> new IllegalArgumentException("customer cannot be found!"));
+                () -> new CustomerNotFoundException("customer cannot be found!"));
         if(!customer.isActive()) {
-            throw new IllegalArgumentException("customer is already inactive!");
+            throw new CustomerAlreadyDeactivatedException("customer is already inactive!");
         }
         customer.setActive(false);
     }
@@ -73,7 +78,7 @@ public class CustomerServiceImpl implements CustomerService {
     public void deleteCustomer(long customerId) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("customer cannot be found!")
+                        () -> new CustomerNotFoundException("customer cannot be found!")
                 );
 
         for (Account account : customer.getAccounts()) {
@@ -89,7 +94,7 @@ public class CustomerServiceImpl implements CustomerService {
     public void updateCustomer(long customerId, String firstName, String lastName, String phoneNumber, String address) {
         Customer existingCustomer =  customerRepository.findById(customerId)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("customer cannot be found")
+                        () -> new CustomerNotFoundException("customer cannot be found")
                 );
         if(firstName != null)existingCustomer.setFirstName(firstName);
         if(lastName != null)existingCustomer.setLastName(lastName);
@@ -102,7 +107,7 @@ public class CustomerServiceImpl implements CustomerService {
         List<Customer> customers =  customerRepository.getCustomersByAccounts_Id(accountId);
 
         if (customers.isEmpty() && !accountRepository.existsById(accountId)) {
-            throw new IllegalArgumentException("account cannot be found");
+            throw new AccountNotFoundException("account cannot be found");
         }
 
         return customers;
