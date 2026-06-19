@@ -8,6 +8,13 @@ import org.springframework.stereotype.Component;
 public class TransactionApiMapper {
 
     public TransactionResponse toTransactionResponse(Transaction transaction){
-        return null;
+        TransactionResponse response = new TransactionResponse();
+        response.setTransactionType(transaction.getTransactionType());
+        response.setTimeStamp(transaction.getTimeStamp());
+        response.setAmount(transaction.getAmount());
+        response.setDescription(transaction.getDescription());
+        response.setStatus(transaction.getStatus());
+        response.setCurrencyCode(transaction.getCurrency().getCode());
+        return response;
     }
 }
