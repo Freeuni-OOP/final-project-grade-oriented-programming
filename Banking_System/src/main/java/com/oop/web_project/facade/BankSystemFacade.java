@@ -79,40 +79,40 @@ public class BankSystemFacade implements CommandLineRunner {
     }
 
     private void testCardService() {
-//        cardService.deactivateCard(1L);
-//
-//        CardBrand cardBrand = new CardBrand(null, "MASTERCARD", null);
-//
-//        Account account = accountService.selectAccountById(1L);
-//
-//
-//        Card card = new Card(null, CardType.DEBIT, cardBrand, account, BigDecimal.valueOf(30000),
-//                LocalDate.now(), "sdfdsfs", "dsfnsdjdsnfds", true, null);
+        cardService.deactivateCard(1L);
 
-//        cardService.createCard(card);
-//
-//        List<Card> cardList = cardService.getAllCardsForAccount(1L);
-//
-//        cardList.forEach(c -> System.out.println("card: " + c.getBrand().getName()));
-//
-//        cardService.depositMoney(1, BigDecimal.valueOf(300), "GEL");
-//
-//        cardService.changeCurrency(1L, BigDecimal.valueOf(400), "GEL", "USD");
-//
-//        cardService.withdrawMoney(1, BigDecimal.valueOf(500), "GEL");
+        CardBrand cardBrand = new CardBrand(null, "MASTERCARD", null);
+
+        Account account = accountService.selectAccountById(1L);
+
+
+        Card card = new Card(null, CardType.DEBIT, cardBrand, account, BigDecimal.valueOf(30000),
+                LocalDate.now(), "sdfdsfs", "dsfnsdjdsnfds", true, null);
+
+        cardService.createCard(card);
+
+        List<Card> cardList = cardService.getAllCardsForAccount(1L);
+
+        cardList.forEach(c -> System.out.println("card: " + c.getBrand().getName()));
+
+        cardService.depositMoney(1, BigDecimal.valueOf(300), "GEL");
+
+        cardService.changeCurrency(1L, BigDecimal.valueOf(400), "GEL", "USD");
+
+        cardService.withdrawMoney(1, BigDecimal.valueOf(500), "GEL");
 
         cardService.transferMoney(6, 11, BigDecimal.valueOf(400), "GEL");
 
-//        cardService.deleteCard(1L);
+        cardService.deleteCard(1L);
 
 
-//        System.out.println(cardService.checkCardExpiration(2L));
+        System.out.println(cardService.checkCardExpiration(2L));
     }
 
     @Override
     public void run(String... args) throws Exception {
-//        testAccountService();
-//        testCustomerService();
+        testAccountService();
+        testCustomerService();
         testCardService();
     }
 }
