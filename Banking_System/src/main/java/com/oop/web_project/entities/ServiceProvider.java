@@ -20,7 +20,7 @@ public class ServiceProvider {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "Service_provider_id")
-    private long id;
+    private Long id;
 
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "Service_category_id", nullable = false)
@@ -32,7 +32,7 @@ public class ServiceProvider {
     @Column(name = "Api_endpoint", nullable = false, unique = true)
     private String apiEndpoint;
 
-    @Column(name = "Is_active", nullable = false)
+    @Column(name = "Is_active")
     private boolean isActive;
 
     @OneToMany(mappedBy = "serviceProvider")

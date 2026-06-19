@@ -138,7 +138,7 @@ class CustomerServiceImplTest {
     @Test
     void testUpdateCustomerNotFoundThrowsException() {
         when(customerRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> customerService.updateCustomer(1L, customer));
+        assertThrows(IllegalArgumentException.class, () -> customerService.updateCustomer(1L, null, null, null, null));
     }
 
     @Test
@@ -150,7 +150,7 @@ class CustomerServiceImplTest {
         Customer updatedData = new Customer();
         updatedData.setId(99L);
         updatedData.setFirstName("New");
-        customerService.updateCustomer(1L, updatedData);
+        customerService.updateCustomer(1L, updatedData.getFirstName(), updatedData.getLastName(), updatedData.getPhoneNumber(), updatedData.getAddress());
         assertEquals("New", existingCustomer.getFirstName());
         assertEquals(1L, existingCustomer.getId());
     }

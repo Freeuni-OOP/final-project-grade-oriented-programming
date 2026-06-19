@@ -446,3 +446,18 @@ FROM Currencies c, Service_providers s WHERE c.Currency_code = 'GEL' AND s.Servi
 INSERT INTO Transactions (Transaction_id, Transaction_type, Account_id, Transaction_time_stamp, Transaction_amount, Currency_id, Service_provider_id, Related_Transaction_id, Transaction_idempotency_key, Transaction_description, Transaction_status)
 SELECT 25, 'DEPOSIT', 3, '2025-06-10 10:00:00', 2000.00, c.Currency_id, NULL, NULL, 'idem-tx-025', 'Salary deposit', 'COMPLETE'
 FROM Currencies c WHERE c.Currency_code = 'GEL';
+
+
+-- Advance all sequences past seeded data range
+ALTER SEQUENCE accounts_seq RESTART WITH 1000;
+ALTER SEQUENCE customers_seq RESTART WITH 1000;
+ALTER SEQUENCE cards_seq RESTART WITH 1000;
+ALTER SEQUENCE card_balances_seq RESTART WITH 1000;
+ALTER SEQUENCE card_brands_seq RESTART WITH 1000;
+ALTER SEQUENCE currencies_seq RESTART WITH 1000;
+ALTER SEQUENCE currency_exchanges_seq RESTART WITH 1000;
+ALTER SEQUENCE permissions_seq RESTART WITH 1000;
+ALTER SEQUENCE roles_seq RESTART WITH 1000;
+ALTER SEQUENCE service_categories_seq RESTART WITH 1000;
+ALTER SEQUENCE service_providers_seq RESTART WITH 1000;
+ALTER SEQUENCE transactions_seq RESTART WITH 1000;

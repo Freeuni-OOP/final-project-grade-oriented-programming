@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -98,6 +97,30 @@ class LoggingAspectTest {
         Object actual = loggingAspect.logServiceExecution(pjp);
 
         assertNotNull(actual);
+    }
+
+    @Test
+    void testLogPersistenceExecutionProceedReturnsResult() throws Throwable {
+        when(pjp.getSignature()).thenReturn(signature);
+        when(signature.getName()).thenReturn("save");
+        when(signature.getDeclaringTypeName()).thenReturn("com.oop.web_project.persistence.MemberRepository");
+        when(pjp.getArgs()).thenReturn(new Object[]{});
+        when(pjp.proceed()).thenReturn("saved");
+
+        Object result = loggingAspect.logPersistenceExecution(pjp);
+
+        assertEquals("saved", result);
+    }
+
+    @Test
+    void testLogPersistenceExecutionProceedThrowsRethrows() throws Throwable {
+        when(pjp.getSignature()).thenReturn(signature);
+        when(signature.getName()).thenReturn("save");
+        when(signature.getDeclaringTypeName()).thenReturn("com.oop.web_project.persistence.MemberRepository");
+        when(pjp.getArgs()).thenReturn(new Object[]{});
+        when(pjp.proceed()).thenThrow(new RuntimeException("constraint violation"));
+
+        assertThrows(RuntimeException.class, () -> loggingAspect.logPersistenceExecution(pjp));
     }
 
 }

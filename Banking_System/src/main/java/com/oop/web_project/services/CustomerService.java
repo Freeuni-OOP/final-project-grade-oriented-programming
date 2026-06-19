@@ -45,7 +45,7 @@ public interface CustomerService {
     /**
      * finds customer and updates his/her credentials
      */
-    void updateCustomer(long customerId, Customer customer);
+    void updateCustomer(long customerId, String firstName, String lastName, String phoneNumber, String address);
 
     /**
      * Returns all customers that jointly own the specified account.

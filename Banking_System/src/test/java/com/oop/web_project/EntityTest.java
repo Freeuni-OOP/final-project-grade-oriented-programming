@@ -105,7 +105,7 @@ class CardTest {
         CardBrand brand = new CardBrand(1L, "Visa", null);
         Account account = new Account(1L, "Main Account", AccountCategory.CHECKING,
                 LocalDate.of(2022, 1, 1), true, null, null, null);
-        return new Card(1L, CardType.DEBIT, brand, account, 5000,
+        return new Card(1L, CardType.DEBIT, brand, account, BigDecimal.valueOf(5000),
                 LocalDate.of(2027, 12, 31), "****1234", "token_abc123", true, null);
     }
 
@@ -180,16 +180,16 @@ class CardTest {
     void testGetSpendingLimitReturnsCorrectValue() {
         Card card = createCard();
 
-        assertEquals(5000, card.getSpendingLimit());
+        assertEquals(BigDecimal.valueOf(5000), card.getSpendingLimit());
     }
 
     @Test
     void testSetSpendingLimitUpdatesValue() {
         Card card = createCard();
 
-        card.setSpendingLimit(10000);
+        card.setSpendingLimit(BigDecimal.valueOf(10000));
 
-        assertEquals(10000, card.getSpendingLimit());
+        assertEquals(BigDecimal.valueOf(10000), card.getSpendingLimit());
     }
 
     @Test
@@ -260,7 +260,7 @@ class CardTest {
 class CardBalanceTest {
 
     private CardBalance createCardBalance() {
-        Card card = new Card(1L, CardType.DEBIT, null, null, 5000,
+        Card card = new Card(1L, CardType.DEBIT, null, null, BigDecimal.valueOf(5000),
                 LocalDate.of(2027, 12, 31), "****1234", "token_abc", true, null);
         Currency currency = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
         return new CardBalance(1L, new BigDecimal("1500.00"), card, currency);
@@ -308,7 +308,7 @@ class CardBalanceTest {
     @Test
     void testSetCardUpdatesValue() {
         CardBalance balance = createCardBalance();
-        Card newCard = new Card(2L, CardType.CREDIT, null, null, 3000,
+        Card newCard = new Card(2L, CardType.CREDIT, null, null, BigDecimal.valueOf(3000),
                 LocalDate.of(2026, 6, 30), "****5678", "token_xyz", true, null);
 
         balance.setCard(newCard);

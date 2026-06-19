@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -63,11 +64,23 @@ public class CardServiceImpl implements CardService {
     @Override
     @Transactional
     public void depositMoney(long cardId, BigDecimal amountToAdd, String currencyCode) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("card could not be found!")
+                );
+
         CardBalance balance = cardBalanceRepository.findByCardIdAndCurrencyCode(cardId, currencyCode)
                 .orElseThrow(
                         () -> new IllegalArgumentException("Balance could not be found!")
                 );
-        balance.setAmount(balance.getAmount().add(amountToAdd));
+
+        BigDecimal totalBalance = balance.getAmount().add(amountToAdd);
+
+        if(totalBalance.compareTo(card.getSpendingLimit()) > 0) {
+            throw new IllegalArgumentException("spending limit exceeded!");
+        }
+
+        balance.setAmount(totalBalance);
     }
 
     @Override
@@ -90,6 +103,11 @@ public class CardServiceImpl implements CardService {
     @Override
     @Transactional
     public void transferMoney(long senderCardId, long receiverCardId, BigDecimal amount, String currencyCode) {
+        Card receiverCard = cardRepository.findById(receiverCardId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Card could not be found!")
+                );
+
         FetchedBalances fetchedBalances = safeFetchBalances(senderCardId, receiverCardId,
                 currencyCode, currencyCode);
 
@@ -100,6 +118,10 @@ public class CardServiceImpl implements CardService {
         }
 
         BigDecimal finalBalanceTo = fetchedBalances.to().getAmount().add(amount);
+
+        if(finalBalanceTo.compareTo(receiverCard.getSpendingLimit()) > 0) {
+            throw new IllegalArgumentException("spending limit exceeded!");
+        }
 
         fetchedBalances.from().setAmount(finalBalanceFrom);
         fetchedBalances.to().setAmount(finalBalanceTo);
@@ -133,6 +155,15 @@ public class CardServiceImpl implements CardService {
     @Override
     public List<Card> getAllCardsForAccount(long accountId) {
         return cardRepository.getAllByAccountId(accountId);
+    }
+
+    @Override
+    public boolean checkCardExpiration(long cardId) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("card could not be found!")
+                );
+        return LocalDate.now().isAfter(card.getExpirationDate());
     }
 
     /**

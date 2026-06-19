@@ -75,17 +75,26 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(
                         () -> new IllegalArgumentException("customer cannot be found!")
                 );
+
+        for (Account account : customer.getAccounts()) {
+            account.getCustomers().remove(customer);
+            accountRepository.save(account);
+        }
+
         customerRepository.delete(customer);
     }
 
     @Override
     @Transactional
-    public void updateCustomer(long customerId, Customer customer) {
+    public void updateCustomer(long customerId, String firstName, String lastName, String phoneNumber, String address) {
         Customer existingCustomer =  customerRepository.findById(customerId)
                 .orElseThrow(
                         () -> new IllegalArgumentException("customer cannot be found")
                 );
-        BeanUtils.copyProperties(customer, existingCustomer, "id");
+        if(firstName != null)existingCustomer.setFirstName(firstName);
+        if(lastName != null)existingCustomer.setLastName(lastName);
+        if(phoneNumber != null)existingCustomer.setPhoneNumber(phoneNumber);
+        if(address != null)existingCustomer.setAddress(address);
     }
 
     @Override

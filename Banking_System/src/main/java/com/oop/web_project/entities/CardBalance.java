@@ -20,7 +20,7 @@ public class CardBalance {
     @Column(name = "Card_balance_id")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
 
     @Column(name = "Card_balance_amount", nullable = false)
     private BigDecimal amount;

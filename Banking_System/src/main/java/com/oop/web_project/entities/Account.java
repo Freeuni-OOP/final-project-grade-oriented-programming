@@ -20,7 +20,7 @@ public class Account {
     @Column(name = "Account_id")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
 
     @Column(name = "Account_name", nullable = false)
     private String name;
@@ -32,7 +32,7 @@ public class Account {
     @Column(name = "Date_opened", nullable = false)
     private LocalDate dateOpened;
 
-    @Column(name = "Is_active", nullable = false)
+    @Column(name = "Is_active")
     private boolean isActive;
 
     @OneToMany(mappedBy = "account")

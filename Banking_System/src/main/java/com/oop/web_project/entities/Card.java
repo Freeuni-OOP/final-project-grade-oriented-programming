@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class Card {
     @Column(name = "Card_id")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Card_type", nullable = false)
@@ -36,7 +37,7 @@ public class Card {
     private Account account;
 
     @Column(name = "Spending_limit")
-    private int spendingLimit;
+    private BigDecimal spendingLimit;
 
     @Column(name = "Expiration_date", nullable = false)
     private LocalDate expirationDate;
@@ -47,9 +48,9 @@ public class Card {
     @Column(name = "Pan_token", nullable = false, unique = true)
     private String panToken;
 
-    @Column(name = "Is_active", nullable = false)
+    @Column(name = "Is_active")
     private boolean isActive;
 
-    @OneToMany(mappedBy = "card")
+    @OneToMany(mappedBy = "card", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CardBalance> balances;
 }

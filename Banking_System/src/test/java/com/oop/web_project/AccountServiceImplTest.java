@@ -5,6 +5,7 @@ import com.oop.web_project.entities.Customer;
 import com.oop.web_project.persistence.AccountRepository;
 import com.oop.web_project.persistence.CardRepository;
 import com.oop.web_project.persistence.CustomerRepository;
+import com.oop.web_project.persistence.TransactionRepository;
 import com.oop.web_project.services.AccountServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ class AccountServiceImplTest {
 
     @Mock
     private CustomerRepository customerRepository;
+
+    @Mock
+    private TransactionRepository transactionRepository;
 
     @Mock
     private CardRepository cardRepository;
@@ -102,6 +106,9 @@ class AccountServiceImplTest {
     @Test
     void testDeleteAccountFoundDeletesAccount() {
         when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+        account.setCards(new ArrayList<>());
+        account.setTransactions(new ArrayList<>());
+
         accountService.deleteAccount(1L);
         verify(accountRepository, times(1)).delete(account);
     }
@@ -138,15 +145,7 @@ class AccountServiceImplTest {
     @Test
     void testUpdateAccountNotFoundThrowsException() {
         when(accountRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> accountService.updateAccount(1L, account));
-    }
-
-    @Test
-    void testUpdateAccountIdMismatchThrowsException() {
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
-        Account mismatched = new Account();
-        mismatched.setId(2L);
-        assertThrows(IllegalStateException.class, () -> accountService.updateAccount(1L, mismatched));
+        assertThrows(IllegalArgumentException.class, () -> accountService.updateAccount(1L, "account name"));
     }
 
     @Test
@@ -155,10 +154,7 @@ class AccountServiceImplTest {
         existingAccount.setId(1L);
         existingAccount.setName("Old Name");
         when(accountRepository.findById(1L)).thenReturn(Optional.of(existingAccount));
-        Account updatedData = new Account();
-        updatedData.setId(1L);
-        updatedData.setName("New Name");
-        accountService.updateAccount(1L, updatedData);
+        accountService.updateAccount(1L, "New Name");
         assertEquals("New Name", existingAccount.getName());
         assertEquals(1L, existingAccount.getId());
     }
