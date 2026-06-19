@@ -180,7 +180,7 @@ class CardTest {
     void testGetSpendingLimitReturnsCorrectValue() {
         Card card = createCard();
 
-        assertEquals(5000, card.getSpendingLimit());
+        assertEquals(BigDecimal.valueOf(5000), card.getSpendingLimit());
     }
 
     @Test
@@ -189,7 +189,7 @@ class CardTest {
 
         card.setSpendingLimit(BigDecimal.valueOf(10000));
 
-        assertEquals(10000, card.getSpendingLimit());
+        assertEquals(BigDecimal.valueOf(10000), card.getSpendingLimit());
     }
 
     @Test
