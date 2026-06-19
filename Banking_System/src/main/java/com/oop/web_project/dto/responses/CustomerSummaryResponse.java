@@ -1,4 +1,4 @@
-package com.oop.web_project.dto.requests;
+package com.oop.web_project.dto.responses;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,8 +9,9 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CustomerLoginRequest {
+public class CustomerSummaryResponse {
 
+    private String firstName;
+    private String lastName;
     private String email;
-    private String password;
 }

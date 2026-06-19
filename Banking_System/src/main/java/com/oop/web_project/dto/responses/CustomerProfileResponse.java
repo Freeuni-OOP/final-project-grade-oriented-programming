@@ -20,6 +20,6 @@ public class CustomerProfileResponse {
     private String address;
     private String email;
     private String phoneNumber;
-    private List<AccountProfileResponse> accounts;
+    private List<AccountSummaryResponse> accounts;
 
 }

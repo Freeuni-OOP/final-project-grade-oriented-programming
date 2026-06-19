@@ -1,5 +1,6 @@
-package com.oop.web_project.dto.requests;
+package com.oop.web_project.dto.responses;
 
+import com.oop.web_project.entities.CardType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,8 +10,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CustomerLoginRequest {
+public class CardResponse {
 
-    private String email;
-    private String password;
+    private CardType type;
+
 }

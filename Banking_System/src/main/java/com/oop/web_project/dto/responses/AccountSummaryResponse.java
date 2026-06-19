@@ -8,19 +8,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccountProfileResponse {
+public class AccountSummaryResponse {
 
     private String name;
     private AccountCategory category;
     private LocalDate dateOpened;
     private boolean isActive;
-    private List<TransactionResponse> transactions;
-    private List<CardResponse> cards;
-    private List<CustomerSummaryResponse> customers;
 }

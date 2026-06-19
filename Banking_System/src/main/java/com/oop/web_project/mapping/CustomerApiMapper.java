@@ -1,9 +1,8 @@
 package com.oop.web_project.mapping;
-
-import com.oop.web_project.dto.requests.CustomerLoginRequest;
 import com.oop.web_project.dto.requests.CustomerRegistrationRequest;
-import com.oop.web_project.dto.responses.AccountProfileResponse;
+import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.dto.responses.CustomerProfileResponse;
+import com.oop.web_project.dto.responses.CustomerSummaryResponse;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.entities.Role;
@@ -46,12 +45,20 @@ public class CustomerApiMapper {
         response.setAddress(customer.getAddress());
         response.setEmail(customer.getEmail());
         response.setPhoneNumber(customer.getPhoneNumber());
-        List<AccountProfileResponse> profileAccounts = new ArrayList<>();
+        List<AccountSummaryResponse> summaryAccounts = new ArrayList<>();
         List<Account> accounts = customer.getAccounts();
         for(Account account : accounts){
-            profileAccounts.add(accountApiMapper.toProfileResponse(account));
+            summaryAccounts.add(accountApiMapper.toAccountSummaryResponse(account));
         }
-        response.setAccounts(profileAccounts);
+        response.setAccounts(summaryAccounts);
+        return response;
+    }
+
+    public CustomerSummaryResponse toSummaryResponse(Customer customer){
+        CustomerSummaryResponse response = new CustomerSummaryResponse();
+        response.setEmail(customer.getEmail());
+        response.setFirstName(customer.getFirstName());
+        response.setLastName(customer.getLastName());
         return response;
     }
 }
