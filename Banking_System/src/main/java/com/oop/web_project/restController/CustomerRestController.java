@@ -30,12 +30,11 @@ public class CustomerRestController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-//    @PostMapping("/login")
-//    public ResponseEntity<Void> customerLogin(@RequestBody @Valid CustomerLoginRequest request){
-//        Customer customer = customerApiMapper.
-//    }
-
-
-    public ResponseEntity<CustomerProfileResponse> getAccountProfile()
+    @GetMapping("/{id}")
+    public ResponseEntity<CustomerProfileResponse> getCustomerProfile(@PathVariable long id){
+        Customer customer = customerService.getCustomerById(id);
+        CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 
 }
