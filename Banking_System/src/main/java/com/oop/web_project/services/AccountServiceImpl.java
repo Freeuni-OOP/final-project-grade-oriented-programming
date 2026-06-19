@@ -1,6 +1,11 @@
 package com.oop.web_project.services;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Customer;
+import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyActiveException;
+import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyDeactivatedException;
+import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
+import com.oop.web_project.exceptions.cardExceptions.CardBalanceNotFoundException;
+import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
 import com.oop.web_project.persistence.AccountRepository;
 import com.oop.web_project.persistence.CardRepository;
 import com.oop.web_project.persistence.CustomerRepository;
@@ -40,9 +45,9 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public void activateAccount(long accountId) {
         Account account = accountRepository.findById(accountId).orElseThrow(
-                () -> new IllegalArgumentException("account cannot be null!"));
+                () -> new AccountNotFoundException("account cannot be found!"));
         if(account.isActive()) {
-            throw new IllegalArgumentException("account is already active!");
+            throw new AccountAlreadyActiveException("account is already active!");
         }
         account.setActive(true);
     }
@@ -51,9 +56,9 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public void deactivateAccount(long accountId) {
         Account account = accountRepository.findById(accountId).orElseThrow(
-                () -> new IllegalArgumentException("account cannot be null!"));
+                () -> new AccountNotFoundException("account cannot be found!"));
         if(!account.isActive()) {
-            throw new IllegalArgumentException("account is already inactive!");
+            throw new AccountAlreadyDeactivatedException("account is already inactive!");
         }
         account.setActive(false);
     }
@@ -62,7 +67,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public void deleteAccount(long accountId) {
         Account account = accountRepository.findById(accountId).orElseThrow(
-                () -> new IllegalArgumentException("such account does not exist!")
+                () -> new AccountNotFoundException("such account does not exist!")
         );
         cardRepository.deleteAll(account.getCards());
         transactionRepository.deleteAll(account.getTransactions());
@@ -72,7 +77,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account selectAccountById(long accountId) {
         return accountRepository.findById(accountId).orElseThrow(
-                () -> new IllegalArgumentException("Could not find account!")
+                () -> new AccountNotFoundException("Could not find account!")
         );
     }
 
@@ -90,7 +95,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public void updateAccount(long accountId, String accountName) {
         Account existingAccount = accountRepository.findById(accountId).orElseThrow(
-                () -> new IllegalArgumentException("such account does not exist!")
+                () -> new AccountNotFoundException("such account does not exist!")
         );
         if(accountName != null)existingAccount.setName(accountName);
     }
@@ -99,10 +104,10 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public void registerCustomerToAccount(long accountId, long customerId) {
         Account account = accountRepository.findById(accountId).orElseThrow(
-                () -> new IllegalArgumentException("such account does not exist!")
+                () -> new AccountNotFoundException("such account does not exist!")
         );
         Customer customer = customerRepository.findById(customerId).orElseThrow(
-                () -> new IllegalArgumentException("such customer does not exist!")
+                () -> new CustomerNotFoundException("such customer does not exist!")
         );
         account.getCustomers().add(customer);
         customer.getAccounts().add(account);
@@ -112,7 +117,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public BigDecimal getAccountBalanceByCurrency(long accountId, String currencyCode) {
         return cardRepository.getBalanceForAccount(accountId, currencyCode).orElseThrow(
-                () -> new IllegalArgumentException("Could not determine balance of the account!")
+                () -> new CardBalanceNotFoundException("Could not determine balance of the account!")
         );
     }
 

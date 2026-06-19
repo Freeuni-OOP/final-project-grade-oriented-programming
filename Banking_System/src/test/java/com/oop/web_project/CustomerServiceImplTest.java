@@ -1,6 +1,10 @@
 package com.oop.web_project;
 
 import com.oop.web_project.entities.Customer;
+import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
+import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyActiveException;
+import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactivatedException;
+import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
 import com.oop.web_project.persistence.AccountRepository;
 import com.oop.web_project.persistence.CustomerRepository;
 import com.oop.web_project.services.CustomerServiceImpl;
@@ -46,7 +50,7 @@ class CustomerServiceImplTest {
 
     @Test
     void testRegisterCustomerNullCustomerThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> customerService.registerCustomer(null));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.registerCustomer(null));
         verify(customerRepository, never()).save(any());
     }
 
@@ -66,7 +70,7 @@ class CustomerServiceImplTest {
     @Test
     void testGetCustomerByEmailNotFoundThrowsException() {
         when(customerRepository.getCustomerByEmail("missing@example.com")).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> customerService.getCustomerByEmail("missing@example.com"));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.getCustomerByEmail("missing@example.com"));
     }
 
     @Test
@@ -79,20 +83,20 @@ class CustomerServiceImplTest {
     @Test
     void testGetCustomerByIdNotFoundThrowsException() {
         when(customerRepository.findById(2L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> customerService.getCustomerById(2L));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.getCustomerById(2L));
     }
 
     @Test
     void testActivateCustomerNotFoundThrowsException() {
         when(customerRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> customerService.activateCustomer(1L));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.activateCustomer(1L));
     }
 
     @Test
     void testActivateCustomerAlreadyActiveThrowsException() {
         customer.setActive(true);
         when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        assertThrows(IllegalArgumentException.class, () -> customerService.activateCustomer(1L));
+        assertThrows(CustomerAlreadyActiveException.class, () -> customerService.activateCustomer(1L));
     }
 
     @Test
@@ -105,13 +109,13 @@ class CustomerServiceImplTest {
     @Test
     void testDeactivateCustomerNotFoundThrowsException() {
         when(customerRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> customerService.deactivateCustomer(1L));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.deactivateCustomer(1L));
     }
 
     @Test
     void testDeactivateCustomerAlreadyInactiveThrowsException() {
         when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        assertThrows(IllegalArgumentException.class, () -> customerService.deactivateCustomer(1L));
+        assertThrows(CustomerAlreadyDeactivatedException.class, () -> customerService.deactivateCustomer(1L));
     }
 
     @Test
@@ -125,7 +129,7 @@ class CustomerServiceImplTest {
     @Test
     void testDeleteCustomerNotFoundThrowsException() {
         when(customerRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> customerService.deleteCustomer(1L));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.deleteCustomer(1L));
     }
 
     @Test
@@ -138,7 +142,7 @@ class CustomerServiceImplTest {
     @Test
     void testUpdateCustomerNotFoundThrowsException() {
         when(customerRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> customerService.updateCustomer(1L, null, null, null, null));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.updateCustomer(1L, null, null, null, null));
     }
 
     @Test
@@ -175,6 +179,6 @@ class CustomerServiceImplTest {
     void testGetCustomersByAccountEmptyAndAccountNotFoundThrowsException() {
         when(customerRepository.getCustomersByAccounts_Id(1L)).thenReturn(new ArrayList<>());
         when(accountRepository.existsById(1L)).thenReturn(false);
-        assertThrows(IllegalArgumentException.class, () -> customerService.getCustomersByAccount(1L));
+        assertThrows(AccountNotFoundException.class, () -> customerService.getCustomersByAccount(1L));
     }
 }

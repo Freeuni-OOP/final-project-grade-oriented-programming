@@ -1,5 +1,7 @@
 package com.oop.web_project.services;
 import com.oop.web_project.entities.*;
+import com.oop.web_project.exceptions.cardExceptions.*;
+import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
 import com.oop.web_project.persistence.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -31,9 +33,9 @@ public class CardServiceImpl implements CardService {
     @Transactional
     public void activateCard(long cardId) {
         Card card = cardRepository.findById(cardId).orElseThrow(
-                () -> new IllegalArgumentException("card cannot be found!"));
+                () -> new CardNotFoundException("card cannot be found!"));
         if(card.isActive()) {
-            throw new IllegalArgumentException("card is already active!");
+            throw new CardAlreadyActiveException("card is already active!");
         }
         card.setActive(true);
     }
@@ -42,9 +44,9 @@ public class CardServiceImpl implements CardService {
     @Transactional
     public void deactivateCard(long cardId) {
         Card card = cardRepository.findById(cardId).orElseThrow(
-                () -> new IllegalArgumentException("card cannot be found!"));
+                () -> new CardNotFoundException("card cannot be found!"));
         if(!card.isActive()) {
-            throw new IllegalArgumentException("card is already inactive!");
+            throw new CardAlreadyDeactivatedException("card is already inactive!");
         }
         card.setActive(false);
     }
@@ -66,18 +68,18 @@ public class CardServiceImpl implements CardService {
     public void depositMoney(long cardId, BigDecimal amountToAdd, String currencyCode) {
         Card card = cardRepository.findById(cardId)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("card could not be found!")
+                        () -> new CardNotFoundException("card could not be found!")
                 );
 
         CardBalance balance = cardBalanceRepository.findByCardIdAndCurrencyCode(cardId, currencyCode)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("Balance could not be found!")
+                        () -> new CardBalanceNotFoundException("Balance could not be found!")
                 );
-
+        //CASE 2
         BigDecimal totalBalance = balance.getAmount().add(amountToAdd);
 
         if(totalBalance.compareTo(card.getSpendingLimit()) > 0) {
-            throw new IllegalArgumentException("spending limit exceeded!");
+            throw new InsufficientMoneyOnCardException("spending limit exceeded!");
         }
 
         balance.setAmount(totalBalance);
@@ -88,13 +90,13 @@ public class CardServiceImpl implements CardService {
     public void withdrawMoney(long cardId, BigDecimal amountToWithdraw, String currencyCode) {
         CardBalance balance = cardBalanceRepository.findByCardIdAndCurrencyCode(cardId, currencyCode)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("Balance could not be found!")
+                        () -> new CardBalanceNotFoundException("Balance could not be found!")
                 );
-
+        // CASE 3
         BigDecimal finalBalance = balance.getAmount().subtract(amountToWithdraw);
 
         if(finalBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Insufficient funds!");
+            throw new InsufficientMoneyOnCardException("Insufficient funds!");
         }
 
         balance.setAmount(finalBalance);
@@ -105,7 +107,7 @@ public class CardServiceImpl implements CardService {
     public void transferMoney(long senderCardId, long receiverCardId, BigDecimal amount, String currencyCode) {
         Card receiverCard = cardRepository.findById(receiverCardId)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("Card could not be found!")
+                        () -> new CardNotFoundException("Card could not be found!")
                 );
 
         FetchedBalances fetchedBalances = safeFetchBalances(senderCardId, receiverCardId,
@@ -114,13 +116,13 @@ public class CardServiceImpl implements CardService {
         BigDecimal finalBalanceFrom = fetchedBalances.from().getAmount().subtract(amount);
 
         if(finalBalanceFrom.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Insufficient funds!");
+            throw new InsufficientMoneyOnCardException("Insufficient funds!");
         }
 
         BigDecimal finalBalanceTo = fetchedBalances.to().getAmount().add(amount);
 
         if(finalBalanceTo.compareTo(receiverCard.getSpendingLimit()) > 0) {
-            throw new IllegalArgumentException("spending limit exceeded!");
+            throw new InsufficientMoneyOnCardException("spending limit exceeded!");
         }
 
         fetchedBalances.from().setAmount(finalBalanceFrom);
@@ -137,13 +139,13 @@ public class CardServiceImpl implements CardService {
         BigDecimal finalBalanceFrom = fetchedBalances.from().getAmount().subtract(amount);
 
         if(finalBalanceFrom.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Insufficient funds!");
+            throw new InsufficientMoneyOnCardException("Insufficient funds!");
         }
 
         CurrencyExchange currencyRate = currencyExchangeRepository.
                 findByCurrencyCodes(fromCurrencyCode, toCurrencyCode)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("Could not find currency exchange!")
+                        () -> new CurrencyExchangeException("Could not find currency exchange!")
                 );
 
         BigDecimal finalBalanceTo = fetchedBalances.to().getAmount().add(exchangeCurrency(amount, currencyRate.getRate()));
@@ -161,7 +163,7 @@ public class CardServiceImpl implements CardService {
     public boolean checkCardExpiration(long cardId) {
         Card card = cardRepository.findById(cardId)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("card could not be found!")
+                        () -> new CardNotFoundException("card could not be found!")
                 );
         return LocalDate.now().isAfter(card.getExpirationDate());
     }
@@ -200,14 +202,14 @@ public class CardServiceImpl implements CardService {
 
         if (lockFromFirst) {
             balanceFrom = cardBalanceRepository.findByCardIdAndCurrencyCode(fromCardId, fromCurrencyCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Source card balance could not be found!"));
+                    .orElseThrow(() -> new CardBalanceNotFoundException("Source card balance could not be found!"));
             balanceTo = cardBalanceRepository.findByCardIdAndCurrencyCode(toCardId, toCurrencyCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Target card balance could not be found!"));
+                    .orElseThrow(() -> new CardBalanceNotFoundException("Target card balance could not be found!"));
         } else {
             balanceTo = cardBalanceRepository.findByCardIdAndCurrencyCode(toCardId, toCurrencyCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Target card balance could not be found!"));
+                    .orElseThrow(() -> new CardBalanceNotFoundException("Target card balance could not be found!"));
             balanceFrom = cardBalanceRepository.findByCardIdAndCurrencyCode(fromCardId, fromCurrencyCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Source card balance could not be found!"));
+                    .orElseThrow(() -> new CardBalanceNotFoundException("Source card balance could not be found!"));
         }
         return new FetchedBalances(balanceFrom, balanceTo);
     }
