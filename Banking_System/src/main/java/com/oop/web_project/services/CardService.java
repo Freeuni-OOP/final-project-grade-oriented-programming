@@ -57,4 +57,9 @@ public interface CardService {
      */
     List<Card> getAllCardsForAccount(long accountId);
 
+    /**
+     * @param cardId Id of the card
+     * @return true if card is expired, false otherwise
+     */
+    boolean checkCardExpiration(long cardId);
 }

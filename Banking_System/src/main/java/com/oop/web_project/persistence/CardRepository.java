@@ -5,6 +5,7 @@ import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -16,7 +17,8 @@ public interface CardRepository extends JpaRepository<Card, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT SUM(b.amount) FROM CardBalance b WHERE b.card.account.id = :accountId AND b.currency.code = :currencyCode")
-    Optional<BigDecimal> getBalanceForAccount(long accountId, String currencyCode);
+    Optional<BigDecimal> getBalanceForAccount(@Param("accountId")long accountId,
+                                              @Param("currencyCode") String currencyCode);
 
     List<Card> getAllByAccountId(long accountId);
 }

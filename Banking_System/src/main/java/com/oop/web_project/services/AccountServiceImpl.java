@@ -109,6 +109,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional
     public BigDecimal getAccountBalanceByCurrency(long accountId, String currencyCode) {
         return cardRepository.getBalanceForAccount(accountId, currencyCode).orElseThrow(
                 () -> new IllegalArgumentException("Could not determine balance of the account!")

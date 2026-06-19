@@ -32,7 +32,7 @@ public class Account {
     @Column(name = "Date_opened", nullable = false)
     private LocalDate dateOpened;
 
-    @Column(name = "Is_active", nullable = false)
+    @Column(name = "Is_active")
     private boolean isActive;
 
     @OneToMany(mappedBy = "account")

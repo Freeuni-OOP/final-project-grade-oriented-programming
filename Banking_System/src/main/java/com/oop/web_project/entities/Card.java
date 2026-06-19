@@ -48,7 +48,7 @@ public class Card {
     @Column(name = "Pan_token", nullable = false, unique = true)
     private String panToken;
 
-    @Column(name = "Is_active", nullable = false)
+    @Column(name = "Is_active")
     private boolean isActive;
 
     @OneToMany(mappedBy = "card", cascade = CascadeType.ALL, orphanRemoval = true)

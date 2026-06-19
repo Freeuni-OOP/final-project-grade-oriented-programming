@@ -45,7 +45,7 @@ public class Customer {
     @Column(name = "Hashed_password", nullable = false, unique = true)
     private String hashedPassword;
 
-    @Column(name = "Is_active", nullable = false)
+    @Column(name = "Is_active")
     private boolean isActive;
 
     @ManyToOne(cascade = CascadeType.PERSIST)
