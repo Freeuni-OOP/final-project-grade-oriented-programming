@@ -1,6 +1,7 @@
 package com.oop.web_project.restController;
 
 
+import com.oop.web_project.dto.requests.CardCreationRequest;
 import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.dto.responses.CardBalanceResponse;
 import com.oop.web_project.dto.responses.CardResponse;
@@ -11,6 +12,7 @@ import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.mapping.CardBalanceApiMapper;
 import com.oop.web_project.services.AccountService;
 import com.oop.web_project.services.CardService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,30 +39,54 @@ public class CardRestController {
     }
 
 
-    @GetMapping("/{card_id}")
-    public ResponseEntity<CardResponse> getCardById(@NotNull @PathVariable Long card_id) {
+    @GetMapping("/{card-id}")
+    public ResponseEntity<CardResponse> getCardById(@NotNull @PathVariable("card-id") Long cardId) {
 
-        Card card = cardService.selectCardById(card_id);
+        Card card = cardService.selectCardById(cardId);
 
         return ResponseEntity.ok(cardApiMapper.toCardResponse(card));
     }
 
-    @GetMapping("/{card_id}/account")
-    public ResponseEntity<AccountSummaryResponse> getCardAccount(@NotNull @PathVariable Long card_id) {
+    @GetMapping("/{card-id}/account")
+    public ResponseEntity<AccountSummaryResponse> getCardAccount(@NotNull @PathVariable("card-id") Long cardId) {
 
-        Account account = accountService.selectAccountByCardId(card_id);
+        Account account = accountService.selectAccountByCardId(cardId);
 
         return ResponseEntity.ok(accountApiMapper.toAccountSummaryResponse(account));
     }
 
-    @GetMapping("{card_id}/balances")
-    public ResponseEntity<List<CardBalanceResponse>> getCardBalances(@NotNull @PathVariable Long card_id) {
+    @GetMapping("/{card-id}/balances")
+    public ResponseEntity<List<CardBalanceResponse>> getCardBalances(@NotNull @PathVariable("card-id") Long cardId) {
 
-        Card card = cardService.selectCardById(card_id);
+        Card card = cardService.selectCardById(cardId);
 
-        return ResponseEntity.ok(cardService.selectCardBalances(card_id)
+        return ResponseEntity.ok(cardService.selectCardBalances(cardId)
                 .stream().map(cardBalanceApiMapper::toCardBalanceResponse)
                 .toList());
+    }
+
+    @PostMapping
+    public ResponseEntity<String> createCard(@Valid @RequestBody CardCreationRequest cardCreationRequest) {
+        return null;
+    }
+
+
+
+
+    @PatchMapping("{card-id}/activate")
+    public ResponseEntity<String> activateCard(@NotNull @PathVariable("card-id") Long cardId) {
+
+        cardService.activateCard(cardId);
+
+        return ResponseEntity.ok("Card has been successfully activated!");
+    }
+
+    @PatchMapping("{card-id}/deactivate")
+    public ResponseEntity<String> deactivateCard(@NotNull @PathVariable("card-id") Long cardId) {
+
+        cardService.deactivateCard(cardId);
+
+        return ResponseEntity.ok("Card has been successfully deactivated!");
     }
 
 
