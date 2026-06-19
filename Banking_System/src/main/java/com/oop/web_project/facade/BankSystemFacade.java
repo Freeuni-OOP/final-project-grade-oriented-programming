@@ -10,6 +10,7 @@ import com.oop.web_project.services.CustomerService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -73,6 +74,10 @@ public class BankSystemFacade implements CommandLineRunner {
         accounts.forEach(a -> System.out.println("account name: " + a.getName()));
 
         accountService.deleteAccount(3L);
+
+        BigDecimal val = accountService.getAccountBalanceByCurrency(1, "GEL");
+
+        System.out.println("total is: " + val);
     }
 
     private void testCardService() {
