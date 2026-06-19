@@ -46,6 +46,7 @@ public class CardApiMapper {
         for(CardBalance balance : cardBalances){
             cardBalanceResponses.add(cardBalanceApiMapper.toCardBalanceResponse(balance));
         }
+        response.setCardBalances(cardBalanceResponses);
         return response;
     }
 }
