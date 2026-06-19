@@ -6,6 +6,7 @@ import com.oop.web_project.dto.responses.CustomerProfileResponse;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.mapping.CustomerApiMapper;
 import com.oop.web_project.services.CustomerService;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,39 +31,37 @@ public class CustomerRestController {
         return ResponseEntity.status(HttpStatus.CREATED).body("The Customer has been registered successfully.");
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<CustomerProfileResponse> getCustomerProfile(@PathVariable Long id){
-        Customer customer = customerService.getCustomerById(id);
+    @GetMapping("/{customer-id}")
+    public ResponseEntity<CustomerProfileResponse> getCustomerProfile(@NotNull @PathVariable("customer-id") Long customerId){
+        Customer customer = customerService.getCustomerById(customerId);
         CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<CustomerProfileResponse> updateCustomerProfile(@PathVariable Long id, @RequestBody @Valid CustomerUpdateRequest request){
-        customerService.updateCustomer(id, request.getFirstName(), request.getLastName(), request.getPhoneNumber(), request.getAddress());
-        Customer customer = customerService.getCustomerById(id);
+    @PutMapping("/{customer-id}")
+    public ResponseEntity<CustomerProfileResponse> updateCustomerProfile(@NotNull @PathVariable("customer-id") Long customerId, @RequestBody @Valid CustomerUpdateRequest request){
+        customerService.updateCustomer(customerId, request.getFirstName(), request.getLastName(), request.getPhoneNumber(), request.getAddress());
+        Customer customer = customerService.getCustomerById(customerId);
         CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<String> deactivateCustomer(@PathVariable Long id){
-        customerService.deactivateCustomer(id);
+    @PatchMapping("/{customer-id}/deactivate")
+    public ResponseEntity<String> deactivateCustomer(@NotNull @PathVariable("customer-id") Long customerId){
+        customerService.deactivateCustomer(customerId);
         return ResponseEntity.status(HttpStatus.OK).body("The customer has been deactivated successfully.");
     }
 
-    @PatchMapping("/{id}/activate")
-    public ResponseEntity<String> activateCustomer(@PathVariable Long id){
-        customerService.activateCustomer(id);
+    @PatchMapping("/{customer-id}/activate")
+    public ResponseEntity<String> activateCustomer(@NotNull @PathVariable("customer-id") Long customerId){
+        customerService.activateCustomer(customerId);
         return ResponseEntity.status(HttpStatus.OK).body("The customer has been activated successfully.");
     }
 
-    @DeleteMapping("/{id}/delete")
-    public ResponseEntity<String> deleteCustomer(@PathVariable Long id){
-        customerService.deleteCustomer(id);
+    @DeleteMapping("/{customer-id}/delete")
+    public ResponseEntity<String> deleteCustomer(@NotNull @PathVariable("customer-id") Long customerId){
+        customerService.deleteCustomer(customerId);
         return ResponseEntity.status(HttpStatus.OK).body("The customer has been deleted successfully.");
     }
-
-
 
 }
