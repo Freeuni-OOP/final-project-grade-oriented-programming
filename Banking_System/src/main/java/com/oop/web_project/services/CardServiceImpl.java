@@ -58,6 +58,19 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    public Card selectCardById(long cardId) {
+        return cardRepository.findById(cardId)
+                .orElseThrow(
+                        () -> new CardNotFoundException("Could could not be found!")
+                );
+    }
+
+    @Override
+    public List<CardBalance> selectCardBalances(long cardId) {
+        return cardBalanceRepository.findAllByCardId(cardId);
+    }
+
+    @Override
     @Transactional
     public void deleteCard(long cardId) {
         cardRepository.deleteById(cardId);

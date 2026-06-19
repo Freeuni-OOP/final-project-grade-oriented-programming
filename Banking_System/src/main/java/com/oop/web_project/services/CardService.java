@@ -2,6 +2,7 @@ package com.oop.web_project.services;
 
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Card;
+import com.oop.web_project.entities.CardBalance;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,6 +27,20 @@ public interface CardService {
      * Creates new card
      */
     void createCard(Card card);
+
+
+    /**
+     * Selects card by id
+     */
+    Card selectCardById(long cardId);
+
+
+    /**
+     * looks for balances in different currencies for the card and returns them
+     * @param cardId id of the card we are returning balances for
+     * @return list of balances
+     */
+    List<CardBalance> selectCardBalances(long cardId);
 
     /**
      * Looks for card with cardId in database and deletes it
