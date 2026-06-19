@@ -3,18 +3,20 @@ package com.oop.web_project.logging;
 import com.oop.web_project.annotations.Deposit;
 import com.oop.web_project.annotations.Transfer;
 import com.oop.web_project.annotations.Withdraw;
+import com.oop.web_project.entities.*;
+import com.oop.web_project.exceptions.cardExceptions.CardNotFoundException;
+import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
+import com.oop.web_project.persistence.CardRepository;
+import com.oop.web_project.persistence.CurrencyRepository;
 import com.oop.web_project.persistence.TransactionRepository;
+import com.oop.web_project.services.TransactionAuditService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 
 /**
@@ -25,10 +27,10 @@ import java.math.BigDecimal;
 @Component
 public class TransactionLoggingAspect {
 
-    private final TransactionRepository transactionRepository;
+    private final TransactionAuditService transactionAuditService;
 
-    public TransactionLoggingAspect(TransactionRepository transactionRepository) {
-        this.transactionRepository = transactionRepository;
+    public TransactionLoggingAspect(TransactionAuditService transactionAuditService) {
+        this.transactionAuditService = transactionAuditService;
     }
 
     @Around(value = "@annotation(deposit) && args(cardId, amountToAdd, currencyCode)",
@@ -36,11 +38,7 @@ public class TransactionLoggingAspect {
     public Object createDepositTransaction(ProceedingJoinPoint pjp, long cardId, BigDecimal amountToAdd,
                                            String currencyCode, Deposit deposit)
             throws Throwable {
-        System.out.println("amount to deposit start");
-        System.out.println(cardId);
-        System.out.println(amountToAdd);
-        System.out.println(currencyCode);
-        System.out.println("amount to deposit end");
+
         Object obj = pjp.proceed();
 
         return obj;
@@ -52,12 +50,10 @@ public class TransactionLoggingAspect {
                                             long cardId, BigDecimal amountToWithdraw, String currencyCode,
                                             Withdraw withdraw)
             throws Throwable {
-        System.out.println("amount to withdraw start");
-        System.out.println(cardId);
-        System.out.println(amountToWithdraw);
-        System.out.println(currencyCode);
-        System.out.println("amount to withdraw end");
-        return pjp.proceed();
+
+        Object obj = pjp.proceed();
+
+        return obj;
     }
 
     @Around(value="@annotation(transfer) && args(senderCardId, receiverCardId, amount, currencyCode)",
@@ -68,13 +64,9 @@ public class TransactionLoggingAspect {
                                                Transfer transfer)
             throws Throwable {
 
-        System.out.println("amount to transfer start");
-        System.out.println(senderCardId);
-        System.out.println(receiverCardId);
-        System.out.println(amount);
-        System.out.println(currencyCode);
-        System.out.println("amount to transfer end");
+        Object obj = pjp.proceed();
 
-        return pjp.proceed();
+
+        return obj;
     }
 }
