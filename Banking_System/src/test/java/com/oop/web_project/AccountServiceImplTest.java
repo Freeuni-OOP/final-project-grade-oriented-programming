@@ -2,6 +2,11 @@ package com.oop.web_project;
 
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Customer;
+import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyActiveException;
+import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyDeactivatedException;
+import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
+import com.oop.web_project.exceptions.cardExceptions.CardBalanceNotFoundException;
+import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
 import com.oop.web_project.persistence.AccountRepository;
 import com.oop.web_project.persistence.CardRepository;
 import com.oop.web_project.persistence.CustomerRepository;
@@ -60,14 +65,14 @@ class AccountServiceImplTest {
     @Test
     void testActivateAccountNotFoundThrowsException() {
         when(accountRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> accountService.activateAccount(1L));
+        assertThrows(AccountNotFoundException.class, () -> accountService.activateAccount(1L));
     }
 
     @Test
     void testActivateAccountAlreadyActiveThrowsException() {
         account.setActive(true);
         when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
-        assertThrows(IllegalArgumentException.class, () -> accountService.activateAccount(1L));
+        assertThrows(AccountAlreadyActiveException.class, () -> accountService.activateAccount(1L));
     }
 
     @Test
@@ -80,13 +85,13 @@ class AccountServiceImplTest {
     @Test
     void testDeactivateAccountNotFoundThrowsException() {
         when(accountRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> accountService.deactivateAccount(1L));
+        assertThrows(AccountNotFoundException.class, () -> accountService.deactivateAccount(1L));
     }
 
     @Test
     void testDeactivateAccountAlreadyInactiveThrowsException() {
         when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
-        assertThrows(IllegalArgumentException.class, () -> accountService.deactivateAccount(1L));
+        assertThrows(AccountAlreadyDeactivatedException.class, () -> accountService.deactivateAccount(1L));
     }
 
     @Test
@@ -100,7 +105,7 @@ class AccountServiceImplTest {
     @Test
     void testDeleteAccountNotFoundThrowsException() {
         when(accountRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> accountService.deleteAccount(1L));
+        assertThrows(AccountNotFoundException.class, () -> accountService.deleteAccount(1L));
     }
 
     @Test
@@ -123,7 +128,7 @@ class AccountServiceImplTest {
     @Test
     void testSelectAccountByIdNotFoundThrowsException() {
         when(accountRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> accountService.selectAccountById(1L));
+        assertThrows(AccountNotFoundException.class, () -> accountService.selectAccountById(1L));
     }
 
     @Test
@@ -145,7 +150,7 @@ class AccountServiceImplTest {
     @Test
     void testUpdateAccountNotFoundThrowsException() {
         when(accountRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> accountService.updateAccount(1L, "account name"));
+        assertThrows(AccountNotFoundException.class, () -> accountService.updateAccount(1L, "account name"));
     }
 
     @Test
@@ -162,14 +167,14 @@ class AccountServiceImplTest {
     @Test
     void testRegisterCustomerToAccountAccountNotFoundThrowsException() {
         when(accountRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> accountService.registerCustomerToAccount(1L, 1L));
+        assertThrows(AccountNotFoundException.class, () -> accountService.registerCustomerToAccount(1L, 1L));
     }
 
     @Test
     void testRegisterCustomerToAccountCustomerNotFoundThrowsException() {
         when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
         when(customerRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> accountService.registerCustomerToAccount(1L, 1L));
+        assertThrows(CustomerNotFoundException.class, () -> accountService.registerCustomerToAccount(1L, 1L));
     }
 
     @Test
@@ -194,6 +199,6 @@ class AccountServiceImplTest {
     @Test
     void testGetAccountBalanceByCurrencyNotFoundThrowsException() {
         when(cardRepository.getBalanceForAccount(1L, "USD")).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> accountService.getAccountBalanceByCurrency(1L, "USD"));
+        assertThrows(CardBalanceNotFoundException.class, () -> accountService.getAccountBalanceByCurrency(1L, "USD"));
     }
 }
