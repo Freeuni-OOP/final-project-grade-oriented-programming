@@ -1,5 +1,6 @@
 package com.oop.web_project.mapping;
 
+import com.oop.web_project.dto.requests.CustomerLoginRequest;
 import com.oop.web_project.dto.requests.CustomerRegistrationRequest;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.entities.Role;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 public class CustomerApiMapper {
 
 
-    public Customer toCustomer(CustomerRegistrationRequest request){
+    public Customer toCustomerOnRegistration(CustomerRegistrationRequest request){
         Customer customer = new Customer();
         customer.setFirstName(request.getFirstName());
         customer.setLastName(request.getLastName());
@@ -26,4 +27,8 @@ public class CustomerApiMapper {
         customer.setRole(Role.STANDARD);
         return customer;
     }
+
+//    public Customer toCustomerOnLogin(CustomerLoginRequest request){
+//        Customer customer = new Customer();
+//    }
 }
