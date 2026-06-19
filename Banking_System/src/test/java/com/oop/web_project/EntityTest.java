@@ -102,7 +102,7 @@ class AccountTest {
 class CardTest {
 
     private Card createCard() {
-        CardBrand brand = new CardBrand(1L, "Visa", null);
+        CardBrand brand = CardBrand.VISA;
         Account account = new Account(1L, "Main Account", AccountCategory.CHECKING,
                 LocalDate.of(2022, 1, 1), true, null, null, null);
         return new Card(1L, CardType.DEBIT, brand, account, BigDecimal.valueOf(5000),
@@ -145,17 +145,17 @@ class CardTest {
     void testGetBrandReturnsCorrectValue() {
         Card card = createCard();
 
-        assertEquals("Visa", card.getBrand().getName());
+        assertEquals(CardBrand.VISA, card.getBrand());
     }
 
     @Test
     void testSetBrandUpdatesValue() {
         Card card = createCard();
-        CardBrand mastercard = new CardBrand(2L, "Mastercard", null);
+        CardBrand mastercard = CardBrand.MASTERCARD;
 
         card.setBrand(mastercard);
 
-        assertEquals("Mastercard", card.getBrand().getName());
+        assertEquals(CardBrand.MASTERCARD, card.getBrand());
     }
 
     @Test
@@ -334,40 +334,7 @@ class CardBalanceTest {
     }
 }
 
-class CardBrandTest {
 
-    @Test
-    void testGetIdReturnsCorrectValue() {
-        CardBrand brand = new CardBrand(1L, "Visa", null);
-
-        assertEquals(1L, brand.getId());
-    }
-
-    @Test
-    void testSetIdUpdatesValue() {
-        CardBrand brand = new CardBrand(1L, "Visa", null);
-
-        brand.setId(2L);
-
-        assertEquals(2L, brand.getId());
-    }
-
-    @Test
-    void testGetNameReturnsCorrectValue() {
-        CardBrand brand = new CardBrand(1L, "Visa", null);
-
-        assertEquals("Visa", brand.getName());
-    }
-
-    @Test
-    void testSetNameUpdatesValue() {
-        CardBrand brand = new CardBrand(1L, "Visa", null);
-
-        brand.setName("Mastercard");
-
-        assertEquals("Mastercard", brand.getName());
-    }
-}
 
 class CurrencyTest {
 

@@ -9,6 +9,6 @@ public class CardApiMapper {
 
     public CardResponse toCardResponse(Card card){
         CardResponse response = new CardResponse();
-
+        return null;
     }
 }

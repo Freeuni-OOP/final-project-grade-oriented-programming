@@ -28,8 +28,8 @@ public class Card {
     @Column(name = "Card_type", nullable = false)
     private CardType type;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "Brand_id", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "Brand", nullable = false)
     private CardBrand brand;
 
     @ManyToOne

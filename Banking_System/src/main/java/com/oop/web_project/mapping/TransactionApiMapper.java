@@ -8,6 +8,6 @@ import org.springframework.stereotype.Component;
 public class TransactionApiMapper {
 
     public TransactionResponse toTransactionResponse(Transaction transaction){
-
+        return null;
     }
 }
