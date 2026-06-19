@@ -516,7 +516,7 @@ class CurrencyExchangeTest {
 class CustomerTest {
 
     private Customer createCustomer() {
-        Role role = new Role(1L, RoleName.STANDARD, null, null);
+        Role role = Role.STANDARD;
         return new Customer(1L, "Giorgi", "Maisuradze", "555123456",
                 "Tbilisi, Rustaveli 1", LocalDate.of(1995, 3, 20),
                 "giorgi@example.com", "hashed_pw_123", true, role, null);
@@ -654,89 +654,23 @@ class CustomerTest {
     void testGetRoleReturnsCorrectValue() {
         Customer customer = createCustomer();
 
-        assertEquals(RoleName.STANDARD, customer.getRole().getName());
+        assertEquals(Role.STANDARD, customer.getRole());
     }
 
     @Test
     void testSetRoleUpdatesValue() {
         Customer customer = createCustomer();
-        Role adminRole = new Role(2L, RoleName.ADMIN, null, null);
+        Role adminRole = Role.ADMIN;
 
         customer.setRole(adminRole);
 
-        assertEquals(RoleName.ADMIN, customer.getRole().getName());
+        assertEquals(Role.ADMIN, customer.getRole());
     }
 }
 
-class PermissionTest {
 
-    @Test
-    void testGetIdReturnsCorrectValue() {
-        Permission permission = new Permission(1L, "READ", null);
 
-        assertEquals(1L, permission.getId());
-    }
 
-    @Test
-    void testSetIdUpdatesValue() {
-        Permission permission = new Permission(1L, "READ", null);
-
-        permission.setId(2L);
-
-        assertEquals(2L, permission.getId());
-    }
-
-    @Test
-    void testGetNameReturnsCorrectValue() {
-        Permission permission = new Permission(1L, "READ", null);
-
-        assertEquals("READ", permission.getName());
-    }
-
-    @Test
-    void testSetNameUpdatesValue() {
-        Permission permission = new Permission(1L, "READ", null);
-
-        permission.setName("WRITE");
-
-        assertEquals("WRITE", permission.getName());
-    }
-}
-
-class RoleTest {
-
-    @Test
-    void testGetIdReturnsCorrectValue() {
-        Role role = new Role(1L, RoleName.ADMIN, null, null);
-
-        assertEquals(1L, role.getId());
-    }
-
-    @Test
-    void testSetIdUpdatesValue() {
-        Role role = new Role(1L, RoleName.ADMIN, null,  null);
-
-        role.setId(3L);
-
-        assertEquals(3L, role.getId());
-    }
-
-    @Test
-    void testGetNameReturnsCorrectValue() {
-        Role role = new Role(1L, RoleName.ADMIN, null,  null);
-
-        assertEquals(RoleName.ADMIN, role.getName());
-    }
-
-    @Test
-    void testSetNameUpdatesValue() {
-        Role role = new Role(1L, RoleName.ADMIN, null,  null);
-
-        role.setName(RoleName.MANAGER);
-
-        assertEquals(RoleName.MANAGER, role.getName());
-    }
-}
 
 class ServiceCategoryTest {
 

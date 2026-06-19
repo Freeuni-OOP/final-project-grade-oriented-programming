@@ -48,8 +48,8 @@ public class Customer {
     @Column(name = "Is_active")
     private boolean isActive;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "Role_id")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "Role")
     private Role role;
 
     @ManyToMany(mappedBy = "customers")
