@@ -1,5 +1,6 @@
 package com.oop.web_project.mapping;
 
+import com.oop.web_project.dto.requests.CardCreationRequest;
 import com.oop.web_project.dto.responses.CardBalanceResponse;
 import com.oop.web_project.dto.responses.CardResponse;
 import com.oop.web_project.entities.Card;
@@ -18,6 +19,19 @@ public class CardApiMapper {
         this.cardBalanceApiMapper = cardBalanceApiMapper;
     }
 
+//    public Card toCardOnCardCreation(CardCreationRequest cardCreationRequest) {
+//        return new Card(
+//                null,
+//                cardCreationRequest.getCardType(),
+//                cardCreationRequest.getCardBrand(),
+//                null,
+//                cardCreationRequest.getSpendingLimit(),
+//
+//
+//        );
+//    }
+
+
     public CardResponse toCardResponse(Card card){
         CardResponse response = new CardResponse();
         response.setType(card.getType());
@@ -32,6 +46,7 @@ public class CardApiMapper {
         for(CardBalance balance : cardBalances){
             cardBalanceResponses.add(cardBalanceApiMapper.toCardBalanceResponse(balance));
         }
+        response.setCardBalances(cardBalanceResponses);
         return response;
     }
 }
