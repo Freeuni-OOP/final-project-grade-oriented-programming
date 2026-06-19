@@ -70,7 +70,7 @@ class TransactionAuditServiceImplTest {
         when(currencyRepository.findCurrencyByCode("USD")).thenReturn(Optional.of(currency));
         when(transactionRepository.save(any(Transaction.class))).thenReturn(saved);
 
-        Transaction result = transactionAuditService.savePending(3L, amount, "USD", description);
+        Transaction result = transactionAuditService.savePending(3L, amount, "USD", description, TransactionType.DEPOSIT);
 
         assertNotNull(result);
         assertEquals(TransactionStatus.PENDING, result.getStatus());
@@ -87,7 +87,7 @@ class TransactionAuditServiceImplTest {
         when(currencyRepository.findCurrencyByCode("USD")).thenReturn(Optional.of(currency));
         when(transactionRepository.save(any(Transaction.class))).thenReturn(new Transaction());
 
-        transactionAuditService.savePending(3L, amount, "USD", description);
+        transactionAuditService.savePending(3L, amount, "USD", description, TransactionType.DEPOSIT);
 
         verify(transactionRepository, times(1)).save(any(Transaction.class));
     }
@@ -100,7 +100,7 @@ class TransactionAuditServiceImplTest {
         when(currencyRepository.findCurrencyByCode("USD")).thenReturn(Optional.of(currency));
         when(transactionRepository.save(any(Transaction.class))).thenReturn(new Transaction());
 
-        transactionAuditService.savePending(3L, amount, "USD", description);
+        transactionAuditService.savePending(3L, amount, "USD", description, TransactionType.DEPOSIT);
 
         verify(transactionRepository).save(captor.capture());
         assertNotNull(captor.getValue().getTimeStamp());
@@ -111,7 +111,7 @@ class TransactionAuditServiceImplTest {
         when(cardRepository.findById(3L)).thenReturn(Optional.empty());
 
         assertThrows(CardNotFoundException.class,
-                () -> transactionAuditService.savePending(3L, amount, "USD", description));
+                () -> transactionAuditService.savePending(3L, amount, "USD", description, TransactionType.DEPOSIT));
 
         verifyNoInteractions(transactionRepository);
     }
@@ -122,7 +122,7 @@ class TransactionAuditServiceImplTest {
         when(currencyRepository.findCurrencyByCode("USD")).thenReturn(Optional.empty());
 
         assertThrows(CurrencyNotFoundException.class,
-                () -> transactionAuditService.savePending(3L, amount, "USD", description));
+                () -> transactionAuditService.savePending(3L, amount, "USD", description, TransactionType.DEPOSIT));
 
         verifyNoInteractions(transactionRepository);
     }

@@ -2,6 +2,7 @@ package com.oop.web_project.services;
 
 import com.oop.web_project.entities.Transaction;
 import com.oop.web_project.entities.TransactionStatus;
+import com.oop.web_project.entities.TransactionType;
 
 import java.math.BigDecimal;
 
@@ -14,7 +15,8 @@ public interface TransactionAuditService {
      * @param description description of the transaction
      * @return instance of the transaction we have saved
      */
-    Transaction savePending(long cardId, BigDecimal amount, String currencyCode, String description);
+    Transaction savePending(long cardId, BigDecimal amount, String currencyCode, String description,
+                            TransactionType transactionType);
 
     /**
      * Updates the status of the transaction

@@ -1,22 +1,16 @@
 package com.oop.web_project.logging;
 
 import com.oop.web_project.annotations.Deposit;
+import com.oop.web_project.annotations.Exchange;
 import com.oop.web_project.annotations.Transfer;
 import com.oop.web_project.annotations.Withdraw;
 import com.oop.web_project.entities.*;
-import com.oop.web_project.exceptions.cardExceptions.CardNotFoundException;
-import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
-import com.oop.web_project.persistence.CardRepository;
-import com.oop.web_project.persistence.CurrencyRepository;
-import com.oop.web_project.persistence.TransactionRepository;
 import com.oop.web_project.services.TransactionAuditService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 
 /**
@@ -39,8 +33,20 @@ public class TransactionLoggingAspect {
                                            String currencyCode, Deposit deposit)
             throws Throwable {
 
-        Object obj = pjp.proceed();
+        Transaction transaction =
+                transactionAuditService.savePending(cardId, amountToAdd, currencyCode,
+                        "Deposit of %s %s to card with id %s".formatted(amountToAdd, currencyCode, cardId)
+                        ,TransactionType.DEPOSIT);
 
+        Object obj;
+        try {
+            obj = pjp.proceed();
+        } catch (Throwable t) {
+            transactionAuditService.updateStatus(transaction, TransactionStatus.FAILED);
+            throw t;
+        }
+
+        transactionAuditService.updateStatus(transaction, TransactionStatus.COMPLETE);
         return obj;
     }
 
@@ -51,8 +57,21 @@ public class TransactionLoggingAspect {
                                             Withdraw withdraw)
             throws Throwable {
 
-        Object obj = pjp.proceed();
+        Transaction transaction =
+                transactionAuditService.savePending(cardId, amountToWithdraw.negate(), currencyCode,
+                        "Withdraw of %s %s from card with id %s".formatted(amountToWithdraw, currencyCode, cardId),
+                        TransactionType.WITHDRAWAL);
 
+        Object obj;
+
+        try {
+            obj = pjp.proceed();
+        } catch (Throwable t) {
+            transactionAuditService.updateStatus(transaction, TransactionStatus.FAILED);
+            throw t;
+        }
+
+        transactionAuditService.updateStatus(transaction, TransactionStatus.COMPLETE);
         return obj;
     }
 
@@ -64,9 +83,63 @@ public class TransactionLoggingAspect {
                                                Transfer transfer)
             throws Throwable {
 
-        Object obj = pjp.proceed();
+        Transaction fromTransaction = transactionAuditService.savePending(senderCardId, amount.negate(), currencyCode,
+                "transfer of %s %s from card with id %s to card with id %s"
+                        .formatted(amount, currencyCode, senderCardId, receiverCardId),
+                TransactionType.TRANSFER_OUT);
 
+        Transaction toTransaction = transactionAuditService.savePending(receiverCardId, amount, currencyCode,
+                "transfer of %s %s to card with id %s from card with id %s".
+                        formatted(amount, currencyCode, receiverCardId, senderCardId),
+                TransactionType.TRANSFER_IN);
 
+        fromTransaction.setReverseTransaction(toTransaction);
+        fromTransaction.setRelatedTransaction(toTransaction);
+
+        toTransaction.setRelatedTransaction(fromTransaction);
+        toTransaction.setReverseTransaction(fromTransaction);
+
+        Object obj;
+
+        try {
+            obj = pjp.proceed();
+        } catch (Throwable t) {
+            transactionAuditService.updateStatus(fromTransaction, TransactionStatus.FAILED);
+            transactionAuditService.updateStatus(toTransaction, TransactionStatus.FAILED);
+            throw t;
+        }
+
+        transactionAuditService.updateStatus(fromTransaction, TransactionStatus.COMPLETE);
+        transactionAuditService.updateStatus(toTransaction, TransactionStatus.COMPLETE);
+        return obj;
+    }
+
+    @Around(value="@annotation(exchange) && args(cardId, amount, fromCurrencyCode, toCurrencyCode)",
+            argNames = "pjp,cardId,amount,fromCurrencyCode,toCurrencyCode,exchange")
+    public Object createCurrencyChangeTransactions(ProceedingJoinPoint pjp, long cardId,
+                                                   BigDecimal amount,
+                                                   String fromCurrencyCode, String toCurrencyCode,
+                                                   Exchange exchange)
+    throws Throwable {
+
+        Transaction transaction = transactionAuditService.savePending(
+                cardId,
+                amount,
+                fromCurrencyCode,
+                "Exchanging %s from %s to %s".formatted(amount,fromCurrencyCode, toCurrencyCode),
+                TransactionType.CURRENCY_EXCHANGE
+        );
+
+        Object obj;
+
+        try {
+            obj = pjp.proceed();
+        } catch (Throwable t) {
+            transactionAuditService.updateStatus(transaction, TransactionStatus.FAILED);
+            throw t;
+        }
+
+        transactionAuditService.updateStatus(transaction, TransactionStatus.COMPLETE);
         return obj;
     }
 }

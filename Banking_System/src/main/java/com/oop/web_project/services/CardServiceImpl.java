@@ -1,5 +1,6 @@
 package com.oop.web_project.services;
 import com.oop.web_project.annotations.Deposit;
+import com.oop.web_project.annotations.Exchange;
 import com.oop.web_project.annotations.Transfer;
 import com.oop.web_project.annotations.Withdraw;
 import com.oop.web_project.entities.*;
@@ -136,6 +137,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Exchange
     @Transactional
     public void changeCurrency(long cardId, BigDecimal amount, String fromCurrencyCode, String toCurrencyCode) {
 

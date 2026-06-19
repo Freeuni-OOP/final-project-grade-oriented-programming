@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Service
 public class TransactionAuditServiceImpl implements TransactionAuditService{
@@ -29,7 +30,8 @@ public class TransactionAuditServiceImpl implements TransactionAuditService{
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
-    public Transaction savePending(long cardId, BigDecimal amount, String currencyCode, String description) {
+    public Transaction savePending(long cardId, BigDecimal amount, String currencyCode, String description,
+                                   TransactionType transactionType) {
         Card card = cardRepository.findById(cardId)
                 .orElseThrow(
                         () -> new CardNotFoundException("Card could not be found!")
@@ -43,12 +45,12 @@ public class TransactionAuditServiceImpl implements TransactionAuditService{
                 );
 
         Transaction transaction = Transaction.builder()
-                .transactionType(TransactionType.DEPOSIT)
+                .transactionType(transactionType)
                 .account(account)
                 .amount(amount)
                 .currency(currency)
                 .description(description)
-                .timeStamp(LocalDateTime.now())
+                .timeStamp(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
                 .status(TransactionStatus.PENDING)
                 .build();
         return transactionRepository.save(transaction);
