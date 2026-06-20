@@ -30,7 +30,7 @@ public class CardApiMapper {
                 cardCreationRequest.getSpendingLimit(),
                 LocalDate.now().plusYears(5),
                 CardSecurityUtils.maskPan(cardCreationRequest.getPan()),
-                CardSecurityUtils.maskPan(cardCreationRequest.getPan()),
+                CardSecurityUtils.generateToken(cardCreationRequest.getPan()),
                 true,
                 null
         );
