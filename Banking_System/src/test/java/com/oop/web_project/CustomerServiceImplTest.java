@@ -88,40 +88,40 @@ class CustomerServiceImplTest {
 
     @Test
     void testActivateCustomerNotFoundThrowsException() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.empty());
+        when(customerRepository.findWithLockById(1L)).thenReturn(Optional.empty());
         assertThrows(CustomerNotFoundException.class, () -> customerService.activateCustomer(1L));
     }
 
     @Test
     void testActivateCustomerAlreadyActiveThrowsException() {
         customer.setActive(true);
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerRepository.findWithLockById(1L)).thenReturn(Optional.of(customer));
         assertThrows(CustomerAlreadyActiveException.class, () -> customerService.activateCustomer(1L));
     }
 
     @Test
     void testActivateCustomerInactiveActivatesCustomer() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerRepository.findWithLockById(1L)).thenReturn(Optional.of(customer));
         customerService.activateCustomer(1L);
         assertTrue(customer.isActive());
     }
 
     @Test
     void testDeactivateCustomerNotFoundThrowsException() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.empty());
+        when(customerRepository.findWithLockById(1L)).thenReturn(Optional.empty());
         assertThrows(CustomerNotFoundException.class, () -> customerService.deactivateCustomer(1L));
     }
 
     @Test
     void testDeactivateCustomerAlreadyInactiveThrowsException() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerRepository.findWithLockById(1L)).thenReturn(Optional.of(customer));
         assertThrows(CustomerAlreadyDeactivatedException.class, () -> customerService.deactivateCustomer(1L));
     }
 
     @Test
     void testDeactivateCustomerActiveDeactivatesCustomer() {
         customer.setActive(true);
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerRepository.findWithLockById(1L)).thenReturn(Optional.of(customer));
         customerService.deactivateCustomer(1L);
         assertFalse(customer.isActive());
     }
@@ -141,7 +141,7 @@ class CustomerServiceImplTest {
 
     @Test
     void testUpdateCustomerNotFoundThrowsException() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.empty());
+        when(customerRepository.findWithLockById(1L)).thenReturn(Optional.empty());
         assertThrows(CustomerNotFoundException.class, () -> customerService.updateCustomer(1L, null, null, null, null));
     }
 
@@ -150,7 +150,7 @@ class CustomerServiceImplTest {
         Customer existingCustomer = new Customer();
         existingCustomer.setId(1L);
         existingCustomer.setFirstName("Old");
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(existingCustomer));
+        when(customerRepository.findWithLockById(1L)).thenReturn(Optional.of(existingCustomer));
         Customer updatedData = new Customer();
         updatedData.setId(99L);
         updatedData.setFirstName("New");

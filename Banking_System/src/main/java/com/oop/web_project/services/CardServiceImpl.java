@@ -7,7 +7,8 @@ import com.oop.web_project.entities.*;
 import com.oop.web_project.exceptions.cardExceptions.*;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
 import com.oop.web_project.persistence.*;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -39,7 +40,7 @@ public class CardServiceImpl implements CardService {
     @Override
     @Transactional
     public void activateCard(long cardId) {
-        Card card = cardRepository.findById(cardId).orElseThrow(
+        Card card = cardRepository.findWithLockById(cardId).orElseThrow(
                 () -> new CardNotFoundException("card cannot be found!"));
         if(card.isActive()) {
             throw new CardAlreadyActiveException("card is already active!");
@@ -50,7 +51,7 @@ public class CardServiceImpl implements CardService {
     @Override
     @Transactional
     public void deactivateCard(long cardId) {
-        Card card = cardRepository.findById(cardId).orElseThrow(
+        Card card = cardRepository.findWithLockById(cardId).orElseThrow(
                 () -> new CardNotFoundException("card cannot be found!"));
         if(!card.isActive()) {
             throw new CardAlreadyDeactivatedException("card is already inactive!");
@@ -95,8 +96,11 @@ public class CardServiceImpl implements CardService {
                 card,
                 currency
         );
-
-        cardBalanceRepository.save(cardBalance);
+        try {
+            cardBalanceRepository.saveAndFlush(cardBalance);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicateCurrencyException("Card already has a balance for this currency!");
+        }
     }
 
     @Override
@@ -155,6 +159,9 @@ public class CardServiceImpl implements CardService {
     @Transfer
     @Transactional
     public void transferMoney(long senderCardId, long receiverCardId, BigDecimal amount, String currencyCode) {
+        if(senderCardId == receiverCardId){
+            throw new SameCardTransferException("Tried to transfer to the same card!");
+        }
         Card receiverCard = cardRepository.findById(receiverCardId)
                 .orElseThrow(
                         () -> new CardNotFoundException("Card could not be found!")
@@ -183,7 +190,9 @@ public class CardServiceImpl implements CardService {
     @Exchange
     @Transactional
     public void changeCurrency(long cardId, BigDecimal amount, String fromCurrencyCode, String toCurrencyCode) {
-
+        if(fromCurrencyCode.equals(toCurrencyCode)){
+            throw new DuplicateCurrencyException("Tried to exchange the same currency");
+        }
         FetchedBalances fetchedBalances =
                 safeFetchBalances(cardId, cardId, fromCurrencyCode, toCurrencyCode);
 

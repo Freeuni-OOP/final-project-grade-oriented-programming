@@ -39,6 +39,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
     }
 
+    @ExceptionHandler(SameCardTransferException.class)
+    public ResponseEntity<String> handleSameCardTransfer(SameCardTransferException e){
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateCurrencyException.class)
+    public ResponseEntity<String> handleDuplicateCurrency(DuplicateCurrencyException e){
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
+    }
+
     @ExceptionHandler(CardAlreadyDeactivatedException.class)
     public ResponseEntity<String> handleDeactivatedCard(CardAlreadyDeactivatedException e) {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
