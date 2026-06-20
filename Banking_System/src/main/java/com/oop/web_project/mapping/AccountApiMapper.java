@@ -16,12 +16,13 @@ public class AccountApiMapper {
 
     private final TransactionApiMapper transactionApiMapper;
     private final CardApiMapper cardApiMapper;
-    private final CustomerApiMapper customerApiMapper;
+    private final CustomerSummaryApiMapper customerSummaryApiMapper;
 
-    public AccountApiMapper(TransactionApiMapper transactionApiMapper, CardApiMapper cardApiMapper, CustomerApiMapper customerApiMapper){
+    public AccountApiMapper(TransactionApiMapper transactionApiMapper, CardApiMapper cardApiMapper,
+                            CustomerSummaryApiMapper customerSummaryApiMapper){
         this.transactionApiMapper = transactionApiMapper;
         this.cardApiMapper = cardApiMapper;
-        this.customerApiMapper = customerApiMapper;
+        this.customerSummaryApiMapper = customerSummaryApiMapper;
     }
 
     public AccountProfileResponse toProfileResponse(Account account){
@@ -45,7 +46,7 @@ public class AccountApiMapper {
         List<Customer> customers = account.getCustomers();
         List<CustomerSummaryResponse> customerResponses = new ArrayList<>();
         for(Customer customer : customers){
-            customerResponses.add(customerApiMapper.toSummaryResponse(customer));
+            customerResponses.add(customerSummaryApiMapper.toSummaryResponse(customer));
         }
         response.setCustomers(customerResponses);
         return response;

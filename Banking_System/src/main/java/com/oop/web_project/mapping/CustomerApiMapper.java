@@ -15,10 +15,10 @@ import java.util.List;
 @Component
 public class CustomerApiMapper {
 
-    private final AccountApiMapper accountApiMapper;
+    private final AccountSummaryApiMapper accountSummaryApiMapper;
 
-    public CustomerApiMapper(AccountApiMapper accountApiMapper){
-        this.accountApiMapper = accountApiMapper;
+    public CustomerApiMapper(AccountSummaryApiMapper accountSummaryApiMapper) {
+        this.accountSummaryApiMapper = accountSummaryApiMapper;
     }
 
 
@@ -48,7 +48,7 @@ public class CustomerApiMapper {
         List<AccountSummaryResponse> summaryAccounts = new ArrayList<>();
         List<Account> accounts = customer.getAccounts();
         for(Account account : accounts){
-            summaryAccounts.add(accountApiMapper.toAccountSummaryResponse(account));
+            summaryAccounts.add(accountSummaryApiMapper.toAccountSummaryResponse(account));
         }
         response.setAccounts(summaryAccounts);
         return response;
