@@ -64,40 +64,40 @@ class AccountServiceImplTest {
 
     @Test
     void testActivateAccountNotFoundThrowsException() {
-        when(accountRepository.findById(1L)).thenReturn(Optional.empty());
+        when(accountRepository.findWithLockById(1L)).thenReturn(Optional.empty());
         assertThrows(AccountNotFoundException.class, () -> accountService.activateAccount(1L));
     }
 
     @Test
     void testActivateAccountAlreadyActiveThrowsException() {
         account.setActive(true);
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+        when(accountRepository.findWithLockById(1L)).thenReturn(Optional.of(account));
         assertThrows(AccountAlreadyActiveException.class, () -> accountService.activateAccount(1L));
     }
 
     @Test
     void testActivateAccountInactiveActivatesAccount() {
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+        when(accountRepository.findWithLockById(1L)).thenReturn(Optional.of(account));
         accountService.activateAccount(1L);
         assertTrue(account.isActive());
     }
 
     @Test
     void testDeactivateAccountNotFoundThrowsException() {
-        when(accountRepository.findById(1L)).thenReturn(Optional.empty());
+        when(accountRepository.findWithLockById(1L)).thenReturn(Optional.empty());
         assertThrows(AccountNotFoundException.class, () -> accountService.deactivateAccount(1L));
     }
 
     @Test
     void testDeactivateAccountAlreadyInactiveThrowsException() {
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+        when(accountRepository.findWithLockById(1L)).thenReturn(Optional.of(account));
         assertThrows(AccountAlreadyDeactivatedException.class, () -> accountService.deactivateAccount(1L));
     }
 
     @Test
     void testDeactivateAccountActiveDeactivatesAccount() {
         account.setActive(true);
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+        when(accountRepository.findWithLockById(1L)).thenReturn(Optional.of(account));
         accountService.deactivateAccount(1L);
         assertFalse(account.isActive());
     }
@@ -149,7 +149,7 @@ class AccountServiceImplTest {
 
     @Test
     void testUpdateAccountNotFoundThrowsException() {
-        when(accountRepository.findById(1L)).thenReturn(Optional.empty());
+        when(accountRepository.findWithLockById(1L)).thenReturn(Optional.empty());
         assertThrows(AccountNotFoundException.class, () -> accountService.updateAccount(1L, "account name"));
     }
 
@@ -158,7 +158,7 @@ class AccountServiceImplTest {
         Account existingAccount = new Account();
         existingAccount.setId(1L);
         existingAccount.setName("Old Name");
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(existingAccount));
+        when(accountRepository.findWithLockById(1L)).thenReturn(Optional.of(existingAccount));
         accountService.updateAccount(1L, "New Name");
         assertEquals("New Name", existingAccount.getName());
         assertEquals(1L, existingAccount.getId());

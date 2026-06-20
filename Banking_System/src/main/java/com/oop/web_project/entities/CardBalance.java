@@ -14,7 +14,11 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Entity
-@Table(name = "Card_balances")
+@Table(name = "Card_balances",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uq_card_currency",
+                columnNames = {"Card_id", "Currency_id"}
+        ))
 public class CardBalance {
 
     @Column(name = "Card_balance_id")

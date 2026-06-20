@@ -15,10 +15,12 @@ import java.util.Optional;
 @Repository
 public interface CardRepository extends JpaRepository<Card, Long> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT SUM(b.amount) FROM CardBalance b WHERE b.card.account.id = :accountId AND b.currency.code = :currencyCode")
     Optional<BigDecimal> getBalanceForAccount(@Param("accountId")long accountId,
                                               @Param("currencyCode") String currencyCode);
 
     List<Card> getAllByAccountId(long accountId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Card> findWithLockById(long id);
 }
