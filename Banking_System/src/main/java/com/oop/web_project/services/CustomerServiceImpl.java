@@ -54,7 +54,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public void activateCustomer(long customerId) {
-        Customer customer = customerRepository.findById(customerId).orElseThrow(
+        Customer customer = customerRepository.findWithLockById(customerId).orElseThrow(
                 () -> new CustomerNotFoundException("customer cannot be found!"));
         if(customer.isActive()) {
             throw new CustomerAlreadyActiveException("customer is already active!");
@@ -65,7 +65,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public void deactivateCustomer(long customerId) {
-        Customer customer = customerRepository.findById(customerId).orElseThrow(
+        Customer customer = customerRepository.findWithLockById(customerId).orElseThrow(
                 () -> new CustomerNotFoundException("customer cannot be found!"));
         if(!customer.isActive()) {
             throw new CustomerAlreadyDeactivatedException("customer is already inactive!");
@@ -92,7 +92,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public void updateCustomer(long customerId, String firstName, String lastName, String phoneNumber, String address) {
-        Customer existingCustomer =  customerRepository.findById(customerId)
+        Customer existingCustomer =  customerRepository.findWithLockById(customerId)
                 .orElseThrow(
                         () -> new CustomerNotFoundException("customer cannot be found")
                 );

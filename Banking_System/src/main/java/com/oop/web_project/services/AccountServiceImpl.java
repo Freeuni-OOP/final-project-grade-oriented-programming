@@ -10,7 +10,6 @@ import com.oop.web_project.persistence.AccountRepository;
 import com.oop.web_project.persistence.CardRepository;
 import com.oop.web_project.persistence.CustomerRepository;
 import com.oop.web_project.persistence.TransactionRepository;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +43,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public void activateAccount(long accountId) {
-        Account account = accountRepository.findById(accountId).orElseThrow(
+        Account account = accountRepository.findWithLockById(accountId).orElseThrow(
                 () -> new AccountNotFoundException("account cannot be found!"));
         if(account.isActive()) {
             throw new AccountAlreadyActiveException("account is already active!");
@@ -55,7 +54,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public void deactivateAccount(long accountId) {
-        Account account = accountRepository.findById(accountId).orElseThrow(
+        Account account = accountRepository.findWithLockById(accountId).orElseThrow(
                 () -> new AccountNotFoundException("account cannot be found!"));
         if(!account.isActive()) {
             throw new AccountAlreadyDeactivatedException("account is already inactive!");
@@ -110,7 +109,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public void updateAccount(long accountId, String accountName) {
-        Account existingAccount = accountRepository.findById(accountId).orElseThrow(
+        Account existingAccount = accountRepository.findWithLockById(accountId).orElseThrow(
                 () -> new AccountNotFoundException("such account does not exist!")
         );
         if(accountName != null)existingAccount.setName(accountName);
@@ -130,7 +129,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public BigDecimal getAccountBalanceByCurrency(long accountId, String currencyCode) {
         return cardRepository.getBalanceForAccount(accountId, currencyCode).orElseThrow(
                 () -> new CardBalanceNotFoundException("Could not determine balance of the account!")

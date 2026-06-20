@@ -66,40 +66,40 @@ class CardServiceImplTest {
 
     @Test
     void testActivateCardNotFoundThrowsException() {
-        when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+        when(cardRepository.findWithLockById(1L)).thenReturn(Optional.empty());
         assertThrows(CardNotFoundException.class, () -> cardService.activateCard(1L));
     }
 
     @Test
     void testActivateCardAlreadyActiveThrowsException() {
         card.setActive(true);
-        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        when(cardRepository.findWithLockById(1L)).thenReturn(Optional.of(card));
         assertThrows(CardAlreadyActiveException.class, () -> cardService.activateCard(1L));
     }
 
     @Test
     void testActivateCardInactiveActivatesCard() {
-        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        when(cardRepository.findWithLockById(1L)).thenReturn(Optional.of(card));
         cardService.activateCard(1L);
         assertTrue(card.isActive());
     }
 
     @Test
     void testDeactivateCardNotFoundThrowsException() {
-        when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+        when(cardRepository.findWithLockById(1L)).thenReturn(Optional.empty());
         assertThrows(CardNotFoundException.class, () -> cardService.deactivateCard(1L));
     }
 
     @Test
     void testDeactivateCardAlreadyInactiveThrowsException() {
-        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        when(cardRepository.findWithLockById(1L)).thenReturn(Optional.of(card));
         assertThrows(CardAlreadyDeactivatedException.class, () -> cardService.deactivateCard(1L));
     }
 
     @Test
     void testDeactivateCardActiveDeactivatesCard() {
         card.setActive(true);
-        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        when(cardRepository.findWithLockById(1L)).thenReturn(Optional.of(card));
         cardService.deactivateCard(1L);
         assertFalse(card.isActive());
     }
