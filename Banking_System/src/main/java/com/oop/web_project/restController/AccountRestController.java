@@ -53,7 +53,7 @@ public class AccountRestController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @DeleteMapping("/{account-id}}")
+    @DeleteMapping("/{account-id}")
     public ResponseEntity<String> deleteAccount(@PathVariable("account-id") Long accountId) {
         accountService.deleteAccount(accountId);
         return ResponseEntity.status(HttpStatus.OK).body("Account has been successfully deleted.");
@@ -69,7 +69,7 @@ public class AccountRestController {
         return ResponseEntity.status(HttpStatus.OK).body(summaryResponses);
     }
 
-    @GetMapping("/{customer-id}")
+    @GetMapping("/customer/{customer-id}")
     public ResponseEntity<List<AccountProfileResponse>> getAccountWithCustomerId(@PathVariable("customer-id") Long customerId) {
         List<Account> accounts = accountService.selectAccountsByCustomerId(customerId);
         List<AccountProfileResponse> profileResponses = new ArrayList<>();
@@ -91,7 +91,7 @@ public class AccountRestController {
         return ResponseEntity.ok("Successfully registered");
     }
 
-    @GetMapping("/{account-id}")
+    @GetMapping("/{account-id}/balance")
     public ResponseEntity<BigDecimal> getAccountBalanceByCurrency(@PathVariable("account-id") long accountID, @RequestParam("currencyCode") String currencyCode) {
         BigDecimal balance = accountService.getAccountBalanceByCurrency(accountID, currencyCode);
         return ResponseEntity.status(HttpStatus.OK).body(balance);

@@ -88,7 +88,7 @@ public class CardRestController {
     public ResponseEntity<String> withdrawMoneyFromCard(@NotNull @PathVariable("card-id") Long cardId,
                                                      @RequestBody CardWithdrawRequest cardWithdrawRequest) {
 
-        cardService.depositMoney
+        cardService.withdrawMoney
                 (cardId, cardWithdrawRequest.getAmountToWithdraw(), cardWithdrawRequest.getCurrencyCode());
 
         return ResponseEntity.ok("Money has been successfully withdrawn from card!");
