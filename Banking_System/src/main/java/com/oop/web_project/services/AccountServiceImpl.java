@@ -82,6 +82,14 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public Account selectAccountByCardId(long cardId) {
+        return accountRepository.findByCardsId(cardId)
+                .orElseThrow(
+                        () -> new AccountNotFoundException("Could not find account!")
+                );
+    }
+
+    @Override
     public List<Account> selectAccountsByCustomerEmail(String customerEmail) {
         return accountRepository.findAllByCustomersEmail(customerEmail);
     }
