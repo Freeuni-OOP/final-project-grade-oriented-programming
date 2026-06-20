@@ -66,7 +66,7 @@ public interface AccountService {
 
     /**
      * finds the account in the database and updates its credentials
-     * @param accountId account's id we are looking to update
+     * @param accountId id of the account we are looking to update
      * @param accountName account's name
      */
     void updateAccount(long accountId, String accountName);
