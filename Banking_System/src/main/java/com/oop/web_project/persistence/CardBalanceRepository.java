@@ -15,4 +15,6 @@ public interface CardBalanceRepository extends JpaRepository<CardBalance, Long> 
     Optional<CardBalance> findByCardIdAndCurrencyCode(long cardId, String currencyCode);
 
     List<CardBalance> findAllByCardId(long cardId);
+
+    boolean existsByCardIdAndCurrencyCode(long cardId, String currencyCode);
 }

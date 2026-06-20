@@ -3,7 +3,7 @@ package com.oop.web_project.utils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-public class PasswordHasher {
+public final class PasswordHasher {
 
     private static final PasswordEncoder ENCODER = new BCryptPasswordEncoder();
 

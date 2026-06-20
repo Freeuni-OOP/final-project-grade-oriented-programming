@@ -14,6 +14,7 @@ import com.oop.web_project.services.AccountService;
 import com.oop.web_project.services.CardService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,8 +68,22 @@ public class CardRestController {
 
     @PostMapping
     public ResponseEntity<String> createCard(@Valid @RequestBody CardCreationRequest cardCreationRequest) {
-        return null;
+
+        cardService.createCard(cardApiMapper.toCardOnCardCreation(cardCreationRequest));
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Card has been successfully created!");
     }
+
+    @PatchMapping("/{card-id}/currencies/{currency-code}")
+    public ResponseEntity<CardResponse> addCurrencyToCard(@Valid @PathVariable("card-id") Long cardId,
+                                                          @Valid @PathVariable("currency-code") String currencyCode) {
+
+        cardService.addCurrencyToCard(cardId, currencyCode);
+
+        return ResponseEntity.ok(cardApiMapper.toCardResponse(cardService.selectCardById(cardId)));
+    }
+
 
 
     @PatchMapping("{card-id}/activate")

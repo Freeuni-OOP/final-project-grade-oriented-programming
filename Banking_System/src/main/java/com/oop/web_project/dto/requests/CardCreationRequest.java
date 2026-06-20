@@ -17,4 +17,5 @@ public class CardCreationRequest {
     private CardType cardType;
     private CardBrand cardBrand;
     private BigDecimal spendingLimit;
+    private String pan;
 }

@@ -5,6 +5,7 @@ import com.oop.web_project.dto.responses.CardBalanceResponse;
 import com.oop.web_project.dto.responses.CardResponse;
 import com.oop.web_project.entities.Card;
 import com.oop.web_project.entities.CardBalance;
+import com.oop.web_project.utils.CardSecurityUtils;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -28,8 +29,8 @@ public class CardApiMapper {
                 null,
                 cardCreationRequest.getSpendingLimit(),
                 LocalDate.now().plusYears(5),
-                null,
-                null,
+                CardSecurityUtils.maskPan(cardCreationRequest.getPan()),
+                CardSecurityUtils.maskPan(cardCreationRequest.getPan()),
                 true,
                 null
         );

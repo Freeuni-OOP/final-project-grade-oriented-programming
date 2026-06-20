@@ -25,7 +25,7 @@ public class CustomerRestController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerCustomer(@RequestBody @Valid CustomerRegistrationRequest request){
+    public ResponseEntity<String> registerCustomer(@Valid @RequestBody CustomerRegistrationRequest request){
         Customer customer = customerApiMapper.toCustomerOnRegistration(request);
         customerService.registerCustomer(customer);
         return ResponseEntity.status(HttpStatus.CREATED).body("The Customer has been registered successfully.");

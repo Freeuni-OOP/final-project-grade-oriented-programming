@@ -34,6 +34,13 @@ public interface CardService {
      */
     Card selectCardById(long cardId);
 
+    /**
+     * Initially all cards have no currencies, we manually add them via this service method
+     * @param cardId id of the card to which we are adding new currency
+     * @param currencyCode code of the currency we need to add to a card
+     * Note: Balance of the currency is initialized to zero
+     */
+    void addCurrencyToCard(long cardId, String currencyCode);
 
     /**
      * looks for balances in different currencies for the card and returns them
