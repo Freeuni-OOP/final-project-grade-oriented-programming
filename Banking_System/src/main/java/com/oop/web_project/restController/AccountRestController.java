@@ -31,37 +31,47 @@ public class AccountRestController {
     public ResponseEntity<String> createAccount(@RequestBody AccountCreationRequest request) {
         Account account = accountMapper.toAccount(request);
         accountService.createAccount(account);
-        return ResponseEntity.status(HttpStatus.CREATED).body("successfully created");
+        return ResponseEntity.status(HttpStatus.CREATED).body("Account has been successfully created.");
     }
 
-    @PatchMapping("/{id}/activate")
-    public ResponseEntity<String> ActivateAccount(@PathVariable long id) {
-        accountService.activateAccount(id);
-        return ResponseEntity.status(HttpStatus.OK).body("successfully activated");
+    @PatchMapping("/{account-id}/activate")
+    public ResponseEntity<String> ActivateAccount(@PathVariable("account-id") Long accountId) {
+        accountService.activateAccount(accountId);
+        return ResponseEntity.status(HttpStatus.OK).body("Account has been successfully activated.");
     }
 
-    @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<String> DeactivateAccount(@PathVariable long id) {
-        accountService.deactivateAccount(id);
-        return ResponseEntity.status(HttpStatus.OK).body("successfully deactivated");
+    @PatchMapping("/{account-id}/deactivate")
+    public ResponseEntity<String> DeactivateAccount(@PathVariable("account-id") Long accountId) {
+        accountService.deactivateAccount(accountId);
+        return ResponseEntity.status(HttpStatus.OK).body("Account has been successfully deactivated.");
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<AccountProfileResponse> getAccountWithId(@PathVariable long id) {
-        Account account = accountService.selectAccountById(id);
+    @GetMapping("/{account-id}")
+    public ResponseEntity<AccountProfileResponse> getAccountWithId(@PathVariable("account-id") Long accountId) {
+        Account account = accountService.selectAccountById(accountId);
         AccountProfileResponse response = accountMapper.toProfileResponse(account);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PostMapping("/{id}")
-    public ResponseEntity<String> deleteAccount(@PathVariable long id) {
-        accountService.deleteAccount(id);
-        return ResponseEntity.status(HttpStatus.OK).body("successfully deleted");
+    @DeleteMapping("/{account-id}}")
+    public ResponseEntity<String> deleteAccount(@PathVariable("account-id") Long accountId) {
+        accountService.deleteAccount(accountId);
+        return ResponseEntity.status(HttpStatus.OK).body("Account has been successfully deleted.");
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<List<AccountProfileResponse>> getAccountWithCustomerId(@PathVariable long id) {
-        List<Account> accounts = accountService.selectAccountsByCustomerId(id);
+    @GetMapping
+    public ResponseEntity<List<AccountSummaryResponse>> getAccountsByEmail(@RequestParam("customerEmail") String customerEmail) {
+        List<Account> accounts = accountService.selectAccountsByCustomerEmail(customerEmail);
+        List<AccountSummaryResponse> summaryResponses = new ArrayList<>();
+        for(Account account : accounts) {
+            summaryResponses.add(accountMapper.toAccountSummaryResponse(account));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(summaryResponses);
+    }
+
+    @GetMapping("/{customer-id}")
+    public ResponseEntity<List<AccountProfileResponse>> getAccountWithCustomerId(@PathVariable("customer-id") Long customerId) {
+        List<Account> accounts = accountService.selectAccountsByCustomerId(customerId);
         List<AccountProfileResponse> profileResponses = new ArrayList<>();
         for(Account account : accounts) {
             profileResponses.add(accountMapper.toProfileResponse(account));
@@ -69,21 +79,21 @@ public class AccountRestController {
         return ResponseEntity.status(HttpStatus.OK).body(profileResponses);
     }
 
-    @PutMapping("/{id}/{name}")
-    public ResponseEntity<String> updateAccount(@PathVariable long id, @PathVariable String name) {
-        accountService.updateAccount(id, name);
+    @PutMapping("/{account-id}")
+    public ResponseEntity<String> updateAccount(@PathVariable("account-id") Long accountID, @RequestBody String accountName) {
+        accountService.updateAccount(accountID, accountName);
         return ResponseEntity.status(HttpStatus.OK).body("successfully updated");
     }
 
-    @PutMapping("/{accountId}/customers/{customerId}")
-    public ResponseEntity<String> registerCustomerToAccount(@PathVariable("accountId") long accountId, @PathVariable("customerId") long customerId) {
+    @PutMapping("/{account-id}/customers/{customer-id}")
+    public ResponseEntity<String> registerCustomerToAccount(@PathVariable("account-id") Long accountId, @PathVariable("customer-id") Long customerId) {
         accountService.registerCustomerToAccount(accountId, customerId);
         return ResponseEntity.ok("Successfully registered");
     }
 
-    @GetMapping("/{accountId}/currency/{currencyName}")
-    public ResponseEntity<BigDecimal> getAccountBalanceByCurrency(@PathVariable long accountID, @PathVariable String currencyName) {
-        BigDecimal balance = accountService.getAccountBalanceByCurrency(accountID, currencyName);
+    @GetMapping("/{account-id}")
+    public ResponseEntity<BigDecimal> getAccountBalanceByCurrency(@PathVariable("account-id") long accountID, @RequestParam("currencyCode") String currencyCode) {
+        BigDecimal balance = accountService.getAccountBalanceByCurrency(accountID, currencyCode);
         return ResponseEntity.status(HttpStatus.OK).body(balance);
     }
 }
