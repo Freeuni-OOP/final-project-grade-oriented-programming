@@ -21,6 +21,10 @@ public interface CardRepository extends JpaRepository<Card, Long> {
 
     List<Card> getAllByAccountId(long accountId);
 
+    boolean existsByPanToken(String panToken);
+
+    boolean existsByPanMasked(String panMasked);
+  
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Card> findWithLockById(long id);
 }

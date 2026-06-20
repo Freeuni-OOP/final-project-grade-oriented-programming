@@ -1,5 +1,6 @@
 package com.oop.web_project;
 
+import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Card;
 import com.oop.web_project.entities.CardBalance;
 import com.oop.web_project.entities.CurrencyExchange;
@@ -9,6 +10,7 @@ import com.oop.web_project.exceptions.cardExceptions.CardBalanceNotFoundExceptio
 import com.oop.web_project.exceptions.cardExceptions.CardNotFoundException;
 import com.oop.web_project.exceptions.cardExceptions.InsufficientMoneyOnCardException;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
+import com.oop.web_project.persistence.AccountRepository;
 import com.oop.web_project.persistence.CardBalanceRepository;
 import com.oop.web_project.persistence.CardRepository;
 import com.oop.web_project.persistence.CurrencyExchangeRepository;
@@ -39,6 +41,9 @@ class CardServiceImplTest {
 
     @Mock
     private CurrencyExchangeRepository currencyExchangeRepository;
+
+    @Mock
+    private AccountRepository accountRepository;
 
     @InjectMocks
     private CardServiceImpl cardService;
@@ -101,7 +106,11 @@ class CardServiceImplTest {
 
     @Test
     void testCreateCardSavesCard() {
-        cardService.createCard(card);
+
+        Account account = new Account();
+        account.setId(1L);
+        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+        cardService.createCard(card, 1L);
         verify(cardRepository, times(1)).save(card);
     }
 

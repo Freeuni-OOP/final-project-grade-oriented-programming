@@ -3,10 +3,13 @@ package com.oop.web_project;
 import com.oop.web_project.dto.responses.AccountProfileResponse;
 import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.entities.Account;
+import com.oop.web_project.entities.Card;
 import com.oop.web_project.exceptionHandler.GlobalExceptionHandler;
 import com.oop.web_project.mapping.AccountApiMapper;
+import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.restController.AccountRestController;
 import com.oop.web_project.services.AccountService;
+import com.oop.web_project.services.CardService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -23,6 +26,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,6 +60,12 @@ class AccountRestControllerTest {
     @MockitoBean
     private AccountApiMapper accountMapper;
 
+    @MockitoBean
+    private CardService cardService;
+
+    @MockitoBean
+    private CardApiMapper cardApiMapper;
+
     @Test
     void testCreateAccountReturnsCreated() throws Exception {
         when(accountMapper.toAccount(any())).thenReturn(mock(Account.class));
@@ -75,6 +85,28 @@ class AccountRestControllerTest {
                 .andExpect(content().string("Account has been successfully created."));
 
         verify(accountService).createAccount(any(Account.class));
+    }
+
+    @Test
+    void testCreateCardReturnsCreated() throws Exception {
+        // NOTE: body fields are assumed (cardType, currencyCode) since CardCreationRequest
+        // wasn't available — adjust to match the real DTO's fields/validation constraints.
+        when(cardApiMapper.toCardOnCardCreation(any())).thenReturn(mock(Card.class));
+
+        String body = """
+                {
+                  "cardType": "DEBIT",
+                  "currencyCode": "USD"
+                }
+                """;
+
+        mockMvc.perform(post("/api/account/1/cards")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(content().string("Card has been successfully created!"));
+
+        verify(cardService).createCard(any(Card.class), eq(1L));
     }
 
     @Test
@@ -173,7 +205,7 @@ class AccountRestControllerTest {
                         .contentType(MediaType.TEXT_PLAIN)
                         .content("New Account Name"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("successfully updated"));
+                .andExpect(content().string("Account has been successfully updated!"));
 
         verify(accountService).updateAccount(1L, "New Account Name");
     }
@@ -182,7 +214,7 @@ class AccountRestControllerTest {
     void testRegisterCustomerToAccountReturnsOk() throws Exception {
         mockMvc.perform(put("/api/account/1/customers/2"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Successfully registered"));
+                .andExpect(content().string("Account to the Customer has been registered successfully!"));
 
         verify(accountService).registerCustomerToAccount(1L, 2L);
     }

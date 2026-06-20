@@ -8,6 +8,7 @@ import com.oop.web_project.entities.Customer;
 import com.oop.web_project.entities.Transaction;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,9 +63,15 @@ public class AccountApiMapper {
     }
 
     public Account toAccount(AccountCreationRequest request) {
-        Account account = new Account();
-        account.setName(request.getAccountName());
-        account.setCategory(request.getCategory());
-        return account;
+        return new Account(
+                null,
+                request.getAccountName(),
+                request.getCategory(),
+                LocalDate.now(),
+                true,
+                null,
+                null,
+                null
+        );
     }
 }
