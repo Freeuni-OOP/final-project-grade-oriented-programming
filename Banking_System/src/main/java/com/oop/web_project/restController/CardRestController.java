@@ -71,8 +71,6 @@ public class CardRestController {
     }
 
 
-
-
     @PatchMapping("{card-id}/activate")
     public ResponseEntity<String> activateCard(@NotNull @PathVariable("card-id") Long cardId) {
 

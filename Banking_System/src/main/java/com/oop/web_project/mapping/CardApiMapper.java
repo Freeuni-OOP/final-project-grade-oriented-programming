@@ -7,6 +7,7 @@ import com.oop.web_project.entities.Card;
 import com.oop.web_project.entities.CardBalance;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,17 +20,20 @@ public class CardApiMapper {
         this.cardBalanceApiMapper = cardBalanceApiMapper;
     }
 
-//    public Card toCardOnCardCreation(CardCreationRequest cardCreationRequest) {
-//        return new Card(
-//                null,
-//                cardCreationRequest.getCardType(),
-//                cardCreationRequest.getCardBrand(),
-//                null,
-//                cardCreationRequest.getSpendingLimit(),
-//
-//
-//        );
-//    }
+    public Card toCardOnCardCreation(CardCreationRequest cardCreationRequest) {
+        return new Card(
+                null,
+                cardCreationRequest.getCardType(),
+                cardCreationRequest.getCardBrand(),
+                null,
+                cardCreationRequest.getSpendingLimit(),
+                LocalDate.now().plusYears(5),
+                null,
+                null,
+                true,
+                null
+        );
+    }
 
 
     public CardResponse toCardResponse(Card card){
