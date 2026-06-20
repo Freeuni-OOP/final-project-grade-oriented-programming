@@ -75,11 +75,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
-    @ExceptionHandler(DuplicateCurrencyException.class)
-    public ResponseEntity<String> handleDuplicateCurrency(DuplicateCurrencyException e) {
-        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
-    }
-
     @ExceptionHandler(InvalidCurrencyException.class)
     public ResponseEntity<String> handleInvalidCurrency(InvalidCurrencyException e) {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
