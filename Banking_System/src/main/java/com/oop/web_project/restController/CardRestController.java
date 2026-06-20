@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/card")
+@RequestMapping("/api/card")
 public class CardRestController {
 
     private final CardService cardService;
@@ -113,15 +113,6 @@ public class CardRestController {
                 currencyExchangeRequest.getFromCurrencyCode(), currencyExchangeRequest.getToCurrencyCode());
 
         return ResponseEntity.ok("Currency transfer was successful!");
-    }
-
-    @PostMapping
-    public ResponseEntity<String> createCard(@Valid @RequestBody CardCreationRequest cardCreationRequest) {
-
-        cardService.createCard(cardApiMapper.toCardOnCardCreation(cardCreationRequest));
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Card has been successfully created!");
     }
 
     @PatchMapping("/{card-id}/currencies/{currency-code}")

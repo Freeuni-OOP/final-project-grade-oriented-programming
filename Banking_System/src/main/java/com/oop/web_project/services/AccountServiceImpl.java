@@ -91,12 +91,20 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<Account> selectAccountsByCustomerEmail(String customerEmail) {
-        return accountRepository.findAllByCustomersEmail(customerEmail);
+        List<Account> accountList = accountRepository.findAllByCustomersEmail(customerEmail);
+        if(accountList == null || accountList.isEmpty()) {
+            throw new AccountNotFoundException("accounts could not be found!");
+        }
+        return accountList;
     }
 
     @Override
     public List<Account> selectAccountsByCustomerId(long customerId) {
-        return accountRepository.findAllByCustomersId(customerId);
+        List<Account> accountList = accountRepository.findAllByCustomersId(customerId);
+        if(accountList == null || accountList.isEmpty()) {
+            throw new AccountNotFoundException("accounts could not be found!");
+        }
+        return accountList;
     }
 
     @Override

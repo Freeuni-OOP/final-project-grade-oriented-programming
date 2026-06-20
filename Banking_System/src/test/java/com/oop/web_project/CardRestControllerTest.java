@@ -208,27 +208,6 @@ class CardRestControllerTest {
     }
 
     @Test
-    void testCreateCardReturnsCreated() throws Exception {
-        when(cardApiMapper.toCardOnCardCreation(any())).thenReturn(mock(Card.class));
-
-        String body = """
-                {
-                  "accountId": 1,
-                  "currencyCode": "USD",
-                  "cardHolderName": "John Doe"
-                }
-                """;
-
-        mockMvc.perform(post("/api/card")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isCreated())
-                .andExpect(content().string("Card has been successfully created!"));
-
-        verify(cardService).createCard(any(Card.class));
-    }
-
-    @Test
     void testAddCurrencyToCardReturnsOk() throws Exception {
         Card card = mock(Card.class);
         CardResponse cardResponse = mock(CardResponse.class);

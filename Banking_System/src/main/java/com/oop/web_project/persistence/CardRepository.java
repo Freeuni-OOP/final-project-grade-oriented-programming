@@ -21,4 +21,8 @@ public interface CardRepository extends JpaRepository<Card, Long> {
                                               @Param("currencyCode") String currencyCode);
 
     List<Card> getAllByAccountId(long accountId);
+
+    boolean existsByPanToken(String panToken);
+
+    boolean existsByPanMasked(String panMasked);
 }

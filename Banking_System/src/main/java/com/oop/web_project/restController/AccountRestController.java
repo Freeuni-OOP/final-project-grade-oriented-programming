@@ -1,11 +1,16 @@
 package com.oop.web_project.restController;
 
 import com.oop.web_project.dto.requests.AccountCreationRequest;
+import com.oop.web_project.dto.requests.CardCreationRequest;
 import com.oop.web_project.dto.responses.AccountProfileResponse;
 import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.entities.Account;
+import com.oop.web_project.entities.Card;
 import com.oop.web_project.mapping.AccountApiMapper;
+import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.services.AccountService;
+import com.oop.web_project.services.CardService;
+import jakarta.validation.Valid;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +22,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/account")
+@RequestMapping("/api/account")
 public class AccountRestController {
     private final AccountService accountService;
     private final AccountApiMapper accountMapper;
+    private final CardService cardService;
+    private final CardApiMapper cardApiMapper;
 
-    public AccountRestController(AccountService accountService, AccountApiMapper accountMapper) {
+    public AccountRestController(AccountService accountService, AccountApiMapper accountMapper,
+                                 CardService cardService, CardApiMapper cardApiMapper) {
         this.accountService = accountService;
         this.accountMapper = accountMapper;
+        this.cardService = cardService;
+        this.cardApiMapper = cardApiMapper;
     }
 
     @PostMapping
@@ -33,6 +43,19 @@ public class AccountRestController {
         accountService.createAccount(account);
         return ResponseEntity.status(HttpStatus.CREATED).body("Account has been successfully created.");
     }
+
+    @PostMapping("/{account-id}/cards")
+    public ResponseEntity<String> createCard(
+            @Valid @PathVariable("account-id") Long accountId,
+            @Valid @RequestBody CardCreationRequest cardCreationRequest) {
+
+        cardService.createCard(cardApiMapper.toCardOnCardCreation(cardCreationRequest),
+                accountId);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Card has been successfully created!");
+    }
+
 
     @PatchMapping("/{account-id}/activate")
     public ResponseEntity<String> ActivateAccount(@PathVariable("account-id") Long accountId) {
@@ -82,13 +105,13 @@ public class AccountRestController {
     @PutMapping("/{account-id}")
     public ResponseEntity<String> updateAccount(@PathVariable("account-id") Long accountID, @RequestBody String accountName) {
         accountService.updateAccount(accountID, accountName);
-        return ResponseEntity.status(HttpStatus.OK).body("successfully updated");
+        return ResponseEntity.status(HttpStatus.OK).body("Account has been successfully updated!");
     }
 
     @PutMapping("/{account-id}/customers/{customer-id}")
     public ResponseEntity<String> registerCustomerToAccount(@PathVariable("account-id") Long accountId, @PathVariable("customer-id") Long customerId) {
         accountService.registerCustomerToAccount(accountId, customerId);
-        return ResponseEntity.ok("Successfully registered");
+        return ResponseEntity.ok("Account to the Customer has been registered successfully!");
     }
 
     @GetMapping("/{account-id}/balance")

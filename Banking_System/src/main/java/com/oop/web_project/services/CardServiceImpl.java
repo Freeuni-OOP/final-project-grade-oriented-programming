@@ -4,6 +4,7 @@ import com.oop.web_project.annotations.Exchange;
 import com.oop.web_project.annotations.Transfer;
 import com.oop.web_project.annotations.Withdraw;
 import com.oop.web_project.entities.*;
+import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
 import com.oop.web_project.exceptions.cardExceptions.*;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
 import com.oop.web_project.persistence.*;
@@ -25,15 +26,18 @@ public class CardServiceImpl implements CardService {
     private final CardBalanceRepository cardBalanceRepository;
     private final CurrencyExchangeRepository currencyExchangeRepository;
     private final CurrencyRepository currencyRepository;
+    private final AccountRepository accountRepository;
 
     public CardServiceImpl(CardRepository cardRepository,
                            CardBalanceRepository cardBalanceRepository,
                            CurrencyExchangeRepository currencyExchangeRepository,
-                           CurrencyRepository currencyRepository) {
+                           CurrencyRepository currencyRepository,
+                           AccountRepository accountRepository) {
         this.cardRepository = cardRepository;
         this.cardBalanceRepository = cardBalanceRepository;
         this.currencyExchangeRepository = currencyExchangeRepository;
         this.currencyRepository = currencyRepository;
+        this.accountRepository = accountRepository;
     }
 
     @Override
@@ -60,7 +64,18 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
-    public void createCard(Card card) {
+    public void createCard(Card card, long accountId) {
+        Account account = accountRepository.findById(accountId)
+                        .orElseThrow(
+                                () -> new AccountNotFoundException("Account not found!")
+                        );
+
+        if(cardRepository.existsByPanToken(card.getPanToken()) ||
+        cardRepository.existsByPanMasked(card.getPanMasked())) {
+            throw new CardAlreadyExistsException("Card already exists!");
+        }
+
+        card.setAccount(account);
         cardRepository.save(card);
     }
 

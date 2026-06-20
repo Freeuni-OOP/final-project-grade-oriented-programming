@@ -1,10 +1,16 @@
 package com.oop.web_project.logging;
 
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Aspect
 @Component
@@ -20,6 +26,56 @@ public class LoggingAspect {
     @Pointcut("execution(* com.oop.web_project.persistence.*.*(..))")
     public void persistenceLayer() {}
 
+
+    @Pointcut("execution(* com.oop.web_project.restController.*.*(..))")
+    public void restControllerLayer() {}
+
+
+
+    @Around("restControllerLayer()")
+    public Object logRestControllerExecution(ProceedingJoinPoint joinPoint) throws Throwable {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        if(attributes == null) {
+            log.error("Something went wrong!");
+            return joinPoint.proceed();
+        }
+
+        HttpServletRequest request = attributes.getRequest();
+
+        String runtimeUri = request.getRequestURI();
+        String httpMethod = request.getMethod();
+
+        log.info("Request with uri {} has been received by API. HTTP method type {}", runtimeUri, httpMethod);
+
+        Object result = null;
+
+        try {
+            result = joinPoint.proceed();
+        } catch(Throwable throwable) {
+            log.error("Request with uri {} and HTTP method type {} ran into problems!", runtimeUri, httpMethod);
+
+            log.error("Exception {} was thrown with message: {}",
+                    throwable.getClass(), throwable.getMessage());
+
+            throw throwable;
+        }
+
+        HttpServletResponse httpServletResponse = attributes.getResponse();
+
+        if(httpServletResponse == null) {
+            log.error("Something went wrong!");
+            return joinPoint.proceed();
+        }
+
+        String responseStatusCode = HttpStatus.valueOf(httpServletResponse.getStatus()).name();
+        int status = httpServletResponse.getStatus();
+
+        log.info("Request with uri {} and HTTP method type {} has been resolved with status {} {} ",
+                runtimeUri, httpMethod, status, responseStatusCode);
+
+        return result;
+    }
 
     @Around("serviceLayer()")
     public Object logServiceExecution(ProceedingJoinPoint pjp) throws Throwable {
@@ -65,5 +121,14 @@ public class LoggingAspect {
 
         log.info("Repository method {} of {} finished successfully", methodName, className);
         return result;
+    }
+
+    @AfterThrowing(pointcut = "serviceLayer() || persistenceLayer()", throwing = "ex")
+    public void logGlobalError(JoinPoint joinPoint, Exception ex) {
+        log.error("Exception {} thrown in {} by method {} with message: {}",
+                ex.getClass().getSimpleName(),
+                joinPoint.getSignature().getDeclaringTypeName(),
+                joinPoint.getSignature().getName(),
+                ex.getMessage());
     }
 }

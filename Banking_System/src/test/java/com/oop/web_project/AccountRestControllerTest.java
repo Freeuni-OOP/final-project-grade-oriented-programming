@@ -5,8 +5,10 @@ import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.exceptionHandler.GlobalExceptionHandler;
 import com.oop.web_project.mapping.AccountApiMapper;
+import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.restController.AccountRestController;
 import com.oop.web_project.services.AccountService;
+import com.oop.web_project.services.CardService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -55,6 +57,12 @@ class AccountRestControllerTest {
 
     @MockitoBean
     private AccountApiMapper accountMapper;
+
+    @MockitoBean
+    private CardService cardService;
+
+    @MockitoBean
+    private CardApiMapper cardApiMapper;
 
     @Test
     void testCreateAccountReturnsCreated() throws Exception {
@@ -173,7 +181,7 @@ class AccountRestControllerTest {
                         .contentType(MediaType.TEXT_PLAIN)
                         .content("New Account Name"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("successfully updated"));
+                .andExpect(content().string("Account has been successfully updated!"));
 
         verify(accountService).updateAccount(1L, "New Account Name");
     }
@@ -182,7 +190,7 @@ class AccountRestControllerTest {
     void testRegisterCustomerToAccountReturnsOk() throws Exception {
         mockMvc.perform(put("/api/account/1/customers/2"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Successfully registered"));
+                .andExpect(content().string("Account to the Customer has been registered successfully!"));
 
         verify(accountService).registerCustomerToAccount(1L, 2L);
     }

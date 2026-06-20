@@ -8,6 +8,7 @@ import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyActiveEx
 import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactivatedException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -44,6 +45,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
     }
 
+    @ExceptionHandler(CardAlreadyExistsException.class)
+    public ResponseEntity<String> handleAlreadyExistingCard(CardAlreadyExistsException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
     @ExceptionHandler(CardBalanceNotFoundException.class)
     public ResponseEntity<String> handleBalanceNotFound(CardBalanceNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -57,6 +63,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InsufficientMoneyOnCardException.class)
     public ResponseEntity<String> handleInsufficientMoney(InsufficientMoneyOnCardException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateCurrencyException.class)
+    public ResponseEntity<String> handleDuplicateCurrency(DuplicateCurrencyException e) {
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidCurrencyException.class)
+    public ResponseEntity<String> handleInvalidCurrency(InvalidCurrencyException e) {
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
     }
 
     //Customer
@@ -79,5 +95,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CurrencyExchangeException.class)
     public ResponseEntity<String> handleCurrencyExchangeFailure(CurrencyExchangeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+
+    //other
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<String> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body("Request violates data Integrity!");
     }
 }
