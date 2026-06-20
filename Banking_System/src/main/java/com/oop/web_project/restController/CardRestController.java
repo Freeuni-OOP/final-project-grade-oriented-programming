@@ -1,7 +1,7 @@
 package com.oop.web_project.restController;
 
 
-import com.oop.web_project.dto.requests.CardCreationRequest;
+import com.oop.web_project.dto.requests.*;
 import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.dto.responses.CardBalanceResponse;
 import com.oop.web_project.dto.responses.CardResponse;
@@ -66,6 +66,55 @@ public class CardRestController {
                 .toList());
     }
 
+    @GetMapping("/{card-id}/expiration")
+    public ResponseEntity<Boolean> getCardExpiration(@NotNull @PathVariable("card-id") Long cardId) {
+
+        Boolean isExpired = cardService.checkCardExpiration(cardId);
+
+        return ResponseEntity.ok(isExpired);
+    }
+
+    @PostMapping("/{card-id}/deposit")
+    public ResponseEntity<String> depositMoneyToCard(@NotNull @PathVariable("card-id") Long cardId,
+                                                     @RequestBody CardDepositRequest cardDepositRequest) {
+
+        cardService.depositMoney
+                (cardId, cardDepositRequest.getAmountToDeposit(), cardDepositRequest.getCurrencyCode());
+
+        return ResponseEntity.ok("Money has been successfully deposited to card!");
+    }
+
+    @PostMapping("/{card-id}/withdraw")
+    public ResponseEntity<String> withdrawMoneyFromCard(@NotNull @PathVariable("card-id") Long cardId,
+                                                     @RequestBody CardWithdrawRequest cardWithdrawRequest) {
+
+        cardService.depositMoney
+                (cardId, cardWithdrawRequest.getAmountToWithdraw(), cardWithdrawRequest.getCurrencyCode());
+
+        return ResponseEntity.ok("Money has been successfully withdrawn from card!");
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<String> transferMoney(@RequestBody CardTransferRequest cardTransferRequest) {
+
+        cardService.transferMoney(cardTransferRequest.getSenderCardId(),
+                cardTransferRequest.getReceiverCardId(),
+                cardTransferRequest.getAmount(),
+                cardTransferRequest.getCurrencyCode());
+
+        return ResponseEntity.ok("Money have been successfully transferred!");
+    }
+
+    @PostMapping("/{card-id}/exchange-currency")
+    public ResponseEntity<String> exchangeCurrency(@PathVariable("card-id") Long cardId,
+            @RequestBody CurrencyExchangeRequest currencyExchangeRequest) {
+
+        cardService.changeCurrency(cardId, currencyExchangeRequest.getAmount(),
+                currencyExchangeRequest.getFromCurrencyCode(), currencyExchangeRequest.getToCurrencyCode());
+
+        return ResponseEntity.ok("Currency transfer was successful!");
+    }
+
     @PostMapping
     public ResponseEntity<String> createCard(@Valid @RequestBody CardCreationRequest cardCreationRequest) {
 
@@ -85,7 +134,6 @@ public class CardRestController {
     }
 
 
-
     @PatchMapping("{card-id}/activate")
     public ResponseEntity<String> activateCard(@NotNull @PathVariable("card-id") Long cardId) {
 
@@ -100,6 +148,15 @@ public class CardRestController {
         cardService.deactivateCard(cardId);
 
         return ResponseEntity.ok("Card has been successfully deactivated!");
+    }
+
+
+    @DeleteMapping("/{card-id}")
+    public ResponseEntity<String> deleteCard(@NotNull @PathVariable("card-id") Long cardId) {
+
+        cardService.deleteCard(cardId);
+
+        return ResponseEntity.ok("Card has been successfully deleted!");
     }
 
 
