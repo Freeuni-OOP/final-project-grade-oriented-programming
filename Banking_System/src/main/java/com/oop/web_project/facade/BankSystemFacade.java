@@ -2,6 +2,8 @@ package com.oop.web_project.facade;
 
 
 import com.oop.web_project.entities.*;
+import com.oop.web_project.exceptions.cardExceptions.CardNotFoundException;
+import com.oop.web_project.exceptions.cardExceptions.InsufficientMoneyOnCardException;
 import com.oop.web_project.services.AccountService;
 import com.oop.web_project.services.CardService;
 import com.oop.web_project.services.CustomerService;
@@ -103,9 +105,13 @@ public class BankSystemFacade implements CommandLineRunner {
 
         cardService.transferMoney(6, 11, BigDecimal.valueOf(400), "GEL");
 
-        cardService.deleteCard(1L);
+//        cardService.deleteCard(1L)
 
-
+        try {
+            cardService.depositMoney(1L, BigDecimal.valueOf(1000000000), "GEL");
+        }catch(InsufficientMoneyOnCardException e) {
+            e.printStackTrace();
+        }
         System.out.println(cardService.checkCardExpiration(2L));
     }
 

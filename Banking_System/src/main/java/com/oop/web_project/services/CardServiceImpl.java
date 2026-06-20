@@ -1,4 +1,8 @@
 package com.oop.web_project.services;
+import com.oop.web_project.annotations.Deposit;
+import com.oop.web_project.annotations.Exchange;
+import com.oop.web_project.annotations.Transfer;
+import com.oop.web_project.annotations.Withdraw;
 import com.oop.web_project.entities.*;
 import com.oop.web_project.exceptions.cardExceptions.*;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
@@ -107,6 +111,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Deposit
     @Transactional
     public void depositMoney(long cardId, BigDecimal amountToAdd, String currencyCode) {
         Card card = cardRepository.findById(cardId)
@@ -129,6 +134,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Withdraw
     @Transactional
     public void withdrawMoney(long cardId, BigDecimal amountToWithdraw, String currencyCode) {
         CardBalance balance = cardBalanceRepository.findByCardIdAndCurrencyCode(cardId, currencyCode)
@@ -146,6 +152,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Transfer
     @Transactional
     public void transferMoney(long senderCardId, long receiverCardId, BigDecimal amount, String currencyCode) {
         Card receiverCard = cardRepository.findById(receiverCardId)
@@ -173,6 +180,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Exchange
     @Transactional
     public void changeCurrency(long cardId, BigDecimal amount, String fromCurrencyCode, String toCurrencyCode) {
 

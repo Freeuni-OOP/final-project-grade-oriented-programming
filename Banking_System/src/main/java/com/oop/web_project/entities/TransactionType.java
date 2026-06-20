@@ -13,5 +13,6 @@ public enum TransactionType {
     REVERSAL,
     REFUND,
     FEE,
-    INTEREST
+    INTEREST,
+    CURRENCY_EXCHANGE
 }
