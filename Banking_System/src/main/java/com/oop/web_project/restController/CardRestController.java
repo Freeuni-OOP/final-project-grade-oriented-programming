@@ -13,15 +13,18 @@ import com.oop.web_project.mapping.CardBalanceApiMapper;
 import com.oop.web_project.services.AccountService;
 import com.oop.web_project.services.CardService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/card")
+@Validated
 public class CardRestController {
 
     private final CardService cardService;
@@ -41,7 +44,7 @@ public class CardRestController {
 
 
     @GetMapping("/{card-id}")
-    public ResponseEntity<CardResponse> getCardById(@NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<CardResponse> getCardById(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
         Card card = cardService.selectCardById(cardId);
 
@@ -49,7 +52,7 @@ public class CardRestController {
     }
 
     @GetMapping("/{card-id}/account")
-    public ResponseEntity<AccountSummaryResponse> getCardAccount(@NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<AccountSummaryResponse> getCardAccount(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
         Account account = accountService.selectAccountByCardId(cardId);
 
@@ -57,7 +60,7 @@ public class CardRestController {
     }
 
     @GetMapping("/{card-id}/balances")
-    public ResponseEntity<List<CardBalanceResponse>> getCardBalances(@NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<List<CardBalanceResponse>> getCardBalances(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
         Card card = cardService.selectCardById(cardId);
 
@@ -67,7 +70,7 @@ public class CardRestController {
     }
 
     @GetMapping("/{card-id}/expiration")
-    public ResponseEntity<Boolean> getCardExpiration(@NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<Boolean> getCardExpiration(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
         Boolean isExpired = cardService.checkCardExpiration(cardId);
 
@@ -75,8 +78,8 @@ public class CardRestController {
     }
 
     @PostMapping("/{card-id}/deposit")
-    public ResponseEntity<String> depositMoneyToCard(@NotNull @PathVariable("card-id") Long cardId,
-                                                     @RequestBody CardDepositRequest cardDepositRequest) {
+    public ResponseEntity<String> depositMoneyToCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
+                                                     @Valid @RequestBody CardDepositRequest cardDepositRequest) {
 
         cardService.depositMoney
                 (cardId, cardDepositRequest.getAmountToDeposit(), cardDepositRequest.getCurrencyCode());
@@ -85,8 +88,8 @@ public class CardRestController {
     }
 
     @PostMapping("/{card-id}/withdraw")
-    public ResponseEntity<String> withdrawMoneyFromCard(@NotNull @PathVariable("card-id") Long cardId,
-                                                     @RequestBody CardWithdrawRequest cardWithdrawRequest) {
+    public ResponseEntity<String> withdrawMoneyFromCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
+                                                     @Valid @RequestBody CardWithdrawRequest cardWithdrawRequest) {
 
         cardService.withdrawMoney
                 (cardId, cardWithdrawRequest.getAmountToWithdraw(), cardWithdrawRequest.getCurrencyCode());
@@ -95,7 +98,7 @@ public class CardRestController {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<String> transferMoney(@RequestBody CardTransferRequest cardTransferRequest) {
+    public ResponseEntity<String> transferMoney(@Valid @RequestBody CardTransferRequest cardTransferRequest) {
 
         cardService.transferMoney(cardTransferRequest.getSenderCardId(),
                 cardTransferRequest.getReceiverCardId(),
@@ -106,8 +109,8 @@ public class CardRestController {
     }
 
     @PostMapping("/{card-id}/exchange-currency")
-    public ResponseEntity<String> exchangeCurrency(@PathVariable("card-id") Long cardId,
-            @RequestBody CurrencyExchangeRequest currencyExchangeRequest) {
+    public ResponseEntity<String> exchangeCurrency(@NotNull @Positive @PathVariable("card-id") Long cardId,
+            @Valid @RequestBody CurrencyExchangeRequest currencyExchangeRequest) {
 
         cardService.changeCurrency(cardId, currencyExchangeRequest.getAmount(),
                 currencyExchangeRequest.getFromCurrencyCode(), currencyExchangeRequest.getToCurrencyCode());
@@ -116,8 +119,8 @@ public class CardRestController {
     }
 
     @PatchMapping("/{card-id}/currencies/{currency-code}")
-    public ResponseEntity<CardResponse> addCurrencyToCard(@Valid @PathVariable("card-id") Long cardId,
-                                                          @Valid @PathVariable("currency-code") String currencyCode) {
+    public ResponseEntity<CardResponse> addCurrencyToCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
+                                                          @NotBlank @PathVariable("currency-code") String currencyCode) {
 
         cardService.addCurrencyToCard(cardId, currencyCode);
 
@@ -126,7 +129,7 @@ public class CardRestController {
 
 
     @PatchMapping("{card-id}/activate")
-    public ResponseEntity<String> activateCard(@NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<String> activateCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
         cardService.activateCard(cardId);
 
@@ -134,7 +137,7 @@ public class CardRestController {
     }
 
     @PatchMapping("{card-id}/deactivate")
-    public ResponseEntity<String> deactivateCard(@NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<String> deactivateCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
         cardService.deactivateCard(cardId);
 
@@ -143,7 +146,7 @@ public class CardRestController {
 
 
     @DeleteMapping("/{card-id}")
-    public ResponseEntity<String> deleteCard(@NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<String> deleteCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
         cardService.deleteCard(cardId);
 
