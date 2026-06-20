@@ -6,6 +6,7 @@ import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException
 import com.oop.web_project.exceptions.cardExceptions.*;
 import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyActiveException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactivatedException;
+import com.oop.web_project.exceptions.customerExceptions.CustomerCannotBeAuthenticatedException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -94,6 +95,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomerNotFoundException.class)
     public ResponseEntity<String> handleCustomerNotFound(CustomerNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(CustomerCannotBeAuthenticatedException.class)
+    public ResponseEntity<String> handleCustomerNotAuthenticated(CustomerCannotBeAuthenticatedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 
     //transaction
