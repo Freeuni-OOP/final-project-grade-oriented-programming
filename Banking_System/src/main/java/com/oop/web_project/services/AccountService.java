@@ -42,6 +42,14 @@ public interface AccountService {
      * @return returns appropriate account
      */
     Account selectAccountById(long accountId);
+
+    /**
+     * Retrieves account associated to the card
+     * @param cardId id of the card
+     * @return account associated to the card
+     */
+    Account selectAccountByCardId(long cardId);
+
     /**
      * looks for accounts associated to the email of the particular customer
      * @param customerEmail email of the customer whose accounts we are looking for

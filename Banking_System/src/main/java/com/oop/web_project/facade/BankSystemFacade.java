@@ -83,7 +83,7 @@ public class BankSystemFacade implements CommandLineRunner {
     private void testCardService() {
         cardService.deactivateCard(1L);
 
-        CardBrand cardBrand = new CardBrand(null, "MASTERCARD", null);
+        CardBrand cardBrand = CardBrand.MASTERCARD;
 
         Account account = accountService.selectAccountById(1L);
 
@@ -95,7 +95,7 @@ public class BankSystemFacade implements CommandLineRunner {
 
         List<Card> cardList = cardService.getAllCardsForAccount(1L);
 
-        cardList.forEach(c -> System.out.println("card: " + c.getBrand().getName()));
+        cardList.forEach(c -> System.out.println("card: " + c.getBrand()));
 
         cardService.depositMoney(1, BigDecimal.valueOf(300), "GEL");
 

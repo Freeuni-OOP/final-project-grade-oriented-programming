@@ -24,13 +24,16 @@ public class CardServiceImpl implements CardService {
     private final CardRepository cardRepository;
     private final CardBalanceRepository cardBalanceRepository;
     private final CurrencyExchangeRepository currencyExchangeRepository;
+    private final CurrencyRepository currencyRepository;
 
     public CardServiceImpl(CardRepository cardRepository,
                            CardBalanceRepository cardBalanceRepository,
-                           CurrencyExchangeRepository currencyExchangeRepository) {
+                           CurrencyExchangeRepository currencyExchangeRepository,
+                           CurrencyRepository currencyRepository) {
         this.cardRepository = cardRepository;
         this.cardBalanceRepository = cardBalanceRepository;
         this.currencyExchangeRepository = currencyExchangeRepository;
+        this.currencyRepository = currencyRepository;
     }
 
     @Override
@@ -62,6 +65,46 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    public Card selectCardById(long cardId) {
+        return cardRepository.findById(cardId)
+                .orElseThrow(
+                        () -> new CardNotFoundException("Could could not be found!")
+                );
+    }
+
+    @Override
+    @Transactional
+    public void addCurrencyToCard(long cardId, String currencyCode) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(
+                        () -> new CardNotFoundException("card could not be found!")
+                );
+
+        Currency currency = currencyRepository.findCurrencyByCode(currencyCode)
+                .orElseThrow(
+                        () -> new InvalidCurrencyException("Such currency does not exist!")
+                );
+
+        if (cardBalanceRepository.existsByCardIdAndCurrencyCode(cardId, currencyCode)) {
+            throw new DuplicateCurrencyException("Card already has a balance for this currency!");
+        }
+
+        CardBalance cardBalance = new CardBalance(
+                null,
+                BigDecimal.ZERO,
+                card,
+                currency
+        );
+
+        cardBalanceRepository.save(cardBalance);
+    }
+
+    @Override
+    public List<CardBalance> selectCardBalances(long cardId) {
+        return cardBalanceRepository.findAllByCardId(cardId);
+    }
+
+    @Override
     @Transactional
     public void deleteCard(long cardId) {
         cardRepository.deleteById(cardId);
@@ -80,7 +123,7 @@ public class CardServiceImpl implements CardService {
                 .orElseThrow(
                         () -> new CardBalanceNotFoundException("Balance could not be found!")
                 );
-        //CASE 2
+
         BigDecimal totalBalance = balance.getAmount().add(amountToAdd);
 
         if(totalBalance.compareTo(card.getSpendingLimit()) > 0) {
@@ -98,7 +141,7 @@ public class CardServiceImpl implements CardService {
                 .orElseThrow(
                         () -> new CardBalanceNotFoundException("Balance could not be found!")
                 );
-        // CASE 3
+
         BigDecimal finalBalance = balance.getAmount().subtract(amountToWithdraw);
 
         if(finalBalance.compareTo(BigDecimal.ZERO) < 0) {
