@@ -5,17 +5,15 @@ import com.oop.web_project.dto.requests.CardCreationRequest;
 import com.oop.web_project.dto.responses.AccountProfileResponse;
 import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.entities.Account;
-import com.oop.web_project.entities.Card;
 import com.oop.web_project.mapping.AccountApiMapper;
+import com.oop.web_project.mapping.AccountSummaryApiMapper;
 import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.services.AccountService;
 import com.oop.web_project.services.CardService;
 import jakarta.validation.Valid;
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.w3c.dom.html.HTMLHtmlElement;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -28,13 +26,15 @@ public class AccountRestController {
     private final AccountApiMapper accountMapper;
     private final CardService cardService;
     private final CardApiMapper cardApiMapper;
+    private final AccountSummaryApiMapper accountSummaryApiMapper;
 
     public AccountRestController(AccountService accountService, AccountApiMapper accountMapper,
-                                 CardService cardService, CardApiMapper cardApiMapper) {
+                                 CardService cardService, CardApiMapper cardApiMapper, AccountSummaryApiMapper accountSummaryApiMapper) {
         this.accountService = accountService;
         this.accountMapper = accountMapper;
         this.cardService = cardService;
         this.cardApiMapper = cardApiMapper;
+        this.accountSummaryApiMapper = accountSummaryApiMapper;
     }
 
     @PostMapping
@@ -87,7 +87,7 @@ public class AccountRestController {
         List<Account> accounts = accountService.selectAccountsByCustomerEmail(customerEmail);
         List<AccountSummaryResponse> summaryResponses = new ArrayList<>();
         for(Account account : accounts) {
-            summaryResponses.add(accountMapper.toAccountSummaryResponse(account));
+            summaryResponses.add(accountSummaryApiMapper.toAccountSummaryResponse(account));
         }
         return ResponseEntity.status(HttpStatus.OK).body(summaryResponses);
     }

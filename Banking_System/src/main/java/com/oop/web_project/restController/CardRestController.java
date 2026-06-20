@@ -8,6 +8,7 @@ import com.oop.web_project.dto.responses.CardResponse;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Card;
 import com.oop.web_project.mapping.AccountApiMapper;
+import com.oop.web_project.mapping.AccountSummaryApiMapper;
 import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.mapping.CardBalanceApiMapper;
 import com.oop.web_project.services.AccountService;
@@ -27,16 +28,16 @@ public class CardRestController {
     private final CardService cardService;
     private final AccountService accountService;
     private final CardApiMapper cardApiMapper;
-    private final AccountApiMapper accountApiMapper;
     private final CardBalanceApiMapper cardBalanceApiMapper;
+    private final AccountSummaryApiMapper accountSummaryApiMapper;
 
     public CardRestController(CardService cardService, AccountService accountService, CardApiMapper cardApiMapper,
-                              AccountApiMapper accountApiMapper, CardBalanceApiMapper cardBalanceApiMapper) {
+                              CardBalanceApiMapper cardBalanceApiMapper, AccountSummaryApiMapper accountSummaryApiMapper) {
         this.cardService = cardService;
         this.accountService = accountService;
         this.cardApiMapper = cardApiMapper;
-        this.accountApiMapper = accountApiMapper;
         this.cardBalanceApiMapper = cardBalanceApiMapper;
+        this.accountSummaryApiMapper = accountSummaryApiMapper;
     }
 
 
@@ -53,7 +54,7 @@ public class CardRestController {
 
         Account account = accountService.selectAccountByCardId(cardId);
 
-        return ResponseEntity.ok(accountApiMapper.toAccountSummaryResponse(account));
+        return ResponseEntity.ok(accountSummaryApiMapper.toAccountSummaryResponse(account));
     }
 
     @GetMapping("/{card-id}/balances")
