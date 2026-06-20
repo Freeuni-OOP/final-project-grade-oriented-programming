@@ -1,5 +1,6 @@
 package com.oop.web_project.mapping;
 
+import com.oop.web_project.dto.requests.AccountCreationRequest;
 import com.oop.web_project.dto.responses.*;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Card;
@@ -59,4 +60,10 @@ public class AccountApiMapper {
         return response;
     }
 
+    public Account toAccount(AccountCreationRequest request) {
+        Account account = new Account();
+        account.setName(request.getAccountName());
+        account.setCategory(request.getCategory());
+        return account;
+    }
 }
