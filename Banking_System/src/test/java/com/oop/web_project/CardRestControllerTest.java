@@ -8,6 +8,7 @@ import com.oop.web_project.entities.Card;
 import com.oop.web_project.entities.CardBalance;
 import com.oop.web_project.exceptionHandler.GlobalExceptionHandler;
 import com.oop.web_project.mapping.AccountApiMapper;
+import com.oop.web_project.mapping.AccountSummaryApiMapper;
 import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.mapping.CardBalanceApiMapper;
 import com.oop.web_project.restController.CardRestController;
@@ -68,6 +69,9 @@ class CardRestControllerTest {
     private AccountApiMapper accountApiMapper;
 
     @MockitoBean
+    private AccountSummaryApiMapper accountSummaryApiMapper;
+
+    @MockitoBean
     private CardBalanceApiMapper cardBalanceApiMapper;
 
     @Test
@@ -91,13 +95,13 @@ class CardRestControllerTest {
         AccountSummaryResponse summaryResponse = mock(AccountSummaryResponse.class);
 
         when(accountService.selectAccountByCardId(1L)).thenReturn(account);
-        when(accountApiMapper.toAccountSummaryResponse(account)).thenReturn(summaryResponse);
+        when(accountSummaryApiMapper.toAccountSummaryResponse(account)).thenReturn(summaryResponse);
 
         mockMvc.perform(get("/api/card/1/account"))
                 .andExpect(status().isOk());
 
         verify(accountService).selectAccountByCardId(1L);
-        verify(accountApiMapper).toAccountSummaryResponse(account);
+        verify(accountSummaryApiMapper).toAccountSummaryResponse(account);
     }
 
     @Test

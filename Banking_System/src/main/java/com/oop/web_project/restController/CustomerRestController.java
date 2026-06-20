@@ -15,13 +15,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/customer")
 @Tag(name = "Customer", description = "Operations for managing customers")
+@Validated
 public class CustomerRestController {
 
     private final CustomerService customerService;
@@ -58,9 +61,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
     @GetMapping("/{customer-id}")
-    public ResponseEntity<CustomerProfileResponse> getCustomerProfile(
-            @Parameter(description = "ID of the customer to retrieve", required = true, example = "1")
-            @NotNull @PathVariable("customer-id") Long customerId) {
+    public ResponseEntity<CustomerProfileResponse> getCustomerProfile(@NotNull @Positive @PathVariable("customer-id") Long customerId){
         Customer customer = customerService.getCustomerById(customerId);
         CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -74,13 +75,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
     @PutMapping("/{customer-id}")
-    public ResponseEntity<CustomerProfileResponse> updateCustomerProfile(
-            @Parameter(description = "ID of the customer to update", required = true, example = "1")
-            @NotNull @PathVariable("customer-id") Long customerId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Updated customer details", required = true,
-                    content = @Content(schema = @Schema(implementation = CustomerUpdateRequest.class)))
-            @RequestBody @Valid CustomerUpdateRequest request) {
+    public ResponseEntity<CustomerProfileResponse> updateCustomerProfile(@NotNull @Positive @PathVariable("customer-id") Long customerId, @Valid @RequestBody CustomerUpdateRequest request){
         customerService.updateCustomer(customerId, request.getFirstName(), request.getLastName(), request.getPhoneNumber(), request.getAddress());
         Customer customer = customerService.getCustomerById(customerId);
         CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
@@ -95,9 +90,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
     @PatchMapping("/{customer-id}/deactivate")
-    public ResponseEntity<String> deactivateCustomer(
-            @Parameter(description = "ID of the customer to deactivate", required = true, example = "1")
-            @NotNull @PathVariable("customer-id") Long customerId) {
+    public ResponseEntity<String> deactivateCustomer(@NotNull @Positive @PathVariable("customer-id") Long customerId){
         customerService.deactivateCustomer(customerId);
         return ResponseEntity.status(HttpStatus.OK).body("The customer has been deactivated successfully.");
     }
@@ -110,9 +103,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
     @PatchMapping("/{customer-id}/activate")
-    public ResponseEntity<String> activateCustomer(
-            @Parameter(description = "ID of the customer to activate", required = true, example = "1")
-            @NotNull @PathVariable("customer-id") Long customerId) {
+    public ResponseEntity<String> activateCustomer(@NotNull @Positive @PathVariable("customer-id") Long customerId){
         customerService.activateCustomer(customerId);
         return ResponseEntity.status(HttpStatus.OK).body("The customer has been activated successfully.");
     }
@@ -125,9 +116,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
     @DeleteMapping("/{customer-id}/delete")
-    public ResponseEntity<String> deleteCustomer(
-            @Parameter(description = "ID of the customer to delete", required = true, example = "1")
-            @NotNull @PathVariable("customer-id") Long customerId) {
+    public ResponseEntity<String> deleteCustomer(@NotNull @Positive @PathVariable("customer-id") Long customerId){
         customerService.deleteCustomer(customerId);
         return ResponseEntity.status(HttpStatus.OK).body("The customer has been deleted successfully.");
     }

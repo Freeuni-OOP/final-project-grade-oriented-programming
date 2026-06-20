@@ -5,8 +5,8 @@ import com.oop.web_project.dto.requests.CardCreationRequest;
 import com.oop.web_project.dto.responses.AccountProfileResponse;
 import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.entities.Account;
-import com.oop.web_project.entities.Card;
 import com.oop.web_project.mapping.AccountApiMapper;
+import com.oop.web_project.mapping.AccountSummaryApiMapper;
 import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.services.AccountService;
 import com.oop.web_project.services.CardService;
@@ -18,11 +18,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.Getter;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.w3c.dom.html.HTMLHtmlElement;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -31,19 +34,22 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/account")
 @Tag(name = "Account", description = "Operations for managing accounts")
+@Validated
 public class AccountRestController {
 
     private final AccountService accountService;
     private final AccountApiMapper accountMapper;
     private final CardService cardService;
     private final CardApiMapper cardApiMapper;
+    private final AccountSummaryApiMapper accountSummaryApiMapper;
 
     public AccountRestController(AccountService accountService, AccountApiMapper accountMapper,
-                                 CardService cardService, CardApiMapper cardApiMapper) {
+                                 CardService cardService, CardApiMapper cardApiMapper, AccountSummaryApiMapper accountSummaryApiMapper) {
         this.accountService = accountService;
         this.accountMapper = accountMapper;
         this.cardService = cardService;
         this.cardApiMapper = cardApiMapper;
+        this.accountSummaryApiMapper = accountSummaryApiMapper;
     }
 
     @Operation(summary = "Create a new account", description = "Creates a new bank account from the provided details")
@@ -54,11 +60,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<String> createAccount(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Account creation details", required = true,
-                    content = @Content(schema = @Schema(implementation = AccountCreationRequest.class)))
-            @RequestBody AccountCreationRequest request) {
+    public ResponseEntity<String> createAccount(@RequestBody @Valid AccountCreationRequest request) {
         Account account = accountMapper.toAccount(request);
         accountService.createAccount(account);
         return ResponseEntity.status(HttpStatus.CREATED).body("Account has been successfully created.");
@@ -73,11 +75,7 @@ public class AccountRestController {
     })
     @PostMapping("/{account-id}/cards")
     public ResponseEntity<String> createCard(
-            @Parameter(description = "ID of the account to link the card to", required = true, example = "1")
-            @Valid @PathVariable("account-id") Long accountId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Card creation details", required = true,
-                    content = @Content(schema = @Schema(implementation = CardCreationRequest.class)))
+            @NotNull @Positive @PathVariable("account-id") Long accountId,
             @Valid @RequestBody CardCreationRequest cardCreationRequest) {
         cardService.createCard(cardApiMapper.toCardOnCardCreation(cardCreationRequest), accountId);
         return ResponseEntity.status(HttpStatus.CREATED).body("Card has been successfully created!");
@@ -91,9 +89,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
     @PatchMapping("/{account-id}/activate")
-    public ResponseEntity<String> ActivateAccount(
-            @Parameter(description = "ID of the account to activate", required = true, example = "1")
-            @PathVariable("account-id") Long accountId) {
+    public ResponseEntity<String> ActivateAccount(@NotNull @Positive @PathVariable("account-id") Long accountId) {
         accountService.activateAccount(accountId);
         return ResponseEntity.status(HttpStatus.OK).body("Account has been successfully activated.");
     }
@@ -106,9 +102,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
     @PatchMapping("/{account-id}/deactivate")
-    public ResponseEntity<String> DeactivateAccount(
-            @Parameter(description = "ID of the account to deactivate", required = true, example = "1")
-            @PathVariable("account-id") Long accountId) {
+    public ResponseEntity<String> DeactivateAccount(@NotNull @Positive @PathVariable("account-id") Long accountId) {
         accountService.deactivateAccount(accountId);
         return ResponseEntity.status(HttpStatus.OK).body("Account has been successfully deactivated.");
     }
@@ -121,9 +115,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
     @GetMapping("/{account-id}")
-    public ResponseEntity<AccountProfileResponse> getAccountWithId(
-            @Parameter(description = "ID of the account to retrieve", required = true, example = "1")
-            @PathVariable("account-id") Long accountId) {
+    public ResponseEntity<AccountProfileResponse> getAccountWithId(@NotNull @Positive @PathVariable("account-id") Long accountId) {
         Account account = accountService.selectAccountById(accountId);
         AccountProfileResponse response = accountMapper.toProfileResponse(account);
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -137,9 +129,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
     @DeleteMapping("/{account-id}")
-    public ResponseEntity<String> deleteAccount(
-            @Parameter(description = "ID of the account to delete", required = true, example = "1")
-            @PathVariable("account-id") Long accountId) {
+    public ResponseEntity<String> deleteAccount(@NotNull @Positive @PathVariable("account-id") Long accountId) {
         accountService.deleteAccount(accountId);
         return ResponseEntity.status(HttpStatus.OK).body("Account has been successfully deleted.");
     }
@@ -152,13 +142,11 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "No accounts found for this email", content = @Content)
     })
     @GetMapping
-    public ResponseEntity<List<AccountSummaryResponse>> getAccountsByEmail(
-            @Parameter(description = "Email of the customer whose accounts to retrieve", required = true, example = "jane@example.com")
-            @RequestParam("customerEmail") String customerEmail) {
+    public ResponseEntity<List<AccountSummaryResponse>> getAccountsByEmail(@NotBlank @Email @RequestParam("customerEmail") String customerEmail) {
         List<Account> accounts = accountService.selectAccountsByCustomerEmail(customerEmail);
         List<AccountSummaryResponse> summaryResponses = new ArrayList<>();
-        for (Account account : accounts) {
-            summaryResponses.add(accountMapper.toAccountSummaryResponse(account));
+        for(Account account : accounts) {
+            summaryResponses.add(accountSummaryApiMapper.toAccountSummaryResponse(account));
         }
         return ResponseEntity.status(HttpStatus.OK).body(summaryResponses);
     }
@@ -171,9 +159,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "No accounts found for this customer", content = @Content)
     })
     @GetMapping("/customer/{customer-id}")
-    public ResponseEntity<List<AccountProfileResponse>> getAccountWithCustomerId(
-            @Parameter(description = "ID of the customer whose accounts to retrieve", required = true, example = "1")
-            @PathVariable("customer-id") Long customerId) {
+    public ResponseEntity<List<AccountProfileResponse>> getAccountWithCustomerId(@NotNull @Positive @PathVariable("customer-id") Long customerId) {
         List<Account> accounts = accountService.selectAccountsByCustomerId(customerId);
         List<AccountProfileResponse> profileResponses = new ArrayList<>();
         for (Account account : accounts) {
@@ -190,14 +176,8 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
     @PutMapping("/{account-id}")
-    public ResponseEntity<String> updateAccount(
-            @Parameter(description = "ID of the account to update", required = true, example = "1")
-            @PathVariable("account-id") Long accountID,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "New account name", required = true,
-                    content = @Content(schema = @Schema(type = "string")))
-            @RequestBody String accountName) {
-        accountService.updateAccount(accountID, accountName);
+    public ResponseEntity<String> updateAccount(@NotNull @Positive @PathVariable("account-id") Long accountId, @NotBlank @RequestBody String accountName) {
+        accountService.updateAccount(accountId, accountName);
         return ResponseEntity.status(HttpStatus.OK).body("Account has been successfully updated!");
     }
 
@@ -209,11 +189,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "Account or customer not found", content = @Content)
     })
     @PutMapping("/{account-id}/customers/{customer-id}")
-    public ResponseEntity<String> registerCustomerToAccount(
-            @Parameter(description = "ID of the account", required = true, example = "1")
-            @PathVariable("account-id") Long accountId,
-            @Parameter(description = "ID of the customer to link", required = true, example = "1")
-            @PathVariable("customer-id") Long customerId) {
+    public ResponseEntity<String> registerCustomerToAccount(@NotNull @Positive @PathVariable("account-id") Long accountId, @NotNull @Positive @PathVariable("customer-id") Long customerId) {
         accountService.registerCustomerToAccount(accountId, customerId);
         return ResponseEntity.ok("Account to the Customer has been registered successfully!");
     }
@@ -226,12 +202,8 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
     @GetMapping("/{account-id}/balance")
-    public ResponseEntity<BigDecimal> getAccountBalanceByCurrency(
-            @Parameter(description = "ID of the account", required = true, example = "1")
-            @PathVariable("account-id") long accountID,
-            @Parameter(description = "Currency code to convert balance to", required = true, example = "USD")
-            @RequestParam("currencyCode") String currencyCode) {
-        BigDecimal balance = accountService.getAccountBalanceByCurrency(accountID, currencyCode);
+    public ResponseEntity<BigDecimal> getAccountBalanceByCurrency(@NotNull @Positive @PathVariable("account-id") Long accountId, @NotBlank @RequestParam("currencyCode") String currencyCode) {
+        BigDecimal balance = accountService.getAccountBalanceByCurrency(accountId, currencyCode);
         return ResponseEntity.status(HttpStatus.OK).body(balance);
     }
 }

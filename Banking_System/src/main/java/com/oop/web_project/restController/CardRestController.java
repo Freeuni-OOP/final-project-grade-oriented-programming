@@ -7,6 +7,7 @@ import com.oop.web_project.dto.responses.CardResponse;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Card;
 import com.oop.web_project.mapping.AccountApiMapper;
+import com.oop.web_project.mapping.AccountSummaryApiMapper;
 import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.mapping.CardBalanceApiMapper;
 import com.oop.web_project.services.AccountService;
@@ -19,9 +20,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,21 +32,22 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/card")
 @Tag(name = "Card", description = "Operations for managing cards")
+@Validated
 public class CardRestController {
 
     private final CardService cardService;
     private final AccountService accountService;
     private final CardApiMapper cardApiMapper;
-    private final AccountApiMapper accountApiMapper;
     private final CardBalanceApiMapper cardBalanceApiMapper;
+    private final AccountSummaryApiMapper accountSummaryApiMapper;
 
     public CardRestController(CardService cardService, AccountService accountService, CardApiMapper cardApiMapper,
-                              AccountApiMapper accountApiMapper, CardBalanceApiMapper cardBalanceApiMapper) {
+                              CardBalanceApiMapper cardBalanceApiMapper, AccountSummaryApiMapper accountSummaryApiMapper) {
         this.cardService = cardService;
         this.accountService = accountService;
         this.cardApiMapper = cardApiMapper;
-        this.accountApiMapper = accountApiMapper;
         this.cardBalanceApiMapper = cardBalanceApiMapper;
+        this.accountSummaryApiMapper = accountSummaryApiMapper;
     }
 
     @Operation(summary = "Get card by ID", description = "Retrieves the details of a card by its ID")
@@ -54,9 +58,8 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @GetMapping("/{card-id}")
-    public ResponseEntity<CardResponse> getCardById(
-            @Parameter(description = "ID of the card to retrieve", required = true, example = "1")
-            @NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<CardResponse> getCardById(@NotNull @Positive @PathVariable("card-id") Long cardId) {
+
         Card card = cardService.selectCardById(cardId);
         return ResponseEntity.ok(cardApiMapper.toCardResponse(card));
     }
@@ -69,11 +72,11 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card or account not found", content = @Content)
     })
     @GetMapping("/{card-id}/account")
-    public ResponseEntity<AccountSummaryResponse> getCardAccount(
-            @Parameter(description = "ID of the card whose account to retrieve", required = true, example = "1")
-            @NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<AccountSummaryResponse> getCardAccount(@NotNull @Positive @PathVariable("card-id") Long cardId) {
+
         Account account = accountService.selectAccountByCardId(cardId);
-        return ResponseEntity.ok(accountApiMapper.toAccountSummaryResponse(account));
+
+        return ResponseEntity.ok(accountSummaryApiMapper.toAccountSummaryResponse(account));
     }
 
     @Operation(summary = "Get card balances", description = "Retrieves all currency balances associated with the given card")
@@ -84,9 +87,8 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @GetMapping("/{card-id}/balances")
-    public ResponseEntity<List<CardBalanceResponse>> getCardBalances(
-            @Parameter(description = "ID of the card whose balances to retrieve", required = true, example = "1")
-            @NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<List<CardBalanceResponse>> getCardBalances(@NotNull @Positive @PathVariable("card-id") Long cardId) {
+
         Card card = cardService.selectCardById(cardId);
         return ResponseEntity.ok(cardService.selectCardBalances(cardId)
                 .stream().map(cardBalanceApiMapper::toCardBalanceResponse)
@@ -101,9 +103,8 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @GetMapping("/{card-id}/expiration")
-    public ResponseEntity<Boolean> getCardExpiration(
-            @Parameter(description = "ID of the card to check expiration for", required = true, example = "1")
-            @NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<Boolean> getCardExpiration(@NotNull @Positive @PathVariable("card-id") Long cardId) {
+
         Boolean isExpired = cardService.checkCardExpiration(cardId);
         return ResponseEntity.ok(isExpired);
     }
@@ -116,14 +117,12 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @PostMapping("/{card-id}/deposit")
-    public ResponseEntity<String> depositMoneyToCard(
-            @Parameter(description = "ID of the card to deposit money to", required = true, example = "1")
-            @NotNull @PathVariable("card-id") Long cardId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Deposit amount and currency details", required = true,
-                    content = @Content(schema = @Schema(implementation = CardDepositRequest.class)))
-            @RequestBody CardDepositRequest cardDepositRequest) {
-        cardService.depositMoney(cardId, cardDepositRequest.getAmountToDeposit(), cardDepositRequest.getCurrencyCode());
+    public ResponseEntity<String> depositMoneyToCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
+                                                     @Valid @RequestBody CardDepositRequest cardDepositRequest) {
+
+        cardService.depositMoney
+                (cardId, cardDepositRequest.getAmountToDeposit(), cardDepositRequest.getCurrencyCode());
+
         return ResponseEntity.ok("Money has been successfully deposited to card!");
     }
 
@@ -135,14 +134,12 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @PostMapping("/{card-id}/withdraw")
-    public ResponseEntity<String> withdrawMoneyFromCard(
-            @Parameter(description = "ID of the card to withdraw money from", required = true, example = "1")
-            @NotNull @PathVariable("card-id") Long cardId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Withdrawal amount and currency details", required = true,
-                    content = @Content(schema = @Schema(implementation = CardWithdrawRequest.class)))
-            @RequestBody CardWithdrawRequest cardWithdrawRequest) {
-        cardService.withdrawMoney(cardId, cardWithdrawRequest.getAmountToWithdraw(), cardWithdrawRequest.getCurrencyCode());
+    public ResponseEntity<String> withdrawMoneyFromCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
+                                                     @Valid @RequestBody CardWithdrawRequest cardWithdrawRequest) {
+
+        cardService.withdrawMoney
+                (cardId, cardWithdrawRequest.getAmountToWithdraw(), cardWithdrawRequest.getCurrencyCode());
+
         return ResponseEntity.ok("Money has been successfully withdrawn from card!");
     }
 
@@ -154,11 +151,8 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Sender or receiver card not found", content = @Content)
     })
     @PostMapping("/transfer")
-    public ResponseEntity<String> transferMoney(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Transfer details including sender, receiver, amount and currency", required = true,
-                    content = @Content(schema = @Schema(implementation = CardTransferRequest.class)))
-            @RequestBody CardTransferRequest cardTransferRequest) {
+    public ResponseEntity<String> transferMoney(@Valid @RequestBody CardTransferRequest cardTransferRequest) {
+
         cardService.transferMoney(cardTransferRequest.getSenderCardId(),
                 cardTransferRequest.getReceiverCardId(),
                 cardTransferRequest.getAmount(),
@@ -174,13 +168,9 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @PostMapping("/{card-id}/exchange-currency")
-    public ResponseEntity<String> exchangeCurrency(
-            @Parameter(description = "ID of the card to perform currency exchange on", required = true, example = "1")
-            @PathVariable("card-id") Long cardId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Exchange amount and currency codes", required = true,
-                    content = @Content(schema = @Schema(implementation = CurrencyExchangeRequest.class)))
-            @RequestBody CurrencyExchangeRequest currencyExchangeRequest) {
+    public ResponseEntity<String> exchangeCurrency(@NotNull @Positive @PathVariable("card-id") Long cardId,
+            @Valid @RequestBody CurrencyExchangeRequest currencyExchangeRequest) {
+
         cardService.changeCurrency(cardId, currencyExchangeRequest.getAmount(),
                 currencyExchangeRequest.getFromCurrencyCode(), currencyExchangeRequest.getToCurrencyCode());
         return ResponseEntity.ok("Currency transfer was successful!");
@@ -194,11 +184,9 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @PatchMapping("/{card-id}/currencies/{currency-code}")
-    public ResponseEntity<CardResponse> addCurrencyToCard(
-            @Parameter(description = "ID of the card to add the currency to", required = true, example = "1")
-            @Valid @PathVariable("card-id") Long cardId,
-            @Parameter(description = "Currency code to add (e.g. USD, EUR)", required = true, example = "USD")
-            @Valid @PathVariable("currency-code") String currencyCode) {
+    public ResponseEntity<CardResponse> addCurrencyToCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
+                                                          @NotBlank @PathVariable("currency-code") String currencyCode) {
+
         cardService.addCurrencyToCard(cardId, currencyCode);
         return ResponseEntity.ok(cardApiMapper.toCardResponse(cardService.selectCardById(cardId)));
     }
@@ -211,9 +199,8 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @PatchMapping("{card-id}/activate")
-    public ResponseEntity<String> activateCard(
-            @Parameter(description = "ID of the card to activate", required = true, example = "1")
-            @NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<String> activateCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
+
         cardService.activateCard(cardId);
         return ResponseEntity.ok("Card has been successfully activated!");
     }
@@ -226,9 +213,8 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @PatchMapping("{card-id}/deactivate")
-    public ResponseEntity<String> deactivateCard(
-            @Parameter(description = "ID of the card to deactivate", required = true, example = "1")
-            @NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<String> deactivateCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
+
         cardService.deactivateCard(cardId);
         return ResponseEntity.ok("Card has been successfully deactivated!");
     }
@@ -241,9 +227,8 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @DeleteMapping("/{card-id}")
-    public ResponseEntity<String> deleteCard(
-            @Parameter(description = "ID of the card to delete", required = true, example = "1")
-            @NotNull @PathVariable("card-id") Long cardId) {
+    public ResponseEntity<String> deleteCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
+
         cardService.deleteCard(cardId);
         return ResponseEntity.ok("Card has been successfully deleted!");
     }

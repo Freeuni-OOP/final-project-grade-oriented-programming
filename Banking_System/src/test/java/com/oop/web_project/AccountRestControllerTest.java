@@ -6,6 +6,7 @@ import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Card;
 import com.oop.web_project.exceptionHandler.GlobalExceptionHandler;
 import com.oop.web_project.mapping.AccountApiMapper;
+import com.oop.web_project.mapping.AccountSummaryApiMapper;
 import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.restController.AccountRestController;
 import com.oop.web_project.services.AccountService;
@@ -61,6 +62,9 @@ class AccountRestControllerTest {
     private AccountApiMapper accountMapper;
 
     @MockitoBean
+    private AccountSummaryApiMapper accountSummaryApiMapper;
+
+    @MockitoBean
     private CardService cardService;
 
     @MockitoBean
@@ -74,7 +78,7 @@ class AccountRestControllerTest {
                 {
                   "customerId": 1,
                   "accountName": "Savings",
-                  "currencyCode": "USD"
+                  "category": "SAVINGS"
                 }
                 """;
 
@@ -89,14 +93,14 @@ class AccountRestControllerTest {
 
     @Test
     void testCreateCardReturnsCreated() throws Exception {
-        // NOTE: body fields are assumed (cardType, currencyCode) since CardCreationRequest
-        // wasn't available — adjust to match the real DTO's fields/validation constraints.
         when(cardApiMapper.toCardOnCardCreation(any())).thenReturn(mock(Card.class));
 
         String body = """
                 {
                   "cardType": "DEBIT",
-                  "currencyCode": "USD"
+                  "cardBrand": "VISA",
+                  "spendingLimit": 200,
+                  "pan": "123456789101123"
                 }
                 """;
 
@@ -157,13 +161,13 @@ class AccountRestControllerTest {
         AccountSummaryResponse summaryResponse = mock(AccountSummaryResponse.class);
 
         when(accountService.selectAccountsByCustomerEmail("john@example.com")).thenReturn(List.of(account));
-        when(accountMapper.toAccountSummaryResponse(account)).thenReturn(summaryResponse);
+        when(accountSummaryApiMapper.toAccountSummaryResponse(account)).thenReturn(summaryResponse);
 
         mockMvc.perform(get("/api/account").param("customerEmail", "john@example.com"))
                 .andExpect(status().isOk());
 
         verify(accountService).selectAccountsByCustomerEmail("john@example.com");
-        verify(accountMapper).toAccountSummaryResponse(account);
+        verify(accountSummaryApiMapper).toAccountSummaryResponse(account);
     }
 
     @Test
