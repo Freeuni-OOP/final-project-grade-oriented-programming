@@ -78,7 +78,7 @@ class AccountRestControllerTest {
                 {
                   "customerId": 1,
                   "accountName": "Savings",
-                  "currencyCode": "USD"
+                  "category": "SAVINGS"
                 }
                 """;
 
@@ -93,14 +93,14 @@ class AccountRestControllerTest {
 
     @Test
     void testCreateCardReturnsCreated() throws Exception {
-        // NOTE: body fields are assumed (cardType, currencyCode) since CardCreationRequest
-        // wasn't available — adjust to match the real DTO's fields/validation constraints.
         when(cardApiMapper.toCardOnCardCreation(any())).thenReturn(mock(Card.class));
 
         String body = """
                 {
                   "cardType": "DEBIT",
-                  "currencyCode": "USD"
+                  "cardBrand": "VISA",
+                  "spendingLimit": 200,
+                  "pan": "123456789101123"
                 }
                 """;
 
