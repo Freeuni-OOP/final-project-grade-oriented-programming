@@ -11,6 +11,7 @@ import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.restController.AccountRestController;
 import com.oop.web_project.services.AccountService;
 import com.oop.web_project.services.CardService;
+import com.oop.web_project.services.JWTService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -69,6 +70,9 @@ class AccountRestControllerTest {
 
     @MockitoBean
     private CardApiMapper cardApiMapper;
+
+    @MockitoBean
+    private JWTService jwtService;
 
     @Test
     void testCreateAccountReturnsCreated() throws Exception {

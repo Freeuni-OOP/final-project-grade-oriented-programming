@@ -9,6 +9,7 @@ import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundExcepti
 import com.oop.web_project.mapping.CustomerApiMapper;
 import com.oop.web_project.restController.CustomerRestController;
 import com.oop.web_project.services.CustomerService;
+import com.oop.web_project.services.JWTService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -60,6 +61,9 @@ class CustomerRestControllerTest {
 
     @MockitoBean
     private CustomerApiMapper customerApiMapper;
+
+    @MockitoBean
+    private JWTService jwtService;
 
     @Test
     void testRegisterCustomerReturnsCreated() throws Exception {
