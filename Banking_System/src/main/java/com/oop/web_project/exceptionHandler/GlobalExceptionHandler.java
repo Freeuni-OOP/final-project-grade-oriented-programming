@@ -3,6 +3,7 @@ package com.oop.web_project.exceptionHandler;
 import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyActiveException;
 import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyDeactivatedException;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
+import com.oop.web_project.exceptions.accountExceptions.NotAccountOfCustomerException;
 import com.oop.web_project.exceptions.cardExceptions.*;
 import com.oop.web_project.exceptions.customerExceptions.*;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Hidden
 public class GlobalExceptionHandler {
 
-    // ACC
+    // ACCOUNT
     @ExceptionHandler(AccountAlreadyActiveException.class)
     public ResponseEntity<String> handleAlreadyActiveAccount(AccountAlreadyActiveException e) {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
@@ -31,6 +32,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<String> handleAccountNotFound(AccountNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(NotAccountOfCustomerException.class)
+    public ResponseEntity<String> handleAccountNotBeingOfCustomer(NotAccountOfCustomerException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 
     //CARD
@@ -103,6 +109,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomerAlreadyRegisteredException.class)
     public ResponseEntity<String> handleAlreadyRegisteredCustomer(CustomerAlreadyRegisteredException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(CustomerDetailsNotFoundException.class)
+    public ResponseEntity<String> handleCustomerDetailsNotFound(CustomerNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(CustomerIsNotAuthenticatedException.class)
+    public ResponseEntity<String> handleCustomerIsNotAuthenticated(CustomerIsNotAuthenticatedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 
     //transaction

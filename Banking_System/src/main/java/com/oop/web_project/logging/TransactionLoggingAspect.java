@@ -9,6 +9,7 @@ import com.oop.web_project.services.TransactionAuditService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
  */
 @Aspect
 @Component
+@Order(2)
 public class TransactionLoggingAspect {
 
     private final TransactionAuditService transactionAuditService;

@@ -4,6 +4,8 @@ import com.oop.web_project.entities.Customer;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -20,4 +22,11 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     Optional<Customer> findWithLockById(long id);
 
     boolean existsByEmail(String email);
+
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
+            "FROM Account a " +
+            "JOIN a.customers c " +
+            "JOIN a.cards card " +
+            "WHERE c.email = :email AND card.id = :cardId")
+    boolean customerWithEmailOwnsCard(@Param("email") String email, @Param("cardId") Long cardId);
 }

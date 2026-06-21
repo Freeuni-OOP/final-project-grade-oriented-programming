@@ -119,4 +119,10 @@ public class CustomerServiceImpl implements CustomerService {
 
         return customers;
     }
+
+    @Override
+    public boolean customerOwnsAccountWithCard(String email, long cardId) {
+        return customerRepository.customerWithEmailOwnsCard(email, cardId);
+    }
+
 }

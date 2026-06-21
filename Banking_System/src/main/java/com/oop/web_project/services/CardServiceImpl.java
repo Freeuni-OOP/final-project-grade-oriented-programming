@@ -1,8 +1,5 @@
 package com.oop.web_project.services;
-import com.oop.web_project.annotations.Deposit;
-import com.oop.web_project.annotations.Exchange;
-import com.oop.web_project.annotations.Transfer;
-import com.oop.web_project.annotations.Withdraw;
+import com.oop.web_project.annotations.*;
 import com.oop.web_project.entities.*;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
 import com.oop.web_project.exceptions.cardExceptions.*;
@@ -89,6 +86,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @AccountOwnershipRequired
     @Transactional
     public void addCurrencyToCard(long cardId, String currencyCode) {
         Card card = cardRepository.findById(cardId)
@@ -131,6 +129,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Deposit
+    @AccountOwnershipRequired
     @Transactional
     public void depositMoney(long cardId, BigDecimal amountToAdd, String currencyCode) {
         Card card = cardRepository.findById(cardId)
@@ -154,6 +153,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Withdraw
+    @AccountOwnershipRequired
     @Transactional
     public void withdrawMoney(long cardId, BigDecimal amountToWithdraw, String currencyCode) {
         CardBalance balance = cardBalanceRepository.findByCardIdAndCurrencyCode(cardId, currencyCode)
@@ -172,6 +172,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transfer
+    @AccountOwnershipRequired
     @Transactional
     public void transferMoney(long senderCardId, long receiverCardId, BigDecimal amount, String currencyCode) {
         if(senderCardId == receiverCardId){
@@ -203,6 +204,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Exchange
+    @AccountOwnershipRequired
     @Transactional
     public void changeCurrency(long cardId, BigDecimal amount, String fromCurrencyCode, String toCurrencyCode) {
         if(fromCurrencyCode.equals(toCurrencyCode)){
@@ -235,6 +237,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @AccountOwnershipRequired
     public boolean checkCardExpiration(long cardId) {
         Card card = cardRepository.findById(cardId)
                 .orElseThrow(

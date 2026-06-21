@@ -51,4 +51,9 @@ public interface CustomerService {
      * Returns all customers that jointly own the specified account.
      */
     List<Customer> getCustomersByAccount(long accountId);
+
+    /**
+     * returns true, if customer owns the account, false otherwise
+     */
+    boolean customerOwnsAccountWithCard(String email, long cardId);
 }
