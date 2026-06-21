@@ -39,6 +39,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @AccountOwnershipRequired
     @Transactional
     public void activateCard(long cardId) {
         Card card = cardRepository.findWithLockById(cardId).orElseThrow(
@@ -50,6 +51,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @AccountOwnershipRequired
     @Transactional
     public void deactivateCard(long cardId) {
         Card card = cardRepository.findWithLockById(cardId).orElseThrow(
@@ -61,6 +63,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @AccountOwnershipRequired
     @Transactional
     public void createCard(Card card, long accountId) {
         Account account = accountRepository.findById(accountId)
@@ -78,6 +81,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @AccountOwnershipRequired
     public Card selectCardById(long cardId) {
         return cardRepository.findById(cardId)
                 .orElseThrow(
@@ -117,6 +121,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @AccountOwnershipRequired
     public List<CardBalance> selectCardBalances(long cardId) {
         return cardBalanceRepository.findAllByCardId(cardId);
     }
@@ -232,6 +237,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @AccountOwnershipRequired
     public List<Card> getAllCardsForAccount(long accountId) {
         return cardRepository.getAllByAccountId(accountId);
     }
