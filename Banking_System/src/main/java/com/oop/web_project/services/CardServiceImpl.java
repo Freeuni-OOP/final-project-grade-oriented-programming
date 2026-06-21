@@ -39,7 +39,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    @AccountOwnershipRequired
+    @CardAccessPermissionRequired
     @Transactional
     public void activateCard(long cardId) {
         Card card = cardRepository.findWithLockById(cardId).orElseThrow(
@@ -51,7 +51,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    @AccountOwnershipRequired
+    @CardAccessPermissionRequired
     @Transactional
     public void deactivateCard(long cardId) {
         Card card = cardRepository.findWithLockById(cardId).orElseThrow(
@@ -63,9 +63,9 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    @AccountOwnershipRequired
+    @AccountAccessPermissionRequired
     @Transactional
-    public void createCard(Card card, long accountId) {
+    public void createCard(long accountId, Card card) {
         Account account = accountRepository.findById(accountId)
                         .orElseThrow(
                                 () -> new AccountNotFoundException("Account not found!")
@@ -81,7 +81,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    @AccountOwnershipRequired
+    @CardAccessPermissionRequired
     public Card selectCardById(long cardId) {
         return cardRepository.findById(cardId)
                 .orElseThrow(
@@ -90,7 +90,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    @AccountOwnershipRequired
+    @CardAccessPermissionRequired
     @Transactional
     public void addCurrencyToCard(long cardId, String currencyCode) {
         Card card = cardRepository.findById(cardId)
@@ -121,7 +121,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    @AccountOwnershipRequired
+    @CardAccessPermissionRequired
     public List<CardBalance> selectCardBalances(long cardId) {
         return cardBalanceRepository.findAllByCardId(cardId);
     }
@@ -134,7 +134,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Deposit
-    @AccountOwnershipRequired
+    @CardAccessPermissionRequired
     @Transactional
     public void depositMoney(long cardId, BigDecimal amountToAdd, String currencyCode) {
         Card card = cardRepository.findById(cardId)
@@ -158,7 +158,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Withdraw
-    @AccountOwnershipRequired
+    @CardAccessPermissionRequired
     @Transactional
     public void withdrawMoney(long cardId, BigDecimal amountToWithdraw, String currencyCode) {
         CardBalance balance = cardBalanceRepository.findByCardIdAndCurrencyCode(cardId, currencyCode)
@@ -177,7 +177,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transfer
-    @AccountOwnershipRequired
+    @CardAccessPermissionRequired
     @Transactional
     public void transferMoney(long senderCardId, long receiverCardId, BigDecimal amount, String currencyCode) {
         if(senderCardId == receiverCardId){
@@ -209,7 +209,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Exchange
-    @AccountOwnershipRequired
+    @CardAccessPermissionRequired
     @Transactional
     public void changeCurrency(long cardId, BigDecimal amount, String fromCurrencyCode, String toCurrencyCode) {
         if(fromCurrencyCode.equals(toCurrencyCode)){
@@ -237,13 +237,13 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    @AccountOwnershipRequired
+    @AccountAccessPermissionRequired
     public List<Card> getAllCardsForAccount(long accountId) {
         return cardRepository.getAllByAccountId(accountId);
     }
 
     @Override
-    @AccountOwnershipRequired
+    @CardAccessPermissionRequired
     public boolean checkCardExpiration(long cardId) {
         Card card = cardRepository.findById(cardId)
                 .orElseThrow(

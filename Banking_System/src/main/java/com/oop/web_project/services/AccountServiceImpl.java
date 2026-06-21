@@ -1,4 +1,7 @@
 package com.oop.web_project.services;
+import com.oop.web_project.annotations.AccountAccessPermissionRequired;
+import com.oop.web_project.annotations.CardAccessPermissionRequired;
+import com.oop.web_project.annotations.CustomerAccessPermissionRequired;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyActiveException;
@@ -41,6 +44,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @AccountAccessPermissionRequired
     @Transactional
     public void activateAccount(long accountId) {
         Account account = accountRepository.findWithLockById(accountId).orElseThrow(
@@ -52,6 +56,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @AccountAccessPermissionRequired
     @Transactional
     public void deactivateAccount(long accountId) {
         Account account = accountRepository.findWithLockById(accountId).orElseThrow(
@@ -74,6 +79,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @AccountAccessPermissionRequired
     public Account selectAccountById(long accountId) {
         return accountRepository.findById(accountId).orElseThrow(
                 () -> new AccountNotFoundException("Could not find account!")
@@ -81,6 +87,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @CardAccessPermissionRequired
     public Account selectAccountByCardId(long cardId) {
         return accountRepository.findByCardsId(cardId)
                 .orElseThrow(
@@ -98,6 +105,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @CustomerAccessPermissionRequired
     public List<Account> selectAccountsByCustomerId(long customerId) {
         List<Account> accountList = accountRepository.findAllByCustomersId(customerId);
         if(accountList == null || accountList.isEmpty()) {
@@ -107,6 +115,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @AccountAccessPermissionRequired
     @Transactional
     public void updateAccount(long accountId, String accountName) {
         Account existingAccount = accountRepository.findWithLockById(accountId).orElseThrow(
@@ -129,6 +138,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @AccountAccessPermissionRequired
     @Transactional(readOnly = true)
     public BigDecimal getAccountBalanceByCurrency(long accountId, String currencyCode) {
         return cardRepository.getBalanceForAccount(accountId, currencyCode).orElseThrow(

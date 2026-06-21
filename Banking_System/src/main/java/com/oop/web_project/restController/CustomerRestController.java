@@ -20,6 +20,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/customer")
 @Tag(name = "Customer", description = "Operations for managing customers")
@@ -48,6 +50,27 @@ public class CustomerRestController {
         CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @Operation(summary = "Get customers by account", description = "Retrieves all customer profiles associated with a given account ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Customer profiles retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = CustomerProfileResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid account ID", content = @Content),
+            @ApiResponse(responseCode = "404", description = "No customers found for the given account", content = @Content)
+    })
+    @PreAuthorize("hasAuthority(\"MANAGER\")")
+    @GetMapping("/account/{account-id}")
+    public ResponseEntity<List<CustomerProfileResponse>> getCustomerProfilesByAccount
+            (@NotNull @Positive @PathVariable("account-id") Long accountId) {
+
+        List<Customer> customers = customerService.getCustomersByAccount(accountId);
+        return ResponseEntity.ok().body(
+                customers.stream()
+                        .map(customerApiMapper::toProfileResponse)
+                        .toList()
+        );
+    }
+
 
     @Operation(summary = "Update customer profile", description = "Updates the profile details of an existing customer")
     @ApiResponses({

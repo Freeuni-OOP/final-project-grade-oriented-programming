@@ -29,4 +29,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             "JOIN a.cards card " +
             "WHERE c.email = :email AND card.id = :cardId")
     boolean customerWithEmailOwnsCard(@Param("email") String email, @Param("cardId") Long cardId);
+
+    boolean existsByEmailAndAccountsId(String email, Long accountId);
+
+    boolean existsByEmailAndId(String email, Long customerId);
 }

@@ -80,7 +80,7 @@ public class AccountRestController {
     public ResponseEntity<String> createCard(
             @NotNull @Positive @PathVariable("account-id") Long accountId,
             @Valid @RequestBody CardCreationRequest cardCreationRequest) {
-        cardService.createCard(cardApiMapper.toCardOnCardCreation(cardCreationRequest), accountId);
+        cardService.createCard(accountId, cardApiMapper.toCardOnCardCreation(cardCreationRequest));
         return ResponseEntity.status(HttpStatus.CREATED).body("Card has been successfully created!");
     }
 

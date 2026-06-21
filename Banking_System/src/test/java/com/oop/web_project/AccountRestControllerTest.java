@@ -114,7 +114,7 @@ class AccountRestControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(content().string("Card has been successfully created!"));
 
-        verify(cardService).createCard(any(Card.class), eq(1L));
+        verify(cardService).createCard(eq(1L), any(Card.class));
     }
 
     @Test

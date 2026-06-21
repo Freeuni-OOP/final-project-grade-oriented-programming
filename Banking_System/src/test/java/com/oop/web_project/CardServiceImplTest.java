@@ -110,7 +110,7 @@ class CardServiceImplTest {
         Account account = new Account();
         account.setId(1L);
         when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
-        cardService.createCard(card, 1L);
+        cardService.createCard(1L, card);
         verify(cardRepository, times(1)).save(card);
     }
 
