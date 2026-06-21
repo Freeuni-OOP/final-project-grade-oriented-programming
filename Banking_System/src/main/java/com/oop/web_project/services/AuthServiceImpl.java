@@ -1,5 +1,6 @@
 package com.oop.web_project.services;
 
+import com.oop.web_project.exceptions.customerExceptions.CustomerCannotBeAuthenticatedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,10 +24,11 @@ public class AuthServiceImpl implements AuthService {
                         email, password
                 )
         );
-        if(authentication.isAuthenticated()) {
-            return jwtService.generateToken(email);
+
+        if(!authentication.isAuthenticated()) {
+            throw new CustomerCannotBeAuthenticatedException("Customer cannot be authenticated!");
         }
 
-        return "Failure";
+        return jwtService.generateToken(email);
     }
 }

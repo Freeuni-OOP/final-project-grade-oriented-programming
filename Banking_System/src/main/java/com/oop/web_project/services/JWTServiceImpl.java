@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cglib.core.internal.Function;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,7 +37,7 @@ public class JWTServiceImpl implements JWTService {
                     .signWith(getKey())
                     .compact();
         } catch (Exception e) {
-            throw new JwtException("Cannot built JWT token!");
+            throw new JwtException(e.getMessage());
         }
         return generatedToken;
     }
