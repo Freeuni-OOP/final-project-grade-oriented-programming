@@ -627,11 +627,11 @@ class CustomerTest {
     @Test
     void testSetRoleUpdatesValue() {
         Customer customer = createCustomer();
-        Role adminRole = Role.ADMIN;
+        Role adminRole = Role.MANAGER;
 
         customer.setRole(adminRole);
 
-        assertEquals(Role.ADMIN, customer.getRole());
+        assertEquals(Role.MANAGER, customer.getRole());
     }
 }
 

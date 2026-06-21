@@ -81,18 +81,18 @@ class UserDetailsServiceImplTest {
     }
 
     @Test
-    void testLoadUserByUsernameGrantedAuthorityMatchesAdminRole() {
+    void testLoadUserByUsernameGrantedAuthorityMatchesManagerRole() {
         Customer customer = new Customer();
         customer.setEmail("admin@example.com");
         customer.setHashedPassword("hashedPass");
-        customer.setRole(Role.ADMIN);
+        customer.setRole(Role.MANAGER);
 
         when(customerService.getCustomerByEmail("admin@example.com")).thenReturn(customer);
 
         UserDetails result = userDetailsService.loadUserByUsername("admin@example.com");
 
         assertTrue(result.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals(Role.ADMIN.name())));
+                .anyMatch(a -> a.getAuthority().equals(Role.MANAGER.name())));
     }
 
     @Test

@@ -22,6 +22,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,6 +56,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping("/{card-id}")
     public ResponseEntity<CardResponse> getCardById(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
@@ -69,6 +71,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card or account not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping("/{card-id}/account")
     public ResponseEntity<AccountSummaryResponse> getCardAccount(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
@@ -84,6 +87,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping("/{card-id}/balances")
     public ResponseEntity<List<CardBalanceResponse>> getCardBalances(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
@@ -100,6 +104,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping("/{card-id}/expiration")
     public ResponseEntity<Boolean> getCardExpiration(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
@@ -114,6 +119,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "400", description = "Invalid card ID, request body, or spending limit exceeded", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card or card balance (currency) not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PostMapping("/{card-id}/deposit")
     public ResponseEntity<String> depositMoneyToCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
                                                      @Valid @RequestBody CardDepositRequest cardDepositRequest) {
@@ -131,6 +137,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "400", description = "Invalid card ID, request body, or insufficient funds", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card balance (currency) not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PostMapping("/{card-id}/withdraw")
     public ResponseEntity<String> withdrawMoneyFromCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
                                                         @Valid @RequestBody CardWithdrawRequest cardWithdrawRequest) {
@@ -149,6 +156,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Sender or receiver card (or balance) not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Sender and receiver card are the same", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PostMapping("/transfer")
     public ResponseEntity<String> transferMoney(@Valid @RequestBody CardTransferRequest cardTransferRequest) {
 
@@ -167,6 +175,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card or card balance not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "From-currency and to-currency are the same", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PostMapping("/{card-id}/exchange-currency")
     public ResponseEntity<String> exchangeCurrency(@NotNull @Positive @PathVariable("card-id") Long cardId,
                                                    @Valid @RequestBody CurrencyExchangeRequest currencyExchangeRequest) {
@@ -184,6 +193,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Currency code does not exist, or card already has a balance for this currency", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PatchMapping("/{card-id}/currencies/{currency-code}")
     public ResponseEntity<CardResponse> addCurrencyToCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
                                                           @NotBlank @PathVariable("currency-code") String currencyCode) {
@@ -200,6 +210,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Card is already active", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PatchMapping("{card-id}/activate")
     public ResponseEntity<String> activateCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
@@ -215,6 +226,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Card is already inactive", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PatchMapping("{card-id}/deactivate")
     public ResponseEntity<String> deactivateCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
@@ -229,6 +241,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"MANAGER\")")
     @DeleteMapping("/{card-id}")
     public ResponseEntity<String> deleteCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
