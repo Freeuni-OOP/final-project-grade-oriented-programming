@@ -3,13 +3,11 @@ package com.oop.web_project.services;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
-import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyActiveException;
-import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactivatedException;
-import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
-import com.oop.web_project.exceptions.customerExceptions.InvalidCustomerEmailException;
+import com.oop.web_project.exceptions.customerExceptions.*;
 import com.oop.web_project.persistence.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,19 +17,28 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public CustomerServiceImpl(AccountRepository accountRepository,
-                               CustomerRepository customerRepository) {
+                               CustomerRepository customerRepository,
+                               PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
         this.customerRepository = customerRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     @Transactional
     public void registerCustomer(Customer customer) {
         if(customer == null) {
-            throw new CustomerNotFoundException("customer cannot be found!");
+            throw new IllegalArgumentException("customer cannot be null!");
         }
+
+        if(customerRepository.existsByEmail(customer.getEmail())) {
+            throw new CustomerAlreadyRegisteredException("Customer with this email already exists!");
+        }
+
+        customer.setHashedPassword(passwordEncoder.encode(customer.getHashedPassword()));
         customerRepository.save(customer);
     }
 
@@ -112,4 +119,10 @@ public class CustomerServiceImpl implements CustomerService {
 
         return customers;
     }
+
+    @Override
+    public boolean customerOwnsAccountWithCard(String email, long cardId) {
+        return customerRepository.customerWithEmailOwnsCard(email, cardId);
+    }
+
 }

@@ -3,11 +3,11 @@ package com.oop.web_project.exceptionHandler;
 import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyActiveException;
 import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyDeactivatedException;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
+import com.oop.web_project.exceptions.accountExceptions.NotAccountOfCustomerException;
 import com.oop.web_project.exceptions.cardExceptions.*;
-import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyActiveException;
-import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactivatedException;
-import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
+import com.oop.web_project.exceptions.customerExceptions.*;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
+import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
-
+@Hidden
 public class GlobalExceptionHandler {
 
-    // ACC
+    // ACCOUNT
     @ExceptionHandler(AccountAlreadyActiveException.class)
     public ResponseEntity<String> handleAlreadyActiveAccount(AccountAlreadyActiveException e) {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
@@ -32,6 +32,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<String> handleAccountNotFound(AccountNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(NotAccountOfCustomerException.class)
+    public ResponseEntity<String> handleAccountNotBeingOfCustomer(NotAccountOfCustomerException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 
     //CARD
@@ -94,6 +99,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomerNotFoundException.class)
     public ResponseEntity<String> handleCustomerNotFound(CustomerNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(CustomerCannotBeAuthenticatedException.class)
+    public ResponseEntity<String> handleCustomerNotAuthenticated(CustomerCannotBeAuthenticatedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
+    @ExceptionHandler(CustomerAlreadyRegisteredException.class)
+    public ResponseEntity<String> handleAlreadyRegisteredCustomer(CustomerAlreadyRegisteredException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(CustomerDetailsNotFoundException.class)
+    public ResponseEntity<String> handleCustomerDetailsNotFound(CustomerNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(CustomerIsNotAuthenticatedException.class)
+    public ResponseEntity<String> handleCustomerIsNotAuthenticated(CustomerIsNotAuthenticatedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 
     //transaction

@@ -5,7 +5,6 @@ import com.oop.web_project.dto.responses.CustomerProfileResponse;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.entities.Role;
-import com.oop.web_project.utils.PasswordHasher;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -31,7 +30,7 @@ public class CustomerApiMapper {
         customer.setEmail(request.getEmail());
         customer.setAccounts(new ArrayList<>());
         customer.setActive(true);
-        customer.setHashedPassword(PasswordHasher.hash(request.getPassword()));
+        customer.setHashedPassword(request.getPassword());
         customer.setRole(Role.STANDARD);
         return customer;
     }

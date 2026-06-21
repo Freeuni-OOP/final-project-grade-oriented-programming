@@ -1,13 +1,11 @@
 package com.oop.web_project.restController;
 
-import com.oop.web_project.dto.requests.CustomerRegistrationRequest;
 import com.oop.web_project.dto.requests.CustomerUpdateRequest;
 import com.oop.web_project.dto.responses.CustomerProfileResponse;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.mapping.CustomerApiMapper;
 import com.oop.web_project.services.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,24 +31,6 @@ public class CustomerRestController {
     public CustomerRestController(CustomerService customerService, CustomerApiMapper customerApiMapper) {
         this.customerService = customerService;
         this.customerApiMapper = customerApiMapper;
-    }
-
-    @Operation(summary = "Register a new customer", description = "Creates a new customer account")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Customer registered successfully",
-                    content = @Content(schema = @Schema(type = "string"))),
-            @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content),
-            @ApiResponse(responseCode = "409", description = "Customer already exists", content = @Content)
-    })
-    @PostMapping("/register")
-    public ResponseEntity<String> registerCustomer(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Customer registration details", required = true,
-                    content = @Content(schema = @Schema(implementation = CustomerRegistrationRequest.class)))
-            @Valid @RequestBody CustomerRegistrationRequest request) {
-        Customer customer = customerApiMapper.toCustomerOnRegistration(request);
-        customerService.registerCustomer(customer);
-        return ResponseEntity.status(HttpStatus.CREATED).body("The Customer has been registered successfully.");
     }
 
     @Operation(summary = "Get customer profile", description = "Retrieves the profile of a customer by their ID")
@@ -87,7 +67,8 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "200", description = "Customer deactivated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content),
+            @ApiResponse(responseCode = "406", description = "Customer is already inactive", content = @Content)
     })
     @PatchMapping("/{customer-id}/deactivate")
     public ResponseEntity<String> deactivateCustomer(@NotNull @Positive @PathVariable("customer-id") Long customerId){
@@ -100,7 +81,8 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "200", description = "Customer activated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content),
+            @ApiResponse(responseCode = "406", description = "Customer is already active", content = @Content)
     })
     @PatchMapping("/{customer-id}/activate")
     public ResponseEntity<String> activateCustomer(@NotNull @Positive @PathVariable("customer-id") Long customerId){

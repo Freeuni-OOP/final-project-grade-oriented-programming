@@ -11,7 +11,6 @@ import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.services.AccountService;
 import com.oop.web_project.services.CardService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -71,7 +70,8 @@ public class AccountRestController {
             @ApiResponse(responseCode = "201", description = "Card created successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID or request body", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Account not found", content = @Content),
+            @ApiResponse(responseCode = "409", description = "A card with the same PAN already exists", content = @Content)
     })
     @PostMapping("/{account-id}/cards")
     public ResponseEntity<String> createCard(
@@ -86,7 +86,8 @@ public class AccountRestController {
             @ApiResponse(responseCode = "200", description = "Account activated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Account not found", content = @Content),
+            @ApiResponse(responseCode = "406", description = "Account is already active", content = @Content)
     })
     @PatchMapping("/{account-id}/activate")
     public ResponseEntity<String> ActivateAccount(@NotNull @Positive @PathVariable("account-id") Long accountId) {
@@ -99,7 +100,8 @@ public class AccountRestController {
             @ApiResponse(responseCode = "200", description = "Account deactivated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Account not found", content = @Content),
+            @ApiResponse(responseCode = "406", description = "Account is already inactive", content = @Content)
     })
     @PatchMapping("/{account-id}/deactivate")
     public ResponseEntity<String> DeactivateAccount(@NotNull @Positive @PathVariable("account-id") Long accountId) {
