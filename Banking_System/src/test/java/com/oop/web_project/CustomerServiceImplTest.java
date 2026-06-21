@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,9 @@ class CustomerServiceImplTest {
 
     @Mock
     private CustomerRepository customerRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private CustomerServiceImpl customerService;
@@ -56,6 +60,7 @@ class CustomerServiceImplTest {
 
     @Test
     void testRegisterCustomerValidCustomerSavesCustomer() {
+        when(passwordEncoder.encode(customer.getHashedPassword())).thenReturn("");
         customerService.registerCustomer(customer);
         verify(customerRepository, times(1)).save(customer);
     }

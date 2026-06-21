@@ -10,6 +10,7 @@ import com.oop.web_project.exceptions.customerExceptions.InvalidCustomerEmailExc
 import com.oop.web_project.persistence.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,11 +20,14 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public CustomerServiceImpl(AccountRepository accountRepository,
-                               CustomerRepository customerRepository) {
+                               CustomerRepository customerRepository,
+                               PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
         this.customerRepository = customerRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -32,6 +36,8 @@ public class CustomerServiceImpl implements CustomerService {
         if(customer == null) {
             throw new CustomerNotFoundException("customer cannot be found!");
         }
+
+        customer.setHashedPassword(passwordEncoder.encode(customer.getHashedPassword()));
         customerRepository.save(customer);
     }
 
