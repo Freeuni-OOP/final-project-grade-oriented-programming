@@ -4,10 +4,7 @@ import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyActiveExce
 import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyDeactivatedException;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
 import com.oop.web_project.exceptions.cardExceptions.*;
-import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyActiveException;
-import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactivatedException;
-import com.oop.web_project.exceptions.customerExceptions.CustomerCannotBeAuthenticatedException;
-import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
+import com.oop.web_project.exceptions.customerExceptions.*;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
 import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -101,6 +98,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomerCannotBeAuthenticatedException.class)
     public ResponseEntity<String> handleCustomerNotAuthenticated(CustomerCannotBeAuthenticatedException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
+    @ExceptionHandler(CustomerAlreadyRegisteredException.class)
+    public ResponseEntity<String> handleAlreadyRegisteredCustomer(CustomerAlreadyRegisteredException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
     //transaction

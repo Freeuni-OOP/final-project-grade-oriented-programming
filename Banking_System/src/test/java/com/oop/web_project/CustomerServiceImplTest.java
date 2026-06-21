@@ -54,7 +54,7 @@ class CustomerServiceImplTest {
 
     @Test
     void testRegisterCustomerNullCustomerThrowsException() {
-        assertThrows(CustomerNotFoundException.class, () -> customerService.registerCustomer(null));
+        assertThrows(IllegalArgumentException.class, () -> customerService.registerCustomer(null));
         verify(customerRepository, never()).save(any());
     }
 

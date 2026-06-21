@@ -3,10 +3,7 @@ package com.oop.web_project.services;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
-import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyActiveException;
-import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactivatedException;
-import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
-import com.oop.web_project.exceptions.customerExceptions.InvalidCustomerEmailException;
+import com.oop.web_project.exceptions.customerExceptions.*;
 import com.oop.web_project.persistence.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
@@ -34,7 +31,11 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public void registerCustomer(Customer customer) {
         if(customer == null) {
-            throw new CustomerNotFoundException("customer cannot be found!");
+            throw new IllegalArgumentException("customer cannot be null!");
+        }
+
+        if(customerRepository.existsByEmail(customer.getEmail())) {
+            throw new CustomerAlreadyRegisteredException("Customer with this email already exists!");
         }
 
         customer.setHashedPassword(passwordEncoder.encode(customer.getHashedPassword()));

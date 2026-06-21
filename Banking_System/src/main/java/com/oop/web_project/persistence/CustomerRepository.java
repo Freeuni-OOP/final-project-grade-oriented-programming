@@ -18,4 +18,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Customer> findWithLockById(long id);
+
+    boolean existsByEmail(String email);
 }
