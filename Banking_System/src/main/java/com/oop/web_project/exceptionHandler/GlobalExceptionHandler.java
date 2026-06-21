@@ -9,6 +9,7 @@ import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactiva
 import com.oop.web_project.exceptions.customerExceptions.CustomerCannotBeAuthenticatedException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
+import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
-
+@Hidden
 public class GlobalExceptionHandler {
 
     // ACC

@@ -7,7 +7,6 @@ import com.oop.web_project.entities.Customer;
 import com.oop.web_project.mapping.CustomerApiMapper;
 import com.oop.web_project.services.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -87,7 +86,8 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "200", description = "Customer deactivated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content),
+            @ApiResponse(responseCode = "406", description = "Customer is already inactive", content = @Content)
     })
     @PatchMapping("/{customer-id}/deactivate")
     public ResponseEntity<String> deactivateCustomer(@NotNull @Positive @PathVariable("customer-id") Long customerId){
@@ -100,7 +100,8 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "200", description = "Customer activated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content),
+            @ApiResponse(responseCode = "406", description = "Customer is already active", content = @Content)
     })
     @PatchMapping("/{customer-id}/activate")
     public ResponseEntity<String> activateCustomer(@NotNull @Positive @PathVariable("customer-id") Long customerId){

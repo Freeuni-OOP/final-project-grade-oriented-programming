@@ -6,14 +6,12 @@ import com.oop.web_project.dto.responses.CardBalanceResponse;
 import com.oop.web_project.dto.responses.CardResponse;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Card;
-import com.oop.web_project.mapping.AccountApiMapper;
 import com.oop.web_project.mapping.AccountSummaryApiMapper;
 import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.mapping.CardBalanceApiMapper;
 import com.oop.web_project.services.AccountService;
 import com.oop.web_project.services.CardService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -113,8 +111,8 @@ public class CardRestController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Money deposited successfully",
                     content = @Content(schema = @Schema(type = "string"))),
-            @ApiResponse(responseCode = "400", description = "Invalid card ID or request body", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Invalid card ID, request body, or spending limit exceeded", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Card or card balance (currency) not found", content = @Content)
     })
     @PostMapping("/{card-id}/deposit")
     public ResponseEntity<String> depositMoneyToCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
@@ -130,12 +128,12 @@ public class CardRestController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Money withdrawn successfully",
                     content = @Content(schema = @Schema(type = "string"))),
-            @ApiResponse(responseCode = "400", description = "Invalid card ID or request body", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Invalid card ID, request body, or insufficient funds", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Card balance (currency) not found", content = @Content)
     })
     @PostMapping("/{card-id}/withdraw")
     public ResponseEntity<String> withdrawMoneyFromCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
-                                                     @Valid @RequestBody CardWithdrawRequest cardWithdrawRequest) {
+                                                        @Valid @RequestBody CardWithdrawRequest cardWithdrawRequest) {
 
         cardService.withdrawMoney
                 (cardId, cardWithdrawRequest.getAmountToWithdraw(), cardWithdrawRequest.getCurrencyCode());
@@ -147,8 +145,9 @@ public class CardRestController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Money transferred successfully",
                     content = @Content(schema = @Schema(type = "string"))),
-            @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Sender or receiver card not found", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Invalid request body or insufficient funds / spending limit exceeded", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Sender or receiver card (or balance) not found", content = @Content),
+            @ApiResponse(responseCode = "406", description = "Sender and receiver card are the same", content = @Content)
     })
     @PostMapping("/transfer")
     public ResponseEntity<String> transferMoney(@Valid @RequestBody CardTransferRequest cardTransferRequest) {
@@ -164,12 +163,13 @@ public class CardRestController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Currency exchanged successfully",
                     content = @Content(schema = @Schema(type = "string"))),
-            @ApiResponse(responseCode = "400", description = "Invalid card ID or request body", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Invalid card ID, request body, insufficient funds, or no exchange rate found for the currency pair", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Card or card balance not found", content = @Content),
+            @ApiResponse(responseCode = "406", description = "From-currency and to-currency are the same", content = @Content)
     })
     @PostMapping("/{card-id}/exchange-currency")
     public ResponseEntity<String> exchangeCurrency(@NotNull @Positive @PathVariable("card-id") Long cardId,
-            @Valid @RequestBody CurrencyExchangeRequest currencyExchangeRequest) {
+                                                   @Valid @RequestBody CurrencyExchangeRequest currencyExchangeRequest) {
 
         cardService.changeCurrency(cardId, currencyExchangeRequest.getAmount(),
                 currencyExchangeRequest.getFromCurrencyCode(), currencyExchangeRequest.getToCurrencyCode());
@@ -181,7 +181,8 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Currency added successfully",
                     content = @Content(schema = @Schema(implementation = CardResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID or currency code", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Card not found", content = @Content),
+            @ApiResponse(responseCode = "406", description = "Currency code does not exist, or card already has a balance for this currency", content = @Content)
     })
     @PatchMapping("/{card-id}/currencies/{currency-code}")
     public ResponseEntity<CardResponse> addCurrencyToCard(@NotNull @Positive @PathVariable("card-id") Long cardId,
@@ -196,7 +197,8 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Card activated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Card not found", content = @Content),
+            @ApiResponse(responseCode = "406", description = "Card is already active", content = @Content)
     })
     @PatchMapping("{card-id}/activate")
     public ResponseEntity<String> activateCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
@@ -210,7 +212,8 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Card deactivated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Card not found", content = @Content),
+            @ApiResponse(responseCode = "406", description = "Card is already inactive", content = @Content)
     })
     @PatchMapping("{card-id}/deactivate")
     public ResponseEntity<String> deactivateCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
