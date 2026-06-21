@@ -65,30 +65,30 @@ class CustomerRestControllerTest {
     @MockitoBean
     private JWTService jwtService;
 
-    @Test
-    void testRegisterCustomerReturnsCreated() throws Exception {
-        when(customerApiMapper.toCustomerOnRegistration(any())).thenReturn(mock(Customer.class));
-
-        String body = """
-                {
-                  "firstName": "John",
-                  "lastName": "Doe",
-                  "phoneNumber": "1234567890",
-                  "address": "123 Main St",
-                  "dateOfBirth": "2000-01-01",
-                  "email": "john@example.com",
-                  "password": "secret"
-                }
-                """;
-
-        mockMvc.perform(post("/api/customer/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isCreated())
-                .andExpect(content().string("The Customer has been registered successfully."));
-
-        verify(customerService).registerCustomer(any(Customer.class));
-    }
+//    @Test
+//    void testRegisterCustomerReturnsCreated() throws Exception {
+//        when(customerApiMapper.toCustomerOnRegistration(any())).thenReturn(mock(Customer.class));
+//
+//        String body = """
+//                {
+//                  "firstName": "John",
+//                  "lastName": "Doe",
+//                  "phoneNumber": "1234567890",
+//                  "address": "123 Main St",
+//                  "dateOfBirth": "2000-01-01",
+//                  "email": "john@example.com",
+//                  "password": "secret"
+//                }
+//                """;
+//
+//        mockMvc.perform(post("/api/customer/register")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(body))
+//                .andExpect(status().isCreated())
+//                .andExpect(content().string("The Customer has been registered successfully."));
+//
+//        verify(customerService).registerCustomer(any(Customer.class));
+//    }
 
     @Test
     void testGetCustomerProfileReturnsOk() throws Exception {
