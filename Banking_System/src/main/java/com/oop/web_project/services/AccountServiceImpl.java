@@ -96,6 +96,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @CustomerAccessPermissionRequired
     public List<Account> selectAccountsByCustomerEmail(String customerEmail) {
         List<Account> accountList = accountRepository.findAllByCustomersEmail(customerEmail);
         if(accountList == null || accountList.isEmpty()) {
@@ -125,6 +126,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @AccountAccessPermissionRequired
     @Transactional
     public void registerCustomerToAccount(long accountId, long customerId) {
         Account account = accountRepository.findById(accountId).orElseThrow(

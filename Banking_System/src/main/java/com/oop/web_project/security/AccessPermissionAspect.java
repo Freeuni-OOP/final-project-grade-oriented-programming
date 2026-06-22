@@ -3,6 +3,7 @@ package com.oop.web_project.security;
 import com.oop.web_project.annotations.AccountAccessPermissionRequired;
 import com.oop.web_project.annotations.CardAccessPermissionRequired;
 import com.oop.web_project.annotations.CustomerAccessPermissionRequired;
+import com.oop.web_project.entities.Role;
 import com.oop.web_project.exceptions.accountExceptions.NotAccountOfCustomerException;
 import com.oop.web_project.exceptions.cardExceptions.NotCardOfCustomerException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerAccessDeniedException;
@@ -42,7 +43,13 @@ public class AccessPermissionAspect {
 
         String email = getEmail();
 
-        if(!customerRepository.customerWithEmailOwnsCard(email, cardId)) {
+        boolean isManager = customerRepository.existsByEmailAndRole(email, Role.MANAGER);
+
+        if(isManager){
+            return;
+        }
+
+        if (!customerRepository.customerWithEmailOwnsCard(email, cardId)) {
             throw new NotCardOfCustomerException("Current authenticated customer does not own the card!");
         }
     }
@@ -55,7 +62,15 @@ public class AccessPermissionAspect {
 
         String email = getEmail();
 
-        if(!customerRepository.existsByEmailAndAccountsId(email, accountId)) {
+        boolean isManager = customerRepository.existsByEmailAndRole(email, Role.MANAGER);
+        boolean accountHasCustomers = customerRepository.existsCustomerByAccounts_Id(accountId);
+        boolean isAccountOwner = customerRepository.existsByEmailAndAccountsId(email, accountId);
+
+        if(isManager) {
+            return;
+        }
+
+        if (accountHasCustomers && !isAccountOwner) {
             throw new NotAccountOfCustomerException("Current authenticated customer does not own the account!");
         }
     }
@@ -67,20 +82,26 @@ public class AccessPermissionAspect {
 
         String email = getEmail();
 
+        boolean isManager = customerRepository.existsByEmailAndRole(email, Role.MANAGER);
+
+        if(isManager) {
+            return;
+        }
+
         if (obj instanceof String customerEmail) {
             if (!email.equals(customerEmail)) {
-                throw new CustomerAccessDeniedException("Customer could not be authenticated");
+                throw new CustomerAccessDeniedException(
+                        "Current authenticated customer attempted to access other customer's information!"
+                );
             }
             return;
         }
 
         Long customerId = extractArg(jp);
-
-        if(!customerRepository.existsByEmailAndId(email, customerId)) {
+        if (!customerRepository.existsByEmailAndId(email, customerId)) {
             throw new CustomerAccessDeniedException
                     ("Current authenticated customer attempted to access other customer's information!");
         }
-
     }
 
     private Long extractArg(JoinPoint jp) {

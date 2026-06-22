@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
@@ -47,6 +48,22 @@ public class CustomerRestController {
     @GetMapping("/{customer-id}")
     public ResponseEntity<CustomerProfileResponse> getCustomerProfile(@NotNull @Positive @PathVariable("customer-id") Long customerId){
         Customer customer = customerService.getCustomerById(customerId);
+        CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @Operation(summary = "Get customer profile by email", description = "Retrieves the profile of a customer by their email address")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Customer profile retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = CustomerProfileResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid email address", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
+    })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
+    @GetMapping("/email/{customer-email}")
+    public ResponseEntity<CustomerProfileResponse> getCustomerProfileWithEmail(
+            @NotNull @Email @PathVariable("customer-email") String customerEmail) {
+        Customer customer = customerService.getCustomerByEmail(customerEmail);
         CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

@@ -1,6 +1,7 @@
 package com.oop.web_project.persistence;
 
 import com.oop.web_project.entities.Customer;
+import com.oop.web_project.entities.Role;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -33,4 +34,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     boolean existsByEmailAndAccountsId(String email, Long accountId);
 
     boolean existsByEmailAndId(String email, Long customerId);
+
+    boolean existsCustomerByAccounts_Id(long accountId);
+
+    boolean existsByEmailAndRole(String email, Role role);
 }

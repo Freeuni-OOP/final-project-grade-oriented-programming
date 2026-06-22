@@ -95,7 +95,7 @@ SELECT 12, f.Currency_id, t.Currency_id, 0.8496, '2025-06-01 08:00:00' FROM Curr
 -- ------------------------------------------------------------
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    ( 1,'Bob',    'Smith',   '+995551001002', '22 Chavchavadze Ave, Tbilisi',   '1990-07-22', 'bob.smith@example.com',      '$2a$10$managerHash001',   TRUE,  'MANAGER');
+    ( 1,'Bob',    'Smith',   '+995551001002', '22 Chavchavadze Ave, Tbilisi',   '1990-07-22', 'bob.smith@example.com',      '$2a$10$nzCfJ3rg3oWn4sGgBKS.ieIindsG7kNa.MhF9diAqXRsR2BVDyyPW',   TRUE,  'MANAGER');
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
     ( 2,'Carol',  'White',   '+995551001003', '5 Agmashenebeli Ave, Tbilisi',   '1992-11-30', 'carol.white@example.com',    '$2a$10$standardHash001',  TRUE,  'STANDARD');

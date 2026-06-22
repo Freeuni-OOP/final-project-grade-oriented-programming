@@ -200,7 +200,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "400", description = "Invalid account ID or customer ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account or customer not found", content = @Content)
     })
-    @PreAuthorize("hasAuthority(\"MANAGER\")")
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PutMapping("/{account-id}/customers/{customer-id}")
     public ResponseEntity<String> registerCustomerToAccount(@NotNull @Positive @PathVariable("account-id") Long accountId, @NotNull @Positive @PathVariable("customer-id") Long customerId) {
         accountService.registerCustomerToAccount(accountId, customerId);

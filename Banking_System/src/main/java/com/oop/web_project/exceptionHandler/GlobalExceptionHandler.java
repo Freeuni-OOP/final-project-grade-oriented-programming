@@ -85,6 +85,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(e.getMessage());
     }
 
+    @ExceptionHandler(NotCardOfCustomerException.class)
+    public ResponseEntity<String> handleCardNotOwnedByCustomer(NotCardOfCustomerException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
     //Customer
     @ExceptionHandler(CustomerAlreadyActiveException.class)
     public ResponseEntity<String> handleActiveCustomer(CustomerAlreadyActiveException e) {
@@ -118,6 +123,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomerIsNotAuthenticatedException.class)
     public ResponseEntity<String> handleCustomerIsNotAuthenticated(CustomerIsNotAuthenticatedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
+    @ExceptionHandler(CustomerAccessDeniedException.class)
+    public ResponseEntity<String> handleCustomerAccessProhibited(CustomerAccessDeniedException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 
