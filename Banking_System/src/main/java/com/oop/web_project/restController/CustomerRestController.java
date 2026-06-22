@@ -12,12 +12,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/customer")
@@ -40,12 +44,50 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping("/{customer-id}")
     public ResponseEntity<CustomerProfileResponse> getCustomerProfile(@NotNull @Positive @PathVariable("customer-id") Long customerId){
         Customer customer = customerService.getCustomerById(customerId);
         CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @Operation(summary = "Get customer profile by email", description = "Retrieves the profile of a customer by their email address")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Customer profile retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = CustomerProfileResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid email address", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
+    })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
+    @GetMapping("/email/{customer-email}")
+    public ResponseEntity<CustomerProfileResponse> getCustomerProfileWithEmail(
+            @NotNull @Email @PathVariable("customer-email") String customerEmail) {
+        Customer customer = customerService.getCustomerByEmail(customerEmail);
+        CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @Operation(summary = "Get customers by account", description = "Retrieves all customer profiles associated with a given account ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Customer profiles retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = CustomerProfileResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid account ID", content = @Content),
+            @ApiResponse(responseCode = "404", description = "No customers found for the given account", content = @Content)
+    })
+    @PreAuthorize("hasAuthority(\"MANAGER\")")
+    @GetMapping("/account/{account-id}")
+    public ResponseEntity<List<CustomerProfileResponse>> getCustomerProfilesByAccount
+            (@NotNull @Positive @PathVariable("account-id") Long accountId) {
+
+        List<Customer> customers = customerService.getCustomersByAccount(accountId);
+        return ResponseEntity.ok().body(
+                customers.stream()
+                        .map(customerApiMapper::toProfileResponse)
+                        .toList()
+        );
+    }
+
 
     @Operation(summary = "Update customer profile", description = "Updates the profile details of an existing customer")
     @ApiResponses({
@@ -54,6 +96,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "400", description = "Invalid request body or customer ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PutMapping("/{customer-id}")
     public ResponseEntity<CustomerProfileResponse> updateCustomerProfile(@NotNull @Positive @PathVariable("customer-id") Long customerId, @Valid @RequestBody CustomerUpdateRequest request){
         customerService.updateCustomer(customerId, request.getFirstName(), request.getLastName(), request.getPhoneNumber(), request.getAddress());
@@ -70,6 +113,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Customer is already inactive", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PatchMapping("/{customer-id}/deactivate")
     public ResponseEntity<String> deactivateCustomer(@NotNull @Positive @PathVariable("customer-id") Long customerId){
         customerService.deactivateCustomer(customerId);
@@ -84,6 +128,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Customer is already active", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PatchMapping("/{customer-id}/activate")
     public ResponseEntity<String> activateCustomer(@NotNull @Positive @PathVariable("customer-id") Long customerId){
         customerService.activateCustomer(customerId);
@@ -97,6 +142,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"MANAGER\")")
     @DeleteMapping("/{customer-id}/delete")
     public ResponseEntity<String> deleteCustomer(@NotNull @Positive @PathVariable("customer-id") Long customerId){
         customerService.deleteCustomer(customerId);

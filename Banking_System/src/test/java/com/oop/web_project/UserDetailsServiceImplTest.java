@@ -2,6 +2,7 @@ package com.oop.web_project;
 
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.entities.Role;
+import com.oop.web_project.persistence.CustomerRepository;
 import com.oop.web_project.services.CustomerService;
 import com.oop.web_project.services.UserDetailsServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -18,7 +21,7 @@ import static org.mockito.Mockito.*;
 class UserDetailsServiceImplTest {
 
     @Mock
-    private CustomerService customerService;
+    private CustomerRepository customerRepository;
 
     @InjectMocks
     private UserDetailsServiceImpl userDetailsService;
@@ -30,7 +33,7 @@ class UserDetailsServiceImplTest {
         customer.setHashedPassword("hashedPass");
         customer.setRole(Role.STANDARD);
 
-        when(customerService.getCustomerByEmail("test@example.com")).thenReturn(customer);
+        when(customerRepository.getCustomerByEmail("test@example.com")).thenReturn(Optional.of(customer));
 
         UserDetails result = userDetailsService.loadUserByUsername("test@example.com");
 
@@ -44,7 +47,7 @@ class UserDetailsServiceImplTest {
         customer.setHashedPassword("hashedPass");
         customer.setRole(Role.STANDARD);
 
-        when(customerService.getCustomerByEmail("test@example.com")).thenReturn(customer);
+        when(customerRepository.getCustomerByEmail("test@example.com")).thenReturn(Optional.of(customer));
 
         UserDetails result = userDetailsService.loadUserByUsername("test@example.com");
 
@@ -58,7 +61,7 @@ class UserDetailsServiceImplTest {
         customer.setHashedPassword("hashedPass");
         customer.setRole(Role.STANDARD);
 
-        when(customerService.getCustomerByEmail("test@example.com")).thenReturn(customer);
+        when(customerRepository.getCustomerByEmail("test@example.com")).thenReturn(Optional.of(customer));
 
         UserDetails result = userDetailsService.loadUserByUsername("test@example.com");
 
@@ -72,7 +75,7 @@ class UserDetailsServiceImplTest {
         customer.setHashedPassword("hashedPass");
         customer.setRole(Role.STANDARD);
 
-        when(customerService.getCustomerByEmail("test@example.com")).thenReturn(customer);
+        when(customerRepository.getCustomerByEmail("test@example.com")).thenReturn(Optional.of(customer));
 
         UserDetails result = userDetailsService.loadUserByUsername("test@example.com");
 
@@ -81,18 +84,18 @@ class UserDetailsServiceImplTest {
     }
 
     @Test
-    void testLoadUserByUsernameGrantedAuthorityMatchesAdminRole() {
+    void testLoadUserByUsernameGrantedAuthorityMatchesManagerRole() {
         Customer customer = new Customer();
         customer.setEmail("admin@example.com");
         customer.setHashedPassword("hashedPass");
-        customer.setRole(Role.ADMIN);
+        customer.setRole(Role.MANAGER);
 
-        when(customerService.getCustomerByEmail("admin@example.com")).thenReturn(customer);
+        when(customerRepository.getCustomerByEmail("admin@example.com")).thenReturn(Optional.of(customer));
 
         UserDetails result = userDetailsService.loadUserByUsername("admin@example.com");
 
         assertTrue(result.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals(Role.ADMIN.name())));
+                .anyMatch(a -> a.getAuthority().equals(Role.MANAGER.name())));
     }
 
     @Test
@@ -102,11 +105,11 @@ class UserDetailsServiceImplTest {
         customer.setHashedPassword("hashedPass");
         customer.setRole(Role.STANDARD);
 
-        when(customerService.getCustomerByEmail("test@example.com")).thenReturn(customer);
+        when(customerRepository.getCustomerByEmail("test@example.com")).thenReturn(Optional.of(customer));
 
         userDetailsService.loadUserByUsername("test@example.com");
 
-        verify(customerService, times(1)).getCustomerByEmail("test@example.com");
+        verify(customerRepository, times(1)).getCustomerByEmail("test@example.com");
     }
 
     @Test
@@ -116,7 +119,7 @@ class UserDetailsServiceImplTest {
         customer.setHashedPassword("hashedPass");
         customer.setRole(Role.STANDARD);
 
-        when(customerService.getCustomerByEmail("test@example.com")).thenReturn(customer);
+        when(customerRepository.getCustomerByEmail("test@example.com")).thenReturn(Optional.of(customer));
 
         UserDetails result = userDetailsService.loadUserByUsername("test@example.com");
 

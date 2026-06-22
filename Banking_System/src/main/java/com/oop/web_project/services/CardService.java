@@ -26,7 +26,7 @@ public interface CardService {
     /**
      * Creates new card
      */
-    void createCard(Card card, long accountId);
+    void createCard(long accountId, Card card);
 
 
     /**

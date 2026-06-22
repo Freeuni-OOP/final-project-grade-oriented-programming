@@ -2,6 +2,8 @@ package com.oop.web_project.services;
 
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.entities.Role;
+import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
+import com.oop.web_project.persistence.CustomerRepository;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,16 +19,19 @@ import java.util.List;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final CustomerService customerService;
+    private final CustomerRepository customerRepository;
 
-    public UserDetailsServiceImpl(CustomerService customerService) {
-        this.customerService = customerService;
+    public UserDetailsServiceImpl(CustomerRepository customerRepository) {
+        this.customerRepository = customerRepository;
     }
 
     @Override
     @NullMarked
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Customer customer = customerService.getCustomerByEmail(email);
+        Customer customer = customerRepository.getCustomerByEmail(email)
+                .orElseThrow(
+                        () -> new CustomerNotFoundException("Customer with email could not be found!")
+                );
 
         return new User(
                 customer.getEmail(),

@@ -23,6 +23,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,6 +59,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content),
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PostMapping
     public ResponseEntity<String> createAccount(@RequestBody @Valid AccountCreationRequest request) {
         Account account = accountMapper.toAccount(request);
@@ -73,11 +75,12 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content),
             @ApiResponse(responseCode = "409", description = "A card with the same PAN already exists", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PostMapping("/{account-id}/cards")
     public ResponseEntity<String> createCard(
             @NotNull @Positive @PathVariable("account-id") Long accountId,
             @Valid @RequestBody CardCreationRequest cardCreationRequest) {
-        cardService.createCard(cardApiMapper.toCardOnCardCreation(cardCreationRequest), accountId);
+        cardService.createCard(accountId, cardApiMapper.toCardOnCardCreation(cardCreationRequest));
         return ResponseEntity.status(HttpStatus.CREATED).body("Card has been successfully created!");
     }
 
@@ -89,6 +92,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Account is already active", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PatchMapping("/{account-id}/activate")
     public ResponseEntity<String> ActivateAccount(@NotNull @Positive @PathVariable("account-id") Long accountId) {
         accountService.activateAccount(accountId);
@@ -103,6 +107,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Account is already inactive", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PatchMapping("/{account-id}/deactivate")
     public ResponseEntity<String> DeactivateAccount(@NotNull @Positive @PathVariable("account-id") Long accountId) {
         accountService.deactivateAccount(accountId);
@@ -116,6 +121,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "400", description = "Invalid account ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping("/{account-id}")
     public ResponseEntity<AccountProfileResponse> getAccountWithId(@NotNull @Positive @PathVariable("account-id") Long accountId) {
         Account account = accountService.selectAccountById(accountId);
@@ -130,6 +136,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "400", description = "Invalid account ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"MANAGER\")")
     @DeleteMapping("/{account-id}")
     public ResponseEntity<String> deleteAccount(@NotNull @Positive @PathVariable("account-id") Long accountId) {
         accountService.deleteAccount(accountId);
@@ -143,6 +150,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "400", description = "Invalid email parameter", content = @Content),
             @ApiResponse(responseCode = "404", description = "No accounts found for this email", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping
     public ResponseEntity<List<AccountSummaryResponse>> getAccountsByEmail(@NotBlank @Email @RequestParam("customerEmail") String customerEmail) {
         List<Account> accounts = accountService.selectAccountsByCustomerEmail(customerEmail);
@@ -160,6 +168,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "No accounts found for this customer", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping("/customer/{customer-id}")
     public ResponseEntity<List<AccountProfileResponse>> getAccountWithCustomerId(@NotNull @Positive @PathVariable("customer-id") Long customerId) {
         List<Account> accounts = accountService.selectAccountsByCustomerId(customerId);
@@ -177,6 +186,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "400", description = "Invalid account ID or request body", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PutMapping("/{account-id}")
     public ResponseEntity<String> updateAccount(@NotNull @Positive @PathVariable("account-id") Long accountId, @NotBlank @RequestBody String accountName) {
         accountService.updateAccount(accountId, accountName);
@@ -190,6 +200,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "400", description = "Invalid account ID or customer ID", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account or customer not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PutMapping("/{account-id}/customers/{customer-id}")
     public ResponseEntity<String> registerCustomerToAccount(@NotNull @Positive @PathVariable("account-id") Long accountId, @NotNull @Positive @PathVariable("customer-id") Long customerId) {
         accountService.registerCustomerToAccount(accountId, customerId);
@@ -203,6 +214,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "400", description = "Invalid account ID or currency code", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
+    @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping("/{account-id}/balance")
     public ResponseEntity<BigDecimal> getAccountBalanceByCurrency(@NotNull @Positive @PathVariable("account-id") Long accountId, @NotBlank @RequestParam("currencyCode") String currencyCode) {
         BigDecimal balance = accountService.getAccountBalanceByCurrency(accountId, currencyCode);
