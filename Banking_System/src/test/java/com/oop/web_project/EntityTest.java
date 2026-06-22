@@ -639,129 +639,7 @@ class CustomerTest {
 
 
 
-class ServiceCategoryTest {
 
-    @Test
-    void testGetIdReturnsCorrectValue() {
-        ServiceCategory category = new ServiceCategory(1L, "Utilities", null);
-
-        assertEquals(1L, category.getId());
-    }
-
-    @Test
-    void testSetIdUpdatesValue() {
-        ServiceCategory category = new ServiceCategory(1L, "Utilities", null);
-
-        category.setId(2L);
-
-        assertEquals(2L, category.getId());
-    }
-
-    @Test
-    void testGetNameReturnsCorrectValue() {
-        ServiceCategory category = new ServiceCategory(1L, "Utilities", null);
-
-        assertEquals("Utilities", category.getName());
-    }
-
-    @Test
-    void testSetNameUpdatesValue() {
-        ServiceCategory category = new ServiceCategory(1L, "Utilities", null);
-
-        category.setName("Telecom");
-
-        assertEquals("Telecom", category.getName());
-    }
-}
-
-class ServiceProviderTest {
-
-    private ServiceProvider createServiceProvider() {
-        ServiceCategory category = new ServiceCategory(1L, "Utilities", null);
-        return new ServiceProvider(1L, category, "Telasi", "https://api.telasi.ge", true, null);
-    }
-
-    @Test
-    void testGetIdReturnsCorrectValue() {
-        ServiceProvider provider = createServiceProvider();
-
-        assertEquals(1L, provider.getId());
-    }
-
-    @Test
-    void testSetIdUpdatesValue() {
-        ServiceProvider provider = createServiceProvider();
-
-        provider.setId(10L);
-
-        assertEquals(10L, provider.getId());
-    }
-
-    @Test
-    void testGetServiceCategoryReturnsCorrectValue() {
-        ServiceProvider provider = createServiceProvider();
-
-        assertEquals("Utilities", provider.getServiceCategory().getName());
-    }
-
-    @Test
-    void testSetServiceCategoryUpdatesValue() {
-        ServiceProvider provider = createServiceProvider();
-        ServiceCategory telecom = new ServiceCategory(2L, "Telecom", null);
-
-        provider.setServiceCategory(telecom);
-
-        assertEquals("Telecom", provider.getServiceCategory().getName());
-    }
-
-    @Test
-    void testGetNameReturnsCorrectValue() {
-        ServiceProvider provider = createServiceProvider();
-
-        assertEquals("Telasi", provider.getName());
-    }
-
-    @Test
-    void testSetNameUpdatesValue() {
-        ServiceProvider provider = createServiceProvider();
-
-        provider.setName("Magti");
-
-        assertEquals("Magti", provider.getName());
-    }
-
-    @Test
-    void testGetApiEndpointReturnsCorrectValue() {
-        ServiceProvider provider = createServiceProvider();
-
-        assertEquals("https://api.telasi.ge", provider.getApiEndpoint());
-    }
-
-    @Test
-    void testSetApiEndpointUpdatesValue() {
-        ServiceProvider provider = createServiceProvider();
-
-        provider.setApiEndpoint("https://api.magti.ge");
-
-        assertEquals("https://api.magti.ge", provider.getApiEndpoint());
-    }
-
-    @Test
-    void testIsActiveReturnsTrueByDefault() {
-        ServiceProvider provider = createServiceProvider();
-
-        assertTrue(provider.isActive());
-    }
-
-    @Test
-    void testSetActiveUpdatesValue() {
-        ServiceProvider provider = createServiceProvider();
-
-        provider.setActive(false);
-
-        assertFalse(provider.isActive());
-    }
-}
 
 class TransactionTest {
 
@@ -769,11 +647,9 @@ class TransactionTest {
         Currency gel = new Currency(1L, "GEL", "Georgian Lari", null, null, null, null);
         Account account = new Account(1L, "Main Account", AccountCategory.CHECKING,
                 LocalDate.of(2022, 1, 1), true, null, null, null);
-        ServiceProvider provider = new ServiceProvider(1L,
-                new ServiceCategory(1L, "Utilities", null), "Telasi", "https://api.telasi.ge", true, null);
         return new Transaction(1L, TransactionType.DEPOSIT, account,
                 LocalDateTime.of(2024, 6, 1, 10, 30, 0),
-                new BigDecimal("250.00"), gel, provider, null, null,
+                new BigDecimal("250.00"), gel, null, null,
                 "idem_key_001", "Monthly payment", TransactionStatus.COMPLETE);
     }
 
@@ -868,23 +744,7 @@ class TransactionTest {
         assertEquals("USD", transaction.getCurrency().getCode());
     }
 
-    @Test
-    void testGetServiceProviderReturnsCorrectValue() {
-        Transaction transaction = createTransaction();
 
-        assertEquals("Telasi", transaction.getServiceProvider().getName());
-    }
-
-    @Test
-    void testSetServiceProviderUpdatesValue() {
-        Transaction transaction = createTransaction();
-        ServiceProvider newProvider = new ServiceProvider(2L,
-                new ServiceCategory(2L, "Telecom", null), "Magti", "https://api.magti.ge", true, null);
-
-        transaction.setServiceProvider(newProvider);
-
-        assertEquals("Magti", transaction.getServiceProvider().getName());
-    }
 
     @Test
     void testGetRelatedTransactionReturnsNullByDefault() {

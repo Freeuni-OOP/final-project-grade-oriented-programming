@@ -153,6 +153,21 @@ class LoggingAspectTest {
     }
 
     @Test
+    void testServiceLayerPointcutDoesNotThrow() {
+        aspect.serviceLayer();
+    }
+
+    @Test
+    void testPersistenceLayerPointcutDoesNotThrow() {
+        aspect.persistenceLayer();
+    }
+
+    @Test
+    void testRestControllerLayerPointcutDoesNotThrow() {
+        aspect.restControllerLayer();
+    }
+
+    @Test
     void testLogGlobalErrorLogsExceptionDetails() {
         JoinPoint joinPoint = mock(JoinPoint.class);
         Signature sig = mock(Signature.class);

@@ -1,19 +1,10 @@
 package com.oop.web_project;
 
-import com.oop.web_project.entities.Account;
-import com.oop.web_project.entities.Card;
-import com.oop.web_project.entities.CardBalance;
-import com.oop.web_project.entities.CurrencyExchange;
-import com.oop.web_project.exceptions.cardExceptions.CardAlreadyActiveException;
-import com.oop.web_project.exceptions.cardExceptions.CardAlreadyDeactivatedException;
-import com.oop.web_project.exceptions.cardExceptions.CardBalanceNotFoundException;
-import com.oop.web_project.exceptions.cardExceptions.CardNotFoundException;
-import com.oop.web_project.exceptions.cardExceptions.InsufficientMoneyOnCardException;
+import com.oop.web_project.entities.*;
+import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
+import com.oop.web_project.exceptions.cardExceptions.*;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
-import com.oop.web_project.persistence.AccountRepository;
-import com.oop.web_project.persistence.CardBalanceRepository;
-import com.oop.web_project.persistence.CardRepository;
-import com.oop.web_project.persistence.CurrencyExchangeRepository;
+import com.oop.web_project.persistence.*;
 import com.oop.web_project.services.CardServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -35,6 +27,9 @@ class CardServiceImplTest {
 
     @Mock
     private CardRepository cardRepository;
+
+    @Mock
+    private CurrencyRepository currencyRepository;
 
     @Mock
     private CardBalanceRepository cardBalanceRepository;
@@ -62,6 +57,69 @@ class CardServiceImplTest {
         receiverCard.setId(2L);
         receiverCard.setActive(true);
         receiverCard.setSpendingLimit(new BigDecimal("10000.00"));
+    }
+
+    @Test
+    void testSelectCardByIdNotFoundThrowsException() {
+        when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(CardNotFoundException.class, () -> cardService.selectCardById(1L));
+    }
+
+    @Test
+    void testSelectCardByIdFoundReturnsCard() {
+        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        Card result = cardService.selectCardById(1L);
+        assertEquals(card, result);
+    }
+
+    @Test
+    void testAddCurrencyToCardCardNotFoundThrowsException() {
+        when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(CardNotFoundException.class, () -> cardService.addCurrencyToCard(1L, "USD"));
+    }
+
+    @Test
+    void testAddCurrencyToCardCurrencyNotFoundThrowsException() {
+        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        when(currencyRepository.findCurrencyByCode("USD")).thenReturn(Optional.empty());
+        assertThrows(InvalidCurrencyException.class, () -> cardService.addCurrencyToCard(1L, "USD"));
+    }
+
+    @Test
+    void testAddCurrencyToCardAlreadyExistsThrowsException() {
+        Currency currency = new Currency();
+        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        when(currencyRepository.findCurrencyByCode("USD")).thenReturn(Optional.of(currency));
+        when(cardBalanceRepository.existsByCardIdAndCurrencyCode(1L, "USD")).thenReturn(true);
+        assertThrows(DuplicateCurrencyException.class, () -> cardService.addCurrencyToCard(1L, "USD"));
+    }
+
+    @Test
+    void testAddCurrencyToCardDataIntegrityViolationThrowsDuplicateCurrencyException() {
+        Currency currency = new Currency();
+        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        when(currencyRepository.findCurrencyByCode("USD")).thenReturn(Optional.of(currency));
+        when(cardBalanceRepository.existsByCardIdAndCurrencyCode(1L, "USD")).thenReturn(false);
+        when(cardBalanceRepository.saveAndFlush(any(CardBalance.class))).thenThrow(new DataIntegrityViolationException("Duplicate currency balance"));
+        assertThrows(DuplicateCurrencyException.class, () -> cardService.addCurrencyToCard(1L, "USD"));
+    }
+
+    @Test
+    void testAddCurrencyToCardValidSavesCardBalance() {
+        Currency currency = new Currency();
+        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        when(currencyRepository.findCurrencyByCode("USD")).thenReturn(Optional.of(currency));
+        when(cardBalanceRepository.existsByCardIdAndCurrencyCode(1L, "USD")).thenReturn(false);
+        cardService.addCurrencyToCard(1L, "USD");
+        verify(cardBalanceRepository, times(1)).saveAndFlush(any(CardBalance.class));
+    }
+
+    @Test
+    void testSelectCardBalancesReturnsBalances() {
+        List<CardBalance> balances = List.of(new CardBalance());
+        when(cardBalanceRepository.findAllByCardId(1L)).thenReturn(balances);
+        List<CardBalance> result = cardService.selectCardBalances(1L);
+        assertEquals(balances, result);
     }
 
     @Test
@@ -112,6 +170,31 @@ class CardServiceImplTest {
         when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
         cardService.createCard(1L, card);
         verify(cardRepository, times(1)).save(card);
+    }
+
+    @Test
+    void testCreateCardAccountNotFoundThrowsException() {
+        when(accountRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(AccountNotFoundException.class, () -> cardService.createCard(1L, card));
+    }
+
+    @Test
+    void testCreateCardDuplicatePanTokenThrowsException() {
+        Account account = new Account();
+        account.setId(1L);
+        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+        when(cardRepository.existsByPanToken(card.getPanToken())).thenReturn(true);
+        assertThrows(CardAlreadyExistsException.class, () -> cardService.createCard(1L, card));
+    }
+
+    @Test
+    void testCreateCardDuplicatePanMaskedThrowsException() {
+        Account account = new Account();
+        account.setId(1L);
+        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+        when(cardRepository.existsByPanToken(card.getPanToken())).thenReturn(false);
+        when(cardRepository.existsByPanMasked(card.getPanMasked())).thenReturn(true);
+        assertThrows(CardAlreadyExistsException.class, () -> cardService.createCard(1L, card));
     }
 
     @Test
@@ -253,6 +336,11 @@ class CardServiceImplTest {
         cardService.transferMoney(1L, 2L, new BigDecimal("30.00"), "USD");
         assertEquals(new BigDecimal("70.00"), from.getAmount());
         assertEquals(new BigDecimal("50.00"), to.getAmount());
+    }
+
+    @Test
+    void testTransferMoneySameCardThrowsException() {
+        assertThrows(SameCardTransferException.class, () -> cardService.transferMoney(1L, 1L, BigDecimal.TEN, "USD"));
     }
 
     @Test

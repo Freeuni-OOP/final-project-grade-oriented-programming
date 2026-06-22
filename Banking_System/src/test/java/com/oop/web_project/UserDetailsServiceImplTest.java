@@ -2,6 +2,7 @@ package com.oop.web_project;
 
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.entities.Role;
+import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
 import com.oop.web_project.persistence.CustomerRepository;
 import com.oop.web_project.services.CustomerService;
 import com.oop.web_project.services.UserDetailsServiceImpl;
@@ -124,5 +125,13 @@ class UserDetailsServiceImplTest {
         UserDetails result = userDetailsService.loadUserByUsername("test@example.com");
 
         assertEquals(1, result.getAuthorities().size());
+    }
+
+    @Test
+    void testLoadUserByUsernameThrowsWhenCustomerNotFound() {
+        when(customerRepository.getCustomerByEmail("missing@example.com")).thenReturn(Optional.empty());
+
+        assertThrows(CustomerNotFoundException.class,
+                () -> userDetailsService.loadUserByUsername("missing@example.com"));
     }
 }
