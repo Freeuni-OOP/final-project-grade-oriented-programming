@@ -201,4 +201,17 @@ class AccountServiceImplTest {
         when(cardRepository.getBalanceForAccount(1L, "USD")).thenReturn(Optional.empty());
         assertThrows(CardBalanceNotFoundException.class, () -> accountService.getAccountBalanceByCurrency(1L, "USD"));
     }
+
+    @Test
+    void testSelectAccountByCardIdFound() {
+        when(accountRepository.findByCardsId(1L)).thenReturn(Optional.of(account));
+        Account result = accountService.selectAccountByCardId(1L);
+        assertEquals(account, result);
+    }
+
+    @Test
+    void testSelectAccountByCardIdNotFoundThrowsException() {
+        when(accountRepository.findByCardsId(1L)).thenReturn(Optional.empty());
+        assertThrows(AccountNotFoundException.class, () -> accountService.selectAccountByCardId(1L));
+    }
 }

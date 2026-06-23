@@ -3,6 +3,7 @@ package com.oop.web_project;
 import com.oop.web_project.dto.responses.CustomerProfileResponse;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.exceptionHandler.GlobalExceptionHandler;
+import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyActiveException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactivatedException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
@@ -34,7 +35,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -65,30 +65,71 @@ class CustomerRestControllerTest {
     @MockitoBean
     private JWTService jwtService;
 
-//    @Test
-//    void testRegisterCustomerReturnsCreated() throws Exception {
-//        when(customerApiMapper.toCustomerOnRegistration(any())).thenReturn(mock(Customer.class));
-//
-//        String body = """
-//                {
-//                  "firstName": "John",
-//                  "lastName": "Doe",
-//                  "phoneNumber": "1234567890",
-//                  "address": "123 Main St",
-//                  "dateOfBirth": "2000-01-01",
-//                  "email": "john@example.com",
-//                  "password": "secret"
-//                }
-//                """;
-//
-//        mockMvc.perform(post("/api/customer/register")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(body))
-//                .andExpect(status().isCreated())
-//                .andExpect(content().string("The Customer has been registered successfully."));
-//
-//        verify(customerService).registerCustomer(any(Customer.class));
-//    }
+    @Test
+    void testGetCustomerProfileWithEmailReturnsOk() throws Exception {
+        Customer customer = mock(Customer.class);
+        CustomerProfileResponse response = new CustomerProfileResponse(
+                "John", "Doe", LocalDate.of(2000, 1, 1),
+                "123 Main St", "john@example.com", "1234567890", List.of());
+
+        when(customerService.getCustomerByEmail("john@example.com")).thenReturn(customer);
+        when(customerApiMapper.toProfileResponse(customer)).thenReturn(response);
+
+        mockMvc.perform(get("/api/customer/email/john@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.lastName").value("Doe"))
+                .andExpect(jsonPath("$.dateOfBirth").value("2000-01-01"))
+                .andExpect(jsonPath("$.address").value("123 Main St"))
+                .andExpect(jsonPath("$.email").value("john@example.com"))
+                .andExpect(jsonPath("$.phoneNumber").value("1234567890"));
+
+        verify(customerService).getCustomerByEmail("john@example.com");
+        verify(customerApiMapper).toProfileResponse(customer);
+    }
+
+    @Test
+    void testGetCustomerProfileWithEmailReturnsNotFound() throws Exception {
+        when(customerService.getCustomerByEmail("missing@example.com"))
+                .thenThrow(new CustomerNotFoundException("Customer not found"));
+
+        mockMvc.perform(get("/api/customer/email/missing@example.com"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Customer not found"));
+    }
+
+    @Test
+    void testGetCustomerProfilesByAccountReturnsOk() throws Exception {
+        Customer customer = mock(Customer.class);
+        CustomerProfileResponse response = new CustomerProfileResponse(
+                "John", "Doe", LocalDate.of(2000, 1, 1),
+                "123 Main St", "john@example.com", "1234567890", List.of());
+
+        when(customerService.getCustomersByAccount(1L)).thenReturn(List.of(customer));
+        when(customerApiMapper.toProfileResponse(customer)).thenReturn(response);
+
+        mockMvc.perform(get("/api/customer/account/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].firstName").value("John"))
+                .andExpect(jsonPath("$[0].lastName").value("Doe"))
+                .andExpect(jsonPath("$[0].dateOfBirth").value("2000-01-01"))
+                .andExpect(jsonPath("$[0].address").value("123 Main St"))
+                .andExpect(jsonPath("$[0].email").value("john@example.com"))
+                .andExpect(jsonPath("$[0].phoneNumber").value("1234567890"));
+
+        verify(customerService).getCustomersByAccount(1L);
+        verify(customerApiMapper).toProfileResponse(customer);
+    }
+
+    @Test
+    void testGetCustomerProfilesByAccountReturnsNotFound() throws Exception {
+        when(customerService.getCustomersByAccount(99L))
+                .thenThrow(new AccountNotFoundException("account cannot be found"));
+
+        mockMvc.perform(get("/api/customer/account/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("account cannot be found"));
+    }
 
     @Test
     void testGetCustomerProfileReturnsOk() throws Exception {

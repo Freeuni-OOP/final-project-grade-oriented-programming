@@ -39,10 +39,6 @@ public class Transaction {
     @JoinColumn(name = "Currency_id", nullable = false)
     private Currency currency;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "Service_provider_id")
-    private ServiceProvider serviceProvider;
-
     @OneToOne(cascade=CascadeType.ALL)
     @JoinColumn(name = "Related_Transaction_id", unique = true)
     private Transaction relatedTransaction;

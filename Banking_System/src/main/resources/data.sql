@@ -1,56 +1,11 @@
--- ------------------------------------------------------------
---  1. SERVICE CATEGORIES
--- ------------------------------------------------------------
-INSERT INTO Service_categories (Service_category_id, Service_category_name) VALUES (1, 'TELECOM');
-INSERT INTO Service_categories (Service_category_id, Service_category_name) VALUES (2, 'UTILITY');
-INSERT INTO Service_categories (Service_category_id, Service_category_name) VALUES (3, 'INSURANCE');
-INSERT INTO Service_categories (Service_category_id, Service_category_name) VALUES (4, 'GOVERNMENT');
-INSERT INTO Service_categories (Service_category_id, Service_category_name) VALUES (5, 'ENTERTAINMENT');
-INSERT INTO Service_categories (Service_category_id, Service_category_name) VALUES (6, 'RETAIL');
 
-
--- ------------------------------------------------------------
---  2. SERVICE PROVIDERS
---     FK resolved via subquery on unique Service_category_name
--- ------------------------------------------------------------
-INSERT INTO Service_providers (Service_provider_id, Service_category_id, Service_provider_name, Api_endpoint, Is_active)
-SELECT 1, Service_category_id, 'Magti',            'https://api.magticom.ge/payments',   TRUE  FROM Service_categories WHERE Service_category_name = 'TELECOM';
-
-INSERT INTO Service_providers (Service_provider_id, Service_category_id, Service_provider_name, Api_endpoint, Is_active)
-SELECT 2, Service_category_id, 'Silknet',          'https://api.silknet.com/payments',   TRUE  FROM Service_categories WHERE Service_category_name = 'TELECOM';
-
-INSERT INTO Service_providers (Service_provider_id, Service_category_id, Service_provider_name, Api_endpoint, Is_active)
-SELECT 3, Service_category_id, 'Telasi',           'https://api.telasi.ge/payments',     TRUE  FROM Service_categories WHERE Service_category_name = 'UTILITY';
-
-INSERT INTO Service_providers (Service_provider_id, Service_category_id, Service_provider_name, Api_endpoint, Is_active)
-SELECT 4, Service_category_id, 'GWP',              'https://api.gwp.ge/payments',        TRUE  FROM Service_categories WHERE Service_category_name = 'UTILITY';
-
-INSERT INTO Service_providers (Service_provider_id, Service_category_id, Service_provider_name, Api_endpoint, Is_active)
-SELECT 5, Service_category_id, 'Aldagi',           'https://api.aldagi.ge/payments',     TRUE  FROM Service_categories WHERE Service_category_name = 'INSURANCE';
-
-INSERT INTO Service_providers (Service_provider_id, Service_category_id, Service_provider_name, Api_endpoint, Is_active)
-SELECT 6, Service_category_id, 'Revenue Service',  'https://api.rs.ge/payments',         TRUE  FROM Service_categories WHERE Service_category_name = 'GOVERNMENT';
-
-INSERT INTO Service_providers (Service_provider_id, Service_category_id, Service_provider_name, Api_endpoint, Is_active)
-SELECT 7, Service_category_id, 'Netflix',          'https://api.netflix.com/payments',   TRUE  FROM Service_categories WHERE Service_category_name = 'ENTERTAINMENT';
-
-INSERT INTO Service_providers (Service_provider_id, Service_category_id, Service_provider_name, Api_endpoint, Is_active)
-SELECT 8, Service_category_id, 'Carrefour',        'https://api.carrefour.ge/payments',  FALSE FROM Service_categories WHERE Service_category_name = 'RETAIL';
-
-
--- ------------------------------------------------------------
---  3. CURRENCIES
--- ------------------------------------------------------------
 INSERT INTO Currencies (Currency_id, Currency_code, Currency_name) VALUES (1, 'GEL', 'Georgian Lari');
 INSERT INTO Currencies (Currency_id, Currency_code, Currency_name) VALUES (2, 'USD', 'US Dollar');
 INSERT INTO Currencies (Currency_id, Currency_code, Currency_name) VALUES (3, 'EUR', 'Euro');
 INSERT INTO Currencies (Currency_id, Currency_code, Currency_name) VALUES (4, 'GBP', 'British Pound');
 
 
--- ------------------------------------------------------------
---  4. CURRENCY EXCHANGES  (all 12 cross-pairs)
---     FKs resolved via subquery on unique Currency_code
--- ------------------------------------------------------------
+
 INSERT INTO Currency_exchanges (Currency_exchange_id, From_currency_id, To_currency_id, Exchange_rate, Exchange_time_stamp)
 SELECT  1, f.Currency_id, t.Currency_id, 2.7200, '2025-06-01 08:00:00' FROM Currencies f, Currencies t WHERE f.Currency_code='USD' AND t.Currency_code='GEL';
 
@@ -88,11 +43,7 @@ INSERT INTO Currency_exchanges (Currency_exchange_id, From_currency_id, To_curre
 SELECT 12, f.Currency_id, t.Currency_id, 0.8496, '2025-06-01 08:00:00' FROM Currencies f, Currencies t WHERE f.Currency_code='GBP' AND t.Currency_code='EUR';
 
 
--- ------------------------------------------------------------
---  5. CUSTOMERS  (1 MANAGER  STANDARD)
---     Role is a @Enumerated(STRING) column on Customer itself
---     (no separate Roles table any more), so it is inserted directly.
--- ------------------------------------------------------------
+
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
     ( 1,'Bob',    'Smith',   '+995551001002', '22 Chavchavadze Ave, Tbilisi',   '1990-07-22', 'bob.smith@example.com',      '$2a$10$nzCfJ3rg3oWn4sGgBKS.ieIindsG7kNa.MhF9diAqXRsR2BVDyyPW',   TRUE,  'MANAGER');
@@ -128,9 +79,6 @@ INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address
     (11,'Liam',   'Jackson', '+995551001012', '3 Nadzaladevi Blvd, Tbilisi',    '1999-02-14', 'liam.jackson@example.com',   '$2a$10$standardHash009',  TRUE,  'STANDARD');
 
 
--- ------------------------------------------------------------
---  6. ACCOUNTS
--- ------------------------------------------------------------
 INSERT INTO Accounts (Account_id, Account_name, Account_category, Date_opened, Is_active) VALUES  (1,  'Alice Main Checking',   'CHECKING', '2020-01-10', TRUE);
 INSERT INTO Accounts (Account_id, Account_name, Account_category, Date_opened, Is_active) VALUES  (2,  'Alice Savings',          'SAVINGS',  '2020-01-10', TRUE);
 INSERT INTO Accounts (Account_id, Account_name, Account_category, Date_opened, Is_active) VALUES  (3,  'Bob Checking',           'CHECKING', '2019-06-15', TRUE);
@@ -145,12 +93,7 @@ INSERT INTO Accounts (Account_id, Account_name, Account_category, Date_opened, I
 INSERT INTO Accounts (Account_id, Account_name, Account_category, Date_opened, Is_active) VALUES (12,  'Karen Checking',         'CHECKING', '2016-04-20', FALSE);
 
 
--- ------------------------------------------------------------
--- 7. ACCOUNT_CUSTOMER  (join table for the Account <-> Customer
---    many-to-many – no surrogate key)
---    individual ownership + two shared accounts
--- ------------------------------------------------------------
--- Individual
+
 INSERT INTO Account_customer (Account_id, Customer_id) VALUES  (1,  1);   -- Alice      -> Alice Main Checking
 INSERT INTO Account_customer (Account_id, Customer_id) VALUES  (2,  1);   -- Alice      -> Alice Savings
 INSERT INTO Account_customer (Account_id, Customer_id) VALUES  (3,  2);   -- Bob        -> Bob Checking
@@ -168,12 +111,7 @@ INSERT INTO Account_customer (Account_id, Customer_id) VALUES  (9,  2);   -- Bob
 INSERT INTO Account_customer (Account_id, Customer_id) VALUES  (9,  9);   -- Iris       -> Business Account
 
 
--- ------------------------------------------------------------
--- 8. CARDS
---    Brand is a @Enumerated(STRING) column on Card itself
---    (CardBrand only has MASTERCARD / VISA now, no separate
---    Card_brands table), so it is inserted directly.
--- ------------------------------------------------------------
+
 INSERT INTO Cards (Card_id, Card_type, Brand, Account_id, Spending_limit, Expiration_date, Pan_masked,            Pan_token,               Is_active) VALUES
     ( 1, 'DEBIT',  'VISA',       1,  5000, '2027-12-31', '4111 **** **** 1001', 'tok_visa_debit_1001', TRUE);
 
@@ -211,11 +149,7 @@ INSERT INTO Cards (Card_id, Card_type, Brand, Account_id, Spending_limit, Expira
     (12, 'DEBIT',  'MASTERCARD', 1,  3000, '2027-05-31', '5555 **** **** 1012', 'tok_mc_debit_1012',   TRUE);  -- Alice 2nd card
 
 
--- ------------------------------------------------------------
--- 9. CARD BALANCES
---    Currency_id resolved via subquery on unique Currency_code
--- ------------------------------------------------------------
--- Card 1  (Alice Main Checking - Visa Debit) : GEL + USD
+
 INSERT INTO Card_balances (Card_balance_id, Card_balance_amount, Card_id, Currency_id) SELECT  1, 4250.75, 1, Currency_id FROM Currencies WHERE Currency_code = 'GEL';
 INSERT INTO Card_balances (Card_balance_id, Card_balance_amount, Card_id, Currency_id) SELECT  2,  320.00, 1, Currency_id FROM Currencies WHERE Currency_code = 'USD';
 
@@ -257,18 +191,11 @@ INSERT INTO Card_balances (Card_balance_id, Card_balance_amount, Card_id, Curren
 -- Card 12 (Alice 2nd card - MC Debit) : GEL
 INSERT INTO Card_balances (Card_balance_id, Card_balance_amount, Card_id, Currency_id) SELECT 20, 800.00, 12, Currency_id FROM Currencies WHERE Currency_code = 'GEL';
 
--- ------------------------------------------------------------
--- 10. Advance all sequences past the seeded data range
---     (Role and CardBrand are now plain enum columns, not their
---     own tables, so roles_seq / card_brands_seq / permissions_seq
---     no longer apply.)
--- ------------------------------------------------------------
+
 ALTER SEQUENCE accounts_seq RESTART WITH 1000;
 ALTER SEQUENCE customers_seq RESTART WITH 1000;
 ALTER SEQUENCE cards_seq RESTART WITH 1000;
 ALTER SEQUENCE card_balances_seq RESTART WITH 1000;
 ALTER SEQUENCE currencies_seq RESTART WITH 1000;
 ALTER SEQUENCE currency_exchanges_seq RESTART WITH 1000;
-ALTER SEQUENCE service_categories_seq RESTART WITH 1000;
-ALTER SEQUENCE service_providers_seq RESTART WITH 1000;
 ALTER SEQUENCE transactions_seq RESTART WITH 1000;

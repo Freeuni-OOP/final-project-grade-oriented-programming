@@ -177,6 +177,24 @@ class CardRestControllerTest {
     }
 
     @Test
+    void testWithdrawMoneyFromCardReturnsOk() throws Exception {
+        String body = """
+                {
+                  "amountToWithdraw": 200.0,
+                  "currencyCode": "USD"
+                }
+                """;
+
+        mockMvc.perform(post("/api/card/1/withdraw")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Money has been successfully withdrawn from card!"));
+
+        verify(cardService).withdrawMoney(1L, BigDecimal.valueOf(200.00), "USD");
+    }
+
+    @Test
     void testTransferMoneyReturnsOk() throws Exception {
         String body = """
                 {
