@@ -1,4 +1,4 @@
-package com.oop.web_project.logging;
+package com.oop.web_project.aspect.logging;
 
 import com.oop.web_project.annotations.Deposit;
 import com.oop.web_project.annotations.Exchange;

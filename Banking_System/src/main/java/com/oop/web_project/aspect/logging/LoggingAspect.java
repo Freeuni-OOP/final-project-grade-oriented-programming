@@ -1,4 +1,4 @@
-package com.oop.web_project.logging;
+package com.oop.web_project.aspect.logging;
 
 
 import jakarta.servlet.http.HttpServletRequest;

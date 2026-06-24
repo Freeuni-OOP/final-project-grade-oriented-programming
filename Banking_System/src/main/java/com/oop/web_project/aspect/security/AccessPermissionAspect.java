@@ -1,4 +1,4 @@
-package com.oop.web_project.security;
+package com.oop.web_project.aspect.security;
 
 import com.oop.web_project.annotations.AccountAccessPermissionRequired;
 import com.oop.web_project.annotations.CardAccessPermissionRequired;
