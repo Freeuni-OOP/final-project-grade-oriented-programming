@@ -75,7 +75,7 @@ class CustomerRestControllerTest {
         when(customerService.getCustomerByEmail("john@example.com")).thenReturn(customer);
         when(customerApiMapper.toProfileResponse(customer)).thenReturn(response);
 
-        mockMvc.perform(get("/api/customer/email/john@example.com"))
+        mockMvc.perform(get("/api/customer?email=john@example.com"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("John"))
                 .andExpect(jsonPath("$.lastName").value("Doe"))
@@ -93,7 +93,7 @@ class CustomerRestControllerTest {
         when(customerService.getCustomerByEmail("missing@example.com"))
                 .thenThrow(new CustomerNotFoundException("Customer not found"));
 
-        mockMvc.perform(get("/api/customer/email/missing@example.com"))
+        mockMvc.perform(get("/api/customer?email=missing@example.com"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Customer not found"));
     }
