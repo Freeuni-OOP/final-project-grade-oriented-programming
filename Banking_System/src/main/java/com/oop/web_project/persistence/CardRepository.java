@@ -27,4 +27,7 @@ public interface CardRepository extends JpaRepository<Card, Long> {
   
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Card> findWithLockById(long id);
+
+
+    boolean existsByIdAndIsActiveTrue(long cardId);
 }
