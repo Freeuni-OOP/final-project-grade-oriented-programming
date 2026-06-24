@@ -91,6 +91,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @CardAccessPermissionRequired
+    @ActivityCheckRequired(checkActivityTarget = CheckActivityTarget.CARD)
     @Transactional
     public void addCurrencyToCard(long cardId, String currencyCode) {
         Card card = cardRepository.findById(cardId)
@@ -135,6 +136,7 @@ public class CardServiceImpl implements CardService {
     @Override
     @Deposit
     @CardAccessPermissionRequired
+    @ActivityCheckRequired(checkActivityTarget = CheckActivityTarget.CARD)
     @Transactional
     public void depositMoney(long cardId, BigDecimal amountToAdd, String currencyCode) {
         Card card = cardRepository.findById(cardId)
@@ -159,6 +161,7 @@ public class CardServiceImpl implements CardService {
     @Override
     @Withdraw
     @CardAccessPermissionRequired
+    @ActivityCheckRequired(checkActivityTarget = CheckActivityTarget.CARD)
     @Transactional
     public void withdrawMoney(long cardId, BigDecimal amountToWithdraw, String currencyCode) {
         CardBalance balance = cardBalanceRepository.findByCardIdAndCurrencyCode(cardId, currencyCode)
@@ -178,6 +181,7 @@ public class CardServiceImpl implements CardService {
     @Override
     @Transfer
     @CardAccessPermissionRequired
+    @ActivityCheckRequired(checkActivityTarget = CheckActivityTarget.CARD)
     @Transactional
     public void transferMoney(long senderCardId, long receiverCardId, BigDecimal amount, String currencyCode) {
         if(senderCardId == receiverCardId){
@@ -210,6 +214,7 @@ public class CardServiceImpl implements CardService {
     @Override
     @Exchange
     @CardAccessPermissionRequired
+    @ActivityCheckRequired(checkActivityTarget = CheckActivityTarget.CARD)
     @Transactional
     public void changeCurrency(long cardId, BigDecimal amount, String fromCurrencyCode, String toCurrencyCode) {
         if(fromCurrencyCode.equals(toCurrencyCode)){

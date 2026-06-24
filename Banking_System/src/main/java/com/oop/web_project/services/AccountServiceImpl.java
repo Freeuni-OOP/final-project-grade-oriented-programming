@@ -1,8 +1,10 @@
 package com.oop.web_project.services;
 import com.oop.web_project.annotations.AccountAccessPermissionRequired;
+import com.oop.web_project.annotations.ActivityCheckRequired;
 import com.oop.web_project.annotations.CardAccessPermissionRequired;
 import com.oop.web_project.annotations.CustomerAccessPermissionRequired;
 import com.oop.web_project.entities.Account;
+import com.oop.web_project.entities.CheckActivityTarget;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyActiveException;
 import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyDeactivatedException;
@@ -117,6 +119,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @AccountAccessPermissionRequired
+    @ActivityCheckRequired(checkActivityTarget = CheckActivityTarget.ACCOUNT)
     @Transactional
     public void updateAccount(long accountId, String accountName) {
         Account existingAccount = accountRepository.findWithLockById(accountId).orElseThrow(
@@ -127,6 +130,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @AccountAccessPermissionRequired
+    @ActivityCheckRequired(checkActivityTarget = CheckActivityTarget.ACCOUNT)
     @Transactional
     public void registerCustomerToAccount(long accountId, long customerId) {
         Account account = accountRepository.findById(accountId).orElseThrow(
