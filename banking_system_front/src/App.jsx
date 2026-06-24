@@ -1,377 +1,286 @@
 import { useState } from 'react';
+import { authApi } from './api/authApi';
+import { customerApi } from './api/customerApi';
+import { accountApi } from './api/accountApi';
+import { cardApi } from './api/cardApi';
 
-const DEFAULT_BASE_URL = 'http://localhost:8080';
+const REGISTER_BODY = {
+  firstName: 'Test',
+  lastName: 'User',
+  phoneNumber: '995555123456',
+  address: 'Tbilisi',
+  dateOfBirth: '1990-05-15',
+  email: 'test.user@example.com',
+  password: 'Password123',
+};
 
-export default function RegisterCorsTest() {
-  const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
-  const [form, setForm] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    phoneNumber: '555123434',
-    address: '123 Main St',
-    dateOfBirth: '1990-01-15',
-    email: 'johnDoe@bank.com',
-    password: 'abdaubda1234',
-  });
-  const [status, setStatus] = useState(null);
-  const [response, setResponse] = useState(null);
-  const [corsInfo, setCorsInfo] = useState(null);
-  const [errorKind, setErrorKind] = useState(null); // 'network' | 'http'
+const UPDATE_CUSTOMER_BODY = {
+  firstName: 'Updated',
+  lastName: 'Name',
+  phoneNumber: '995555000000',
+  address: 'New Address',
+};
 
-  const handleChange = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+const ACCOUNT_BODY = {
+  accountName: 'Test Account',
+  category: 'CHECKING',
+};
 
-  const sendRequest = async () => {
-    setStatus('loading');
-    setResponse(null);
-    setCorsInfo(null);
-    setErrorKind(null);
+const CARD_BODY = {
+  cardType: 'DEBIT',
+  cardBrand: 'VISA',
+  spendingLimit: 1000,
+  pan: '1234567890123456',
+};
 
-    const url = `${baseUrl.replace(/\/$/, '')}/api/auth/register`;
+const DEPOSIT_BODY = { amountToDeposit: 100, currencyCode: 'USD' };
+const WITHDRAW_BODY = { amountToWithdraw: 50, currencyCode: 'USD' };
+const TRANSFER_BODY = {
+  senderCardId: 1,
+  receiverCardId: 2,
+  amount: 25,
+  currencyCode: 'USD',
+};
+const EXCHANGE_BODY = {
+  amount: 10,
+  fromCurrencyCode: 'USD',
+  toCurrencyCode: 'EUR',
+};
 
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-
-      const corsHeaders = {
-        'Access-Control-Allow-Origin': res.headers.get('Access-Control-Allow-Origin'),
-        'Access-Control-Allow-Methods': res.headers.get('Access-Control-Allow-Methods'),
-        'Access-Control-Allow-Headers': res.headers.get('Access-Control-Allow-Headers'),
-      };
-      setCorsInfo(corsHeaders);
-
-      let body;
-      const ct = res.headers.get('content-type') || '';
-      if (ct.includes('application/json')) {
-        body = await res.json();
-      } else {
-        body = await res.text();
-      }
-
-      setResponse({ ok: res.ok, status: res.status, statusText: res.statusText, body });
-      setStatus(res.ok ? 'success' : 'error');
-      setErrorKind(res.ok ? null : 'http');
-    } catch (err) {
-      setStatus('error');
-      setErrorKind('network');
-      setResponse({
-        error: err.message,
-        hint: 'Request never reached the server. This is almost certainly a CORS preflight block or the server is not running. Check the browser DevTools → Console and Network tabs for details.',
-      });
-    }
-  };
-
-  const previewForm = { ...form, password: '••••••••' };
-
-  const fields = [
-    { key: 'firstName', label: 'First Name' },
-    { key: 'lastName', label: 'Last Name' },
-    { key: 'phoneNumber', label: 'Phone Number' },
-    { key: 'address', label: 'Address' },
-    { key: 'dateOfBirth', label: 'Date of Birth' },
-    { key: 'email', label: 'Email' },
-    { key: 'password', label: 'Password', type: 'password' },
-  ];
-
-  const statusColor = {
-    success: { bg: '#16a34a22', text: '#16a34a', border: '#16a34a55' },
-    http: { bg: '#f59e0b22', text: '#f59e0b', border: '#f59e0b55' },
-    network: { bg: '#dc262622', text: '#dc2626', border: '#dc262655' },
-  };
-
-  const activeColor =
-    status === 'success'
-      ? statusColor.success
-      : errorKind === 'http'
-        ? statusColor.http
-        : statusColor.network;
-
-  const statusLabel =
-    status === 'success'
-      ? `✓ HTTP ${response?.status} ${response?.statusText}`
-      : errorKind === 'http'
-        ? `⚠ HTTP ${response?.status} ${response?.statusText}`
-        : `✗ ${response?.error ?? 'Unknown error'}`;
-
+function Section({ title, children }) {
   return (
-    <div style={styles.page}>
-      <header style={styles.header}>
-        <div style={styles.badge}>CORS TEST</div>
-        <h1 style={styles.title}>POST /api/auth/register</h1>
-        <p style={styles.subtitle}>Fire a real request from the browser and inspect CORS headers</p>
-      </header>
-
-      <div style={styles.card}>
-        <label style={styles.label}>Base URL</label>
-        <input
-          style={styles.input}
-          value={baseUrl}
-          onChange={(e) => setBaseUrl(e.target.value)}
-          placeholder="http://localhost:8080"
-        />
-      </div>
-
-      <div style={styles.card}>
-        <p style={styles.sectionTitle}>Request Body</p>
-        <div style={styles.grid}>
-          {fields.map(({ key, label, type }) => (
-            <div key={key} style={styles.fieldGroup}>
-              <label style={styles.label}>{label}</label>
-              <input
-                style={styles.input}
-                type={type || 'text'}
-                value={form[key]}
-                onChange={handleChange(key)}
-              />
-            </div>
-          ))}
-        </div>
-
-        <div style={styles.preview}>
-          <span style={styles.previewLabel}>JSON Preview (password hidden)</span>
-          <pre style={styles.pre}>{JSON.stringify(previewForm, null, 2)}</pre>
-        </div>
-
-        <button
-          style={{ ...styles.button, opacity: status === 'loading' ? 0.6 : 1 }}
-          onClick={sendRequest}
-          disabled={status === 'loading'}
-        >
-          {status === 'loading' ? (
-            <span style={styles.loadingRow}>
-              <span style={styles.spinner} />
-              Sending…
-            </span>
-          ) : (
-            'Send Request'
-          )}
-        </button>
-      </div>
-
-      {status && status !== 'loading' && (
-        <div style={styles.card}>
-          <p style={styles.sectionTitle}>Response</p>
-
-          <div
-            style={{
-              ...styles.statusBadge,
-              background: activeColor.bg,
-              color: activeColor.text,
-              borderColor: activeColor.border,
-            }}
-          >
-            {statusLabel}
-          </div>
-
-          {response?.hint && <p style={styles.hint}>{response.hint}</p>}
-
-          {response?.body !== undefined && (
-            <div style={styles.preview}>
-              <span style={styles.previewLabel}>Body</span>
-              <pre style={styles.pre}>
-                {typeof response.body === 'string'
-                  ? response.body
-                  : JSON.stringify(response.body, null, 2)}
-              </pre>
-            </div>
-          )}
-
-          {corsInfo && (
-            <div style={styles.preview}>
-              <span style={styles.previewLabel}>CORS Headers</span>
-              <p style={styles.corsNote}>
-                ℹ Browsers block JS from reading these headers when a preflight fails — all nulls
-                below may indicate a CORS block, not absent headers. Cross-check in DevTools →
-                Network.
-              </p>
-              {Object.entries(corsInfo).map(([k, v]) => (
-                <div key={k} style={styles.corsRow}>
-                  <span style={styles.corsKey}>{k}</span>
-                  <span style={v ? styles.corsVal : styles.corsValMissing}>
-                    {v ?? '— not present'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+    <div style={{ marginBottom: 16 }}>
+      <h3 style={{ margin: '10px 0 6px' }}>{title}</h3>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{children}</div>
     </div>
   );
 }
 
-const spin = `
-@keyframes spin { to { transform: rotate(360deg); } }
-`;
-if (typeof document !== 'undefined') {
-  const s = document.createElement('style');
-  s.textContent = spin;
-  document.head.appendChild(s);
-}
+export default function SmokeTest() {
+  const [customerId, setCustomerId] = useState('1');
+  const [accountId, setAccountId] = useState('1');
+  const [cardId, setCardId] = useState('1');
+  const [email, setEmail] = useState('test.user@example.com');
+  const [currency, setCurrency] = useState('USD');
+  const [accountName, setAccountName] = useState('Renamed Account');
+  const [loginEmail, setLoginEmail] = useState('test.user@example.com');
+  const [loginPassword, setLoginPassword] = useState('Password123');
+  const [log, setLog] = useState([]);
 
-const styles = {
-  page: {
-    minHeight: '100vh',
-    background: '#0f1117',
-    color: '#e2e8f0',
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'Courier New', monospace",
-    padding: '32px 16px',
-    boxSizing: 'border-box',
-    maxWidth: 760,
-    margin: '0 auto',
-  },
-  header: { marginBottom: 28 },
-  badge: {
-    display: 'inline-block',
-    background: '#3b82f622',
-    color: '#60a5fa',
-    border: '1px solid #3b82f644',
-    borderRadius: 4,
-    fontSize: 10,
-    fontWeight: 700,
-    letterSpacing: 2,
-    padding: '3px 10px',
-    marginBottom: 12,
-  },
-  title: {
-    margin: '0 0 6px',
-    fontSize: 22,
-    fontWeight: 700,
-    color: '#f8fafc',
-    letterSpacing: -0.5,
-  },
-  subtitle: { margin: 0, fontSize: 13, color: '#64748b' },
-  card: {
-    background: '#1e2130',
-    border: '1px solid #2d3348',
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    margin: '0 0 14px',
-    fontSize: 11,
-    fontWeight: 700,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    color: '#94a3b8',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '10px 16px',
-    marginBottom: 16,
-  },
-  fieldGroup: { display: 'flex', flexDirection: 'column', gap: 4 },
-  label: {
-    fontSize: 11,
-    color: '#64748b',
-    fontWeight: 600,
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  input: {
-    background: '#0f1117',
-    border: '1px solid #2d3348',
-    borderRadius: 6,
-    color: '#e2e8f0',
-    fontSize: 13,
-    padding: '7px 10px',
-    fontFamily: 'inherit',
-    outline: 'none',
-    width: '100%',
-    boxSizing: 'border-box',
-  },
-  preview: {
-    background: '#0f1117',
-    border: '1px solid #2d3348',
-    borderRadius: 6,
-    padding: '12px 14px',
-    marginBottom: 14,
-    position: 'relative',
-  },
-  previewLabel: {
-    display: 'block',
-    fontSize: 10,
-    color: '#475569',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-    fontWeight: 700,
-  },
-  pre: {
-    margin: 0,
-    fontSize: 12,
-    color: '#7dd3fc',
-    overflowX: 'auto',
-    lineHeight: 1.6,
-  },
-  button: {
-    background: '#2563eb',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 7,
-    padding: '10px 24px',
-    fontSize: 14,
-    fontWeight: 700,
-    fontFamily: 'inherit',
-    cursor: 'pointer',
-    letterSpacing: 0.3,
-    width: '100%',
-  },
-  loadingRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  spinner: {
-    display: 'inline-block',
-    width: 14,
-    height: 14,
-    border: '2px solid #ffffff55',
-    borderTop: '2px solid #ffffff',
-    borderRadius: '50%',
-    animation: 'spin 0.7s linear infinite',
-  },
-  statusBadge: {
-    display: 'inline-block',
-    border: '1px solid',
-    borderRadius: 6,
-    padding: '6px 14px',
-    fontSize: 13,
-    fontWeight: 700,
-    marginBottom: 14,
-  },
-  hint: {
-    fontSize: 12,
-    color: '#f59e0b',
-    background: '#f59e0b11',
-    border: '1px solid #f59e0b33',
-    borderRadius: 6,
-    padding: '8px 12px',
-    marginBottom: 14,
-  },
-  corsNote: {
-    fontSize: 11,
-    color: '#94a3b8',
-    background: '#3b82f611',
-    border: '1px solid #3b82f633',
-    borderRadius: 5,
-    padding: '6px 10px',
-    marginBottom: 10,
-    lineHeight: 1.5,
-  },
-  corsRow: {
-    display: 'flex',
-    gap: 12,
-    padding: '4px 0',
-    borderBottom: '1px solid #1e2130',
-    flexWrap: 'wrap',
-  },
-  corsKey: { color: '#94a3b8', fontSize: 12, minWidth: 280 },
-  corsVal: { color: '#4ade80', fontSize: 12, fontWeight: 600 },
-  corsValMissing: { color: '#f87171', fontSize: 12, fontStyle: 'italic' },
-};
+  const record = (label, status, data) => {
+    const time = new Date().toLocaleTimeString();
+    console.log(label, status, data);
+    setLog((prev) => [`${time}  ${label} → ${status}`, ...prev].slice(0, 40));
+  };
+
+  const run = (label, fn) => async () => {
+    try {
+      const data = await fn();
+      record(label, 'OK', data);
+    } catch (error) {
+      record(label, error.response?.status ?? 'NETWORK / CORS ERROR', error.response?.data);
+    }
+  };
+
+  const doLogin = async () => {
+    try {
+      const data = await authApi.login({
+        email: loginEmail,
+        password: loginPassword,
+      });
+      const token = data['Generated JWT token'];
+      if (token) {
+        localStorage.setItem('token', token);
+        record('login + store token', 'OK', '(token stored in localStorage)');
+      } else {
+        record('login', 'OK but no token field found', data);
+      }
+    } catch (error) {
+      record('login', error.response?.status ?? 'NETWORK / CORS ERROR', error.response?.data);
+    }
+  };
+
+  const clearToken = () => {
+    localStorage.removeItem('token');
+    record('clear token', 'done', null);
+  };
+
+  const input = (value, setter, width = 130) => (
+    <input
+      value={value}
+      onChange={(e) => setter(e.target.value)}
+      style={{ width, marginLeft: 4 }}
+    />
+  );
+
+  return (
+    <div
+      style={{
+        padding: 20,
+        fontFamily: 'system-ui, sans-serif',
+        maxWidth: 920,
+        margin: '0 auto',
+        textAlign: 'left',
+      }}
+    >
+      <h1 style={{ marginBottom: 4 }}>API Smoke Test</h1>
+      <p style={{ marginTop: 0 }}>
+        Open DevTools → Network and turn on <strong>Preserve log</strong>. Each button fires one
+        request — inspect its URL, method, payload and headers.
+      </p>
+
+      <fieldset style={{ marginBottom: 16 }}>
+        <legend>Auth / token</legend>
+        <label>email{input(loginEmail, setLoginEmail, 200)}</label>{' '}
+        <label>password{input(loginPassword, setLoginPassword)}</label>{' '}
+        <button onClick={doLogin}>Login &amp; store token</button>{' '}
+        <button onClick={clearToken}>Clear token</button>
+      </fieldset>
+
+      <fieldset style={{ marginBottom: 16 }}>
+        <legend>Shared params</legend>
+        <label>customerId{input(customerId, setCustomerId, 50)}</label>{' '}
+        <label>accountId{input(accountId, setAccountId, 50)}</label>{' '}
+        <label>cardId{input(cardId, setCardId, 50)}</label>{' '}
+        <label>email{input(email, setEmail, 200)}</label>{' '}
+        <label>currency{input(currency, setCurrency, 60)}</label>{' '}
+        <label>accountName{input(accountName, setAccountName)}</label>
+      </fieldset>
+
+      <Section title="authApi">
+        <button onClick={run('auth.register', () => authApi.register(REGISTER_BODY))}>
+          register
+        </button>
+        <button onClick={run('auth.validate', () => authApi.validate())}>validate</button>
+      </Section>
+
+      <Section title="customerApi">
+        <button onClick={run('customer.getById', () => customerApi.getById(customerId))}>
+          getById
+        </button>
+        <button onClick={run('customer.getByEmail', () => customerApi.getByEmail(email))}>
+          getByEmail
+        </button>
+        <button onClick={run('customer.getByAccount', () => customerApi.getByAccount(accountId))}>
+          getByAccount
+        </button>
+        <button
+          onClick={run('customer.update', () =>
+            customerApi.update(customerId, UPDATE_CUSTOMER_BODY)
+          )}
+        >
+          update
+        </button>
+        <button onClick={run('customer.activate', () => customerApi.activate(customerId))}>
+          activate
+        </button>
+        <button onClick={run('customer.deactivate', () => customerApi.deactivate(customerId))}>
+          deactivate
+        </button>
+        <button onClick={run('customer.delete', () => customerApi.delete(customerId))}>
+          delete
+        </button>
+      </Section>
+
+      <Section title="accountApi">
+        <button onClick={run('account.create', () => accountApi.create(ACCOUNT_BODY))}>
+          create
+        </button>
+        <button
+          onClick={run('account.createCard', () => accountApi.createCard(accountId, CARD_BODY))}
+        >
+          createCard
+        </button>
+        <button onClick={run('account.activate', () => accountApi.activate(accountId))}>
+          activate
+        </button>
+        <button onClick={run('account.deactivate', () => accountApi.deactivate(accountId))}>
+          deactivate
+        </button>
+        <button onClick={run('account.getById', () => accountApi.getById(accountId))}>
+          getById
+        </button>
+        <button onClick={run('account.delete', () => accountApi.delete(accountId))}>delete</button>
+        <button onClick={run('account.getByEmail', () => accountApi.getByEmail(email))}>
+          getByEmail
+        </button>
+        <button
+          onClick={run('account.getByCustomerId', () => accountApi.getByCustomerId(customerId))}
+        >
+          getByCustomerId
+        </button>
+        <button
+          onClick={run('account.updateName', () => accountApi.updateName(accountId, accountName))}
+        >
+          updateName
+        </button>
+        <button
+          onClick={run('account.registerCustomer', () =>
+            accountApi.registerCustomer(accountId, customerId)
+          )}
+        >
+          registerCustomer
+        </button>
+        <button
+          onClick={run('account.getBalanceByCurrency', () =>
+            accountApi.getBalanceByCurrency(accountId, currency)
+          )}
+        >
+          getBalanceByCurrency
+        </button>
+      </Section>
+
+      <Section title="cardApi">
+        <button onClick={run('card.getById', () => cardApi.getById(cardId))}>getById</button>
+        <button onClick={run('card.getLinkedAccount', () => cardApi.getLinkedAccount(cardId))}>
+          getLinkedAccount
+        </button>
+        <button onClick={run('card.getBalances', () => cardApi.getBalances(cardId))}>
+          getBalances
+        </button>
+        <button onClick={run('card.checkExpiration', () => cardApi.checkExpiration(cardId))}>
+          checkExpiration
+        </button>
+        <button onClick={run('card.deposit', () => cardApi.deposit(cardId, DEPOSIT_BODY))}>
+          deposit
+        </button>
+        <button onClick={run('card.withdraw', () => cardApi.withdraw(cardId, WITHDRAW_BODY))}>
+          withdraw
+        </button>
+        <button onClick={run('card.transfer', () => cardApi.transfer(TRANSFER_BODY))}>
+          transfer
+        </button>
+        <button
+          onClick={run('card.exchangeCurrency', () =>
+            cardApi.exchangeCurrency(cardId, EXCHANGE_BODY)
+          )}
+        >
+          exchangeCurrency
+        </button>
+        <button onClick={run('card.addCurrency', () => cardApi.addCurrency(cardId, currency))}>
+          addCurrency
+        </button>
+        <button onClick={run('card.activate', () => cardApi.activate(cardId))}>activate</button>
+        <button onClick={run('card.deactivate', () => cardApi.deactivate(cardId))}>
+          deactivate
+        </button>
+        <button onClick={run('card.delete', () => cardApi.delete(cardId))}>delete</button>
+      </Section>
+
+      <h2 style={{ marginBottom: 6 }}>Log (newest first)</h2>
+      <pre
+        style={{
+          background: '#111',
+          color: '#3f3',
+          padding: 12,
+          height: 240,
+          overflow: 'auto',
+          borderRadius: 6,
+          fontSize: 13,
+        }}
+      >
+        {log.join('\n') || '(no calls yet)'}
+      </pre>
+    </div>
+  );
+}
