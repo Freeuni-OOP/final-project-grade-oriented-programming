@@ -59,10 +59,11 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "400", description = "Invalid email address", content = @Content),
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
+
     @PreAuthorize("hasAuthority(\"STANDARD\")")
-    @GetMapping("/email/{customer-email}")
+    @GetMapping
     public ResponseEntity<CustomerProfileResponse> getCustomerProfileWithEmail(
-            @NotNull @Email @PathVariable("customer-email") String customerEmail) {
+            @NotNull @Email @RequestParam("email") String customerEmail) {
         Customer customer = customerService.getCustomerByEmail(customerEmail);
         CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
         return ResponseEntity.status(HttpStatus.OK).body(response);
