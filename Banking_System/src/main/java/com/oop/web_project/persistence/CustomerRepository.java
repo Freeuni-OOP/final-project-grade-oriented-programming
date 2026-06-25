@@ -38,4 +38,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     boolean existsCustomerByAccounts_Id(long accountId);
 
     boolean existsByEmailAndRole(String email, Role role);
+
+    boolean existsByIdAndIsActiveTrue(long customerId);
 }

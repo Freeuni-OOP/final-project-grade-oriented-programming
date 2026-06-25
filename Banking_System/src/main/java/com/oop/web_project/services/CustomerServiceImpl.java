@@ -1,7 +1,9 @@
 package com.oop.web_project.services;
 
+import com.oop.web_project.annotations.ActivityCheckRequired;
 import com.oop.web_project.annotations.CustomerAccessPermissionRequired;
 import com.oop.web_project.entities.Account;
+import com.oop.web_project.entities.CheckActivityTarget;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
 import com.oop.web_project.exceptions.customerExceptions.*;
@@ -102,6 +104,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     @CustomerAccessPermissionRequired
+    @ActivityCheckRequired(checkActivityTarget = CheckActivityTarget.CUSTOMER)
     @Transactional
     public void updateCustomer(long customerId, String firstName, String lastName, String phoneNumber, String address) {
         Customer existingCustomer =  customerRepository.findWithLockById(customerId)

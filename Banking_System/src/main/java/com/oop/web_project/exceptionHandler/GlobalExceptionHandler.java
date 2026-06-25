@@ -1,9 +1,6 @@
 package com.oop.web_project.exceptionHandler;
 
-import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyActiveException;
-import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyDeactivatedException;
-import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
-import com.oop.web_project.exceptions.accountExceptions.NotAccountOfCustomerException;
+import com.oop.web_project.exceptions.accountExceptions.*;
 import com.oop.web_project.exceptions.cardExceptions.*;
 import com.oop.web_project.exceptions.customerExceptions.*;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
@@ -36,6 +33,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotAccountOfCustomerException.class)
     public ResponseEntity<String> handleAccountNotBeingOfCustomer(NotAccountOfCustomerException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
+    @ExceptionHandler(AccountIsNotActiveException.class)
+    public ResponseEntity<String> handleAccountNotActive(AccountIsNotActiveException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 
@@ -90,6 +92,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 
+    @ExceptionHandler(CardIsNotActiveException.class)
+    public ResponseEntity<String> handleCardNotActive(CardIsNotActiveException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
+
     //Customer
     @ExceptionHandler(CustomerAlreadyActiveException.class)
     public ResponseEntity<String> handleActiveCustomer(CustomerAlreadyActiveException e) {
@@ -131,6 +139,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 
+    @ExceptionHandler(CustomerIsNotActiveException.class)
+    public ResponseEntity<String> handleCustomerNotActive(CustomerIsNotActiveException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
     //transaction
     @ExceptionHandler(CurrencyExchangeException.class)
     public ResponseEntity<String> handleCurrencyExchangeFailure(CurrencyExchangeException e) {
@@ -139,7 +152,6 @@ public class GlobalExceptionHandler {
 
 
     //other
-
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<String> handleDataIntegrityViolation(DataIntegrityViolationException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Request violates data Integrity!");

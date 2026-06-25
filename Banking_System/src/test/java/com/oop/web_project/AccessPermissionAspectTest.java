@@ -9,7 +9,7 @@ import com.oop.web_project.exceptions.cardExceptions.NotCardOfCustomerException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerAccessDeniedException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerIsNotAuthenticatedException;
 import com.oop.web_project.persistence.CustomerRepository;
-import com.oop.web_project.security.AccessPermissionAspect;
+import com.oop.web_project.aspect.security.AccessPermissionAspect;
 import org.aspectj.lang.JoinPoint;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

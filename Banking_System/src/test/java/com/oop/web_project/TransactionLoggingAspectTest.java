@@ -7,7 +7,7 @@ import com.oop.web_project.annotations.Withdraw;
 import com.oop.web_project.entities.Transaction;
 import com.oop.web_project.entities.TransactionStatus;
 import com.oop.web_project.entities.TransactionType;
-import com.oop.web_project.logging.TransactionLoggingAspect;
+import com.oop.web_project.aspect.logging.TransactionLoggingAspect;
 import com.oop.web_project.services.TransactionAuditService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,6 +1,6 @@
 package com.oop.web_project;
 
-import com.oop.web_project.logging.LoggingAspect;
+import com.oop.web_project.aspect.logging.LoggingAspect;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.aspectj.lang.JoinPoint;

@@ -20,4 +20,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Account> findWithLockById(long id);
+
+    boolean existsByIdAndIsActiveTrue(long accountId);
 }
