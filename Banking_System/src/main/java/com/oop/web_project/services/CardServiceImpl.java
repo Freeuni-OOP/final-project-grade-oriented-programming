@@ -130,7 +130,9 @@ public class CardServiceImpl implements CardService {
     @Override
     @Transactional
     public void deleteCard(long cardId) {
-        cardRepository.deleteById(cardId);
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new CardNotFoundException("card could not be found!"));
+        cardRepository.delete(card);
     }
 
     @Override
