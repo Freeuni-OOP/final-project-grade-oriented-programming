@@ -16,6 +16,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
+import java.io.PrintWriter;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -126,6 +128,7 @@ class JWTFilterTest {
         when(jwtService.extractEmail("invalid.jwt.token")).thenReturn("test@example.com");
         when(userDetailsService.loadUserByUsername("test@example.com")).thenReturn(userDetails);
         when(jwtService.validateToken("invalid.jwt.token", userDetails)).thenReturn(false);
+        when(response.getWriter()).thenReturn(new PrintWriter("str"));
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mock(SecurityContext.class);
@@ -139,13 +142,14 @@ class JWTFilterTest {
     }
 
     @Test
-    void testDoFilterInternalInvalidTokenProceedsChain() throws Exception {
+    void testDoFilterInternalInvalidTokenDoesNotProceedIntoChain() throws Exception {
         UserDetails userDetails = mock(UserDetails.class);
 
         when(request.getHeader("Authorization")).thenReturn("Bearer invalid.jwt.token");
         when(jwtService.extractEmail("invalid.jwt.token")).thenReturn("test@example.com");
         when(userDetailsService.loadUserByUsername("test@example.com")).thenReturn(userDetails);
         when(jwtService.validateToken("invalid.jwt.token", userDetails)).thenReturn(false);
+        when(response.getWriter()).thenReturn(new PrintWriter("str"));
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mock(SecurityContext.class);
@@ -154,7 +158,7 @@ class JWTFilterTest {
 
             jwtFilter.doFilter(request, response, filterChain);
 
-            verify(filterChain, times(1)).doFilter(request, response);
+            verify(filterChain, times(0)).doFilter(request, response);
         }
     }
 

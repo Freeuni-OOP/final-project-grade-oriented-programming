@@ -1,6 +1,7 @@
 package com.oop.web_project.config;
 
 import com.oop.web_project.filters.JWTFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,6 +59,14 @@ public class SecurityConfig {
                         .requestMatchers(PathRequest.toH2Console()).permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                         .anyRequest().authenticated());
+
+
+        http.exceptionHandling(e -> e.authenticationEntryPoint(
+                (request, response, authException ) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("JWT Validation Failed!");
+                }
+        ));
 
         http.sessionManagement(sessionManagement ->
                 sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

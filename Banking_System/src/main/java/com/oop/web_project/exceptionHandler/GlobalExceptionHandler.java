@@ -157,3 +157,4 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Request violates data Integrity!");
     }
 }
+

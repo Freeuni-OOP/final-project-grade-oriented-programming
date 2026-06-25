@@ -2,6 +2,8 @@ package com.oop.web_project;
 
 import com.oop.web_project.exceptions.customerExceptions.CustomerCannotBeAuthenticatedException;
 import com.oop.web_project.services.JWTServiceImpl;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,13 +66,13 @@ class JWTServiceImplTest {
 
     @Test
     void testExtractEmailInvalidTokenThrowsException() {
-        assertThrows(CustomerCannotBeAuthenticatedException.class,
+        assertThrows(MalformedJwtException.class,
                 () -> jwtService.extractEmail("invalid.jwt.token"));
     }
 
     @Test
     void testExtractEmailMalformedTokenThrowsException() {
-        assertThrows(CustomerCannotBeAuthenticatedException.class,
+        assertThrows(MalformedJwtException.class,
                 () -> jwtService.extractEmail("not-a-jwt-at-all"));
     }
 
@@ -101,7 +103,7 @@ class JWTServiceImplTest {
         ReflectionTestUtils.setField(jwtService, "expiration", -1000L);
         String token = jwtService.generateToken("test@example.com");
         UserDetails userDetails = mock(UserDetails.class);
-        assertThrows(CustomerCannotBeAuthenticatedException.class, () -> jwtService.validateToken(token, userDetails));
+        assertThrows(ExpiredJwtException.class, () -> jwtService.validateToken(token, userDetails));
     }
 
     @Test
