@@ -9,6 +9,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -31,14 +32,27 @@ public class JWTFilter extends OncePerRequestFilter {
         String authenticationHeader = request.getHeader("Authorization");
         String jwtToken = null;
         String email = null;
-        if(authenticationHeader != null && authenticationHeader.startsWith("Bearer")) {
+
+        if(authenticationHeader != null && authenticationHeader.startsWith("Bearer ")) {
             jwtToken = authenticationHeader.substring(7);
-            email = jwtService.extractEmail(jwtToken);
+            try {
+                email = jwtService.extractEmail(jwtToken);
+            } catch(Exception e) {
+                setUnauthorizedStatus(response);
+                return;
+            }
         }
 
         if(email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            UserDetails userDetails = null;
+
+            try {
+                userDetails = userDetailsService.loadUserByUsername(email);
+            }catch(UsernameNotFoundException e) {
+                setUnauthorizedStatus(response);
+                return;
+            }
 
             if(jwtService.validateToken(jwtToken, userDetails)) {
 
@@ -48,10 +62,18 @@ public class JWTFilter extends OncePerRequestFilter {
                 usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+            } else {
+                setUnauthorizedStatus(response);
+                return;
             }
 
         }
         filterChain.doFilter(request, response);
+    }
+
+    private void setUnauthorizedStatus(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write("JWT Validation failed!");
     }
 
 }

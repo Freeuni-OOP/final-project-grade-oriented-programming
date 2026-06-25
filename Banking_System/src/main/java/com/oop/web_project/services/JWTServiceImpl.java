@@ -1,6 +1,5 @@
 package com.oop.web_project.services;
 
-import com.oop.web_project.exceptions.customerExceptions.CustomerCannotBeAuthenticatedException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -96,15 +95,12 @@ public class JWTServiceImpl implements JWTService {
     private Claims extractAllClaims(String jwtToken) {
         Claims claims = null;
 
-        try {
-            claims = Jwts.parserBuilder()
-                    .setSigningKey(getKey())
-                    .build()
-                    .parseClaimsJws(jwtToken)
-                    .getBody();
-        } catch(Exception e) {
-            throw new CustomerCannotBeAuthenticatedException("JWT Token validation failed!");
-        }
+        claims = Jwts.parserBuilder()
+                .setSigningKey(getKey())
+                .build()
+                .parseClaimsJws(jwtToken)
+                .getBody();
+
         return claims;
     }
 
