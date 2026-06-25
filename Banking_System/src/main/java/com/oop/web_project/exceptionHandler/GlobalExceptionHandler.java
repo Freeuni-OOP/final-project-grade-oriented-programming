@@ -125,7 +125,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(CustomerDetailsNotFoundException.class)
-    public ResponseEntity<String> handleCustomerDetailsNotFound(CustomerNotFoundException e) {
+    public ResponseEntity<String> handleCustomerDetailsNotFound(CustomerDetailsNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
