@@ -17,14 +17,17 @@ const RULES = {
   lastName: { required: 'Last name is required.' },
   email: {
     required: 'Email is required.',
-    pattern: { value: /\S+@\S+\.\S+/, message: 'Enter a valid email.' },
+    pattern: { value: /\S+@\S+.\S+/, message: 'Enter a valid email.' },
   },
   password: {
     required: 'Password is required.',
-    minLength: { value: 8, message: 'At least 8 characters.' },
+    minLength: { value: 6, message: 'At least 6 characters.' },
+    maxLength: { value: 20, message: 'At most 20 characters.' },
   },
-  phoneNumber: { required: 'Phone number is required.' },
-  address: { required: 'Address is required.' },
+  phoneNumber: {
+    pattern: { value: /^\d+$/, message: 'Phone number must contain only digits.' },
+  },
+  address: {},
   dateOfBirth: { required: 'Date of birth is required.' },
 };
 
