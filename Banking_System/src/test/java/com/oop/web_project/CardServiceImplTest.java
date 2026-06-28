@@ -199,8 +199,10 @@ class CardServiceImplTest {
 
     @Test
     void testDeleteCardDeletesById() {
+        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+
         cardService.deleteCard(1L);
-        verify(cardRepository, times(1)).deleteById(1L);
+        verify(cardRepository, times(1)).delete(card);
     }
 
     @Test
