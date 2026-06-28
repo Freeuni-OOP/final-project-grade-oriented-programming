@@ -12,6 +12,7 @@ import com.oop.web_project.mapping.CardBalanceApiMapper;
 import com.oop.web_project.services.AccountService;
 import com.oop.web_project.services.CardService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -54,6 +55,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Card retrieved successfully",
                     content = @Content(schema = @Schema(implementation = CardResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -69,6 +71,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Account retrieved successfully",
                     content = @Content(schema = @Schema(implementation = AccountSummaryResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card or account not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -83,8 +86,9 @@ public class CardRestController {
     @Operation(summary = "Get card balances", description = "Retrieves all currency balances associated with the given card")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Balances retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = CardBalanceResponse.class))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = CardBalanceResponse.class)))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -102,6 +106,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Expiration status retrieved successfully",
                     content = @Content(schema = @Schema(type = "boolean"))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -117,6 +122,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Money deposited successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID, request body, or spending limit exceeded", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource, or it is inactive", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card or card balance (currency) not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -135,6 +141,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Money withdrawn successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID, request body, or insufficient funds", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource, or it is inactive", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card balance (currency) not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -153,6 +160,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Money transferred successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid request body or insufficient funds / spending limit exceeded", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource, or it is inactive", content = @Content),
             @ApiResponse(responseCode = "404", description = "Sender or receiver card (or balance) not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Sender and receiver card are the same", content = @Content)
     })
@@ -172,6 +180,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Currency exchanged successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID, request body, insufficient funds, or no exchange rate found for the currency pair", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource, or it is inactive", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card or card balance not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "From-currency and to-currency are the same", content = @Content)
     })
@@ -190,6 +199,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Currency added successfully",
                     content = @Content(schema = @Schema(implementation = CardResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID or currency code", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource, or it is inactive", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Currency code does not exist, or card already has a balance for this currency", content = @Content)
     })
@@ -207,11 +217,12 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Card activated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Card is already active", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
-    @PatchMapping("{card-id}/activate")
+    @PatchMapping("/{card-id}/activate")
     public ResponseEntity<String> activateCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
         cardService.activateCard(cardId);
@@ -223,11 +234,12 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Card deactivated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Card is already inactive", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
-    @PatchMapping("{card-id}/deactivate")
+    @PatchMapping("/{card-id}/deactivate")
     public ResponseEntity<String> deactivateCard(@NotNull @Positive @PathVariable("card-id") Long cardId) {
 
         cardService.deactivateCard(cardId);
@@ -239,6 +251,7 @@ public class CardRestController {
             @ApiResponse(responseCode = "200", description = "Card deleted successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid card ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not have the required role", content = @Content),
             @ApiResponse(responseCode = "404", description = "Card not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"MANAGER\")")

@@ -11,6 +11,7 @@ import com.oop.web_project.mapping.CardApiMapper;
 import com.oop.web_project.services.AccountService;
 import com.oop.web_project.services.CardService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -57,7 +58,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "201", description = "Account created successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
+            @ApiResponse(responseCode = "403", description = "Caller does not have the required role", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PostMapping
@@ -72,6 +73,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "201", description = "Card created successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID or request body", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content),
             @ApiResponse(responseCode = "409", description = "A card with the same PAN already exists", content = @Content)
     })
@@ -89,6 +91,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "200", description = "Account activated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Account is already active", content = @Content)
     })
@@ -104,6 +107,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "200", description = "Account deactivated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Account is already inactive", content = @Content)
     })
@@ -119,6 +123,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "200", description = "Account retrieved successfully",
                     content = @Content(schema = @Schema(implementation = AccountProfileResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -134,6 +139,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "200", description = "Account deleted successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not have the required role", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"MANAGER\")")
@@ -146,8 +152,9 @@ public class AccountRestController {
     @Operation(summary = "Get accounts by customer email", description = "Returns a list of account summaries associated with the given customer email")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Accounts retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = AccountSummaryResponse.class))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = AccountSummaryResponse.class)))),
             @ApiResponse(responseCode = "400", description = "Invalid email parameter", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "No accounts found for this email", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -164,8 +171,9 @@ public class AccountRestController {
     @Operation(summary = "Get accounts by customer ID", description = "Returns a list of full account profiles linked to the given customer ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Accounts retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = AccountProfileResponse.class))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = AccountProfileResponse.class)))),
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "No accounts found for this customer", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -184,6 +192,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "200", description = "Account updated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID or request body", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource, or it is inactive", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -198,6 +207,7 @@ public class AccountRestController {
             @ApiResponse(responseCode = "200", description = "Customer registered to account successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID or customer ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource, or it is inactive", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account or customer not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -212,7 +222,8 @@ public class AccountRestController {
             @ApiResponse(responseCode = "200", description = "Balance retrieved successfully",
                     content = @Content(schema = @Schema(type = "number"))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID or currency code", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Account balance not found for the given currency", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping("/{account-id}/balance")

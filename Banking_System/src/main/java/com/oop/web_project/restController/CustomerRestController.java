@@ -6,6 +6,7 @@ import com.oop.web_project.entities.Customer;
 import com.oop.web_project.mapping.CustomerApiMapper;
 import com.oop.web_project.services.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -42,6 +43,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "200", description = "Customer profile retrieved successfully",
                     content = @Content(schema = @Schema(implementation = CustomerProfileResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -57,6 +59,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "200", description = "Customer profile retrieved successfully",
                     content = @Content(schema = @Schema(implementation = CustomerProfileResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid email address", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
 
@@ -72,9 +75,10 @@ public class CustomerRestController {
     @Operation(summary = "Get customers by account", description = "Retrieves all customer profiles associated with a given account ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Customer profiles retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = CustomerProfileResponse.class))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = CustomerProfileResponse.class)))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID", content = @Content),
-            @ApiResponse(responseCode = "404", description = "No customers found for the given account", content = @Content)
+            @ApiResponse(responseCode = "403", description = "Caller does not have the required role", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Account not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"MANAGER\")")
     @GetMapping("/account/{account-id}")
@@ -95,6 +99,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "200", description = "Customer updated successfully",
                     content = @Content(schema = @Schema(implementation = CustomerProfileResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request body or customer ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource, or it is inactive", content = @Content),
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
@@ -111,6 +116,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "200", description = "Customer deactivated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Customer is already inactive", content = @Content)
     })
@@ -126,6 +132,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "200", description = "Customer activated successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content),
             @ApiResponse(responseCode = "406", description = "Customer is already active", content = @Content)
     })
@@ -141,6 +148,7 @@ public class CustomerRestController {
             @ApiResponse(responseCode = "200", description = "Customer deleted successfully",
                     content = @Content(schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid customer ID", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not have the required role", content = @Content),
             @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"MANAGER\")")
