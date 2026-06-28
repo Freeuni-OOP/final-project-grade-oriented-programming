@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import ProtectedRoute from '../../components/ProtectedRoute';
+import ProtectedRoute from '../components/ProtectedRoute';
 
-const mockAuth = {
+const mockAuth = vi.hoisted(() => ({
   isAuthenticated: true,
   authority: 'STANDARD',
   ready: true,
-};
+}));
 
 vi.mock('../components/AuthContext', () => ({
   useAuth: () => mockAuth,
@@ -28,8 +28,6 @@ function renderWithRole(userAuthority, requiredRole) {
     </MemoryRouter>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 describe('Role guard', () => {
   beforeEach(() => {

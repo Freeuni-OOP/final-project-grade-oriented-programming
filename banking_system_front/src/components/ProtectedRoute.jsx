@@ -1,22 +1,14 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import LoadingPage from '../pages/LoadingPage';
 
-/**
- * Wraps any route that requires authentication.
- *
- * Usage (in App.jsx):
- *   <Route element={<ProtectedRoute />}>
- *     <Route path="/dashboard" element={<Dashboard />} />
- *   </Route>
- *
- *   <Route element={<ProtectedRoute requiredRole="MANAGER" />}>
- *     <Route path="/admin" element={<AdminPage />} />
- *   </Route>
- */
 export default function ProtectedRoute({ requiredRole }) {
   const { isAuthenticated, authority, ready } = useAuth();
 
-  if (!ready) return null;
+  // Wait for token validation so private pages do not flash before redirecting.
+  if (!ready) {
+    return <LoadingPage message="Checking your session..." />;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
