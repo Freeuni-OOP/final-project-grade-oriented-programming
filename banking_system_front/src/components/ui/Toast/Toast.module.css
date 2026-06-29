@@ -1,0 +1,127 @@
+.container {
+  position: fixed;
+  z-index: 60;
+  display: grid;
+  width: min(24rem, calc(100vw - 2rem));
+  gap: var(--space-3);
+  pointer-events: none;
+}
+
+.topRight {
+  top: var(--space-5);
+  right: var(--space-5);
+}
+
+.bottomRight {
+  right: var(--space-5);
+  bottom: var(--space-5);
+}
+
+.topLeft {
+  top: var(--space-5);
+  left: var(--space-5);
+}
+
+.bottomLeft {
+  bottom: var(--space-5);
+  left: var(--space-5);
+}
+
+.toast {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
+  pointer-events: auto;
+}
+
+.statusDot {
+  width: 0.625rem;
+  height: 0.625rem;
+  margin-top: 0.35rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.content {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.message {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  overflow-wrap: anywhere;
+}
+
+.action {
+  margin-top: var(--space-3);
+}
+
+.dismiss {
+  display: inline-flex;
+  width: 1.75rem;
+  height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--font-size-lg);
+  line-height: 1;
+}
+
+.dismiss:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.dismiss:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--color-focus-ring);
+}
+
+.info {
+  border-color: var(--color-info-border);
+  color: var(--color-info);
+}
+
+.success {
+  border-color: var(--color-success-border);
+  color: var(--color-success);
+}
+
+.warning {
+  border-color: var(--color-warning-border);
+  color: var(--color-warning);
+}
+
+.danger {
+  border-color: var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+@media (max-width: 640px) {
+  .container {
+    right: var(--space-4);
+    left: var(--space-4);
+    width: auto;
+  }
+}

@@ -1,0 +1,45 @@
+.page {
+  display: grid;
+  min-height: calc(100vh - 8rem);
+  place-items: center;
+}
+
+.card {
+  width: min(100%, 26rem);
+}
+
+.heading {
+  margin: 0 0 var(--space-6);
+  color: var(--color-text);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.footer {
+  margin: var(--space-5) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  text-align: center;
+}
+
+.footer a {
+  font-weight: var(--font-weight-semibold);
+}
+
+@media (max-width: 640px) {
+  .page {
+    min-height: auto;
+    place-items: stretch;
+  }
+
+  .card {
+    width: 100%;
+  }
+}
