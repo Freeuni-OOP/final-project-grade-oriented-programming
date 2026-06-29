@@ -1,42 +1,20 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense } from 'react';
+import { RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './components/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import UnauthorizedPage from './pages/UnauthorizedPage';
+import ErrorBoundary from './components/ErrorBoundary';
+import LoadingPage from './pages/LoadingPage';
+import { createAppRouter } from './routes';
 
-function Dashboard() {
-  return <h1 style={{ padding: 32 }}>Dashboard (STANDARD + MANAGER)</h1>;
-}
-
-function AdminPage() {
-  return <h1 style={{ padding: 32 }}>Admin (MANAGER only)</h1>;
-}
+const router = createAppRouter();
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <ErrorBoundary>
       <AuthProvider>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
-
-          {/* Protected: any authenticated user */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-          </Route>
-
-          {/* Protected: MANAGER only */}
-          <Route element={<ProtectedRoute requiredRole="MANAGER" />}>
-            <Route path="/admin" element={<AdminPage />} />
-          </Route>
-
-          {/* Default redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        <Suspense fallback={<LoadingPage />}>
+          <RouterProvider router={router} fallbackElement={<LoadingPage />} />
+        </Suspense>
       </AuthProvider>
-    </BrowserRouter>
+    </ErrorBoundary>
   );
 }

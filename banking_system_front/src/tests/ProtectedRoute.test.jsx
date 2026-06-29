@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import ProtectedRoute from '../../components/ProtectedRoute';
+import ProtectedRoute from '../components/ProtectedRoute';
 
-const mockAuth = {
+const mockAuth = vi.hoisted(() => ({
   isAuthenticated: false,
   authority: null,
   ready: true,
-};
+}));
 
 vi.mock('../components/AuthContext', () => ({
   useAuth: () => mockAuth,
@@ -49,7 +49,7 @@ describe('ProtectedRoute', () => {
     expect(screen.getByText('Protected content')).toBeInTheDocument();
   });
 
-  it('renders nothing while auth is not yet ready (prevents flash redirect)', () => {
+  it('shows a loading message while auth is not yet ready', () => {
     mockAuth.ready = false;
     mockAuth.isAuthenticated = false;
 
@@ -64,6 +64,7 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
+    expect(screen.getByText('Checking your session...')).toBeInTheDocument();
     expect(screen.queryByText('Protected content')).not.toBeInTheDocument();
     expect(screen.queryByText('Login page')).not.toBeInTheDocument();
   });
