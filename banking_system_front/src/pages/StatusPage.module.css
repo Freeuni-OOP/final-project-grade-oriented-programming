@@ -1,0 +1,88 @@
+.loadingPage {
+  display: grid;
+  min-height: 15rem;
+  place-items: center;
+}
+
+.fullPage {
+  display: grid;
+  min-height: calc(100vh - 8rem);
+  place-items: center;
+}
+
+.statusCard,
+.placeholderCard,
+.centerCard {
+  width: min(100%, 32rem);
+}
+
+.placeholderCard {
+  width: min(100%, 45rem);
+}
+
+.centerCard {
+  text-align: center;
+}
+
+.kicker,
+.kickerDanger {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+  line-height: var(--line-height-tight);
+  text-transform: uppercase;
+}
+
+.kicker {
+  color: var(--color-primary);
+}
+
+.kickerDanger {
+  color: var(--color-danger);
+}
+
+.code {
+  margin: 0 0 var(--space-3);
+  color: var(--color-primary);
+  font-size: 3rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
+.title {
+  margin: 0 0 var(--space-3);
+  color: var(--color-text);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  overflow-wrap: anywhere;
+}
+
+.message {
+  margin: 0 0 var(--space-5);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-base);
+}
+
+.placeholderCard .message {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .fullPage {
+    min-height: auto;
+    place-items: stretch;
+  }
+
+  .statusCard,
+  .placeholderCard,
+  .centerCard {
+    width: 100%;
+  }
+
+  .title {
+    font-size: var(--font-size-2xl);
+  }
+}
