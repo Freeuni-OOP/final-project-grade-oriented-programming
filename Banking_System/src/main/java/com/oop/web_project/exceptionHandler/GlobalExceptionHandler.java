@@ -171,7 +171,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleValidationFailure(MethodArgumentNotValidException e) {
         Map<String, String> errors = new LinkedHashMap<>();
 
-        // Send the field names, so frontend can show errors near inputs.
         e.getBindingResult().getFieldErrors().forEach(error ->
                 errors.putIfAbsent(error.getField(), error.getDefaultMessage())
         );
