@@ -7,3 +7,4 @@ export { default as Select } from './Select/Select';
 export { default as Spinner } from './Spinner/Spinner';
 export { default as Table } from './Table/Table';
 export { default as Toast, ToastContainer } from './Toast/Toast';
+export { ToastProvider, useToast } from '../ToastProvider';
