@@ -13,7 +13,9 @@ async function login(credentials) {
 }
 
 async function validate() {
-  const response = await httpClient.get(`${BASE_PATH}/validate`);
+  const response = await httpClient.get(`${BASE_PATH}/validate`, {
+    skipErrorToast: true,
+  });
   return response.data;
 }
 

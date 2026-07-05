@@ -1,9 +1,12 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../api/authApi';
+import { applyBackendFormErrors } from '../api/formErrors';
 import { useAuth } from '../components/AuthContext';
 import { Button, Card, TextField, Toast } from '../components/ui';
 import styles from './AuthPage.module.css';
+
+const LOGIN_FIELDS = ['email', 'password'];
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -29,8 +32,7 @@ export default function LoginPage() {
       login(token);
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      const msg = err.response?.data?.message ?? err.response?.data ?? 'Invalid email or password.';
-      setError('root', { message: String(msg) });
+      applyBackendFormErrors(err, setError, LOGIN_FIELDS);
     }
   };
 

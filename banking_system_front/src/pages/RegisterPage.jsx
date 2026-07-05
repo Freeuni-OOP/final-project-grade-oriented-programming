@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../api/authApi';
+import { applyBackendFormErrors } from '../api/formErrors';
 import { Button, Card, TextField, Toast } from '../components/ui';
 import styles from './AuthPage.module.css';
 
@@ -33,6 +34,21 @@ const RULES = {
   dateOfBirth: { required: 'Date of birth is required.' },
 };
 
+const REGISTER_FIELDS = FIELDS.map(({ name }) => name);
+
+function blankToNull(value) {
+  return value?.trim() ? value.trim() : null;
+}
+
+function buildRegistrationPayload(values) {
+  return {
+    ...values,
+    email: values.email.trim(),
+    phoneNumber: blankToNull(values.phoneNumber),
+    address: blankToNull(values.address),
+  };
+}
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const {
@@ -44,14 +60,10 @@ export default function RegisterPage() {
 
   const onSubmit = async (values) => {
     try {
-      await authApi.register(values);
+      await authApi.register(buildRegistrationPayload(values));
       navigate('/login', { replace: true, state: { registered: true } });
     } catch (err) {
-      const msg =
-        err.response?.data?.message ??
-        err.response?.data ??
-        'Registration failed. Please try again.';
-      setError('root', { message: String(msg) });
+      applyBackendFormErrors(err, setError, REGISTER_FIELDS);
     }
   };
 
