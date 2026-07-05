@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { notifyBackendError } from '../api/errorNotifications';
 import { ToastProvider, useToast } from '../components/ToastProvider';
 
 function TestButton() {
@@ -35,7 +36,6 @@ describe('ToastProvider', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'show error' }));
 
-    expect(screen.getByText('Request failed')).toBeInTheDocument();
     expect(screen.getByText('Invalid input.')).toBeInTheDocument();
   });
 
@@ -64,5 +64,21 @@ describe('ToastProvider', () => {
     expect(screen.queryByText('Temporary.')).not.toBeInTheDocument();
 
     vi.useRealTimers();
+  });
+
+  it('shows backend errors sent from the api layer', () => {
+    render(
+      <ToastProvider>
+        <span>App content</span>
+      </ToastProvider>
+    );
+
+    act(() => {
+      notifyBackendError({ response: { status: 406 } });
+    });
+
+    expect(
+      screen.getByText('This action is not allowed in the current state.')
+    ).toBeInTheDocument();
   });
 });

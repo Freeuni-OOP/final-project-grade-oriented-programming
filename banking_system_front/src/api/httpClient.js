@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL, TOKEN_KEY } from './config';
+import { notifyBackendError, shouldNotifyBackendError } from './errorNotifications';
 
 const httpClient = axios.create({
   baseURL: API_BASE_URL,
@@ -22,6 +23,11 @@ httpClient.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+
+    if (shouldNotifyBackendError(error)) {
+      notifyBackendError(error);
+    }
+
     return Promise.reject(error);
   }
 );

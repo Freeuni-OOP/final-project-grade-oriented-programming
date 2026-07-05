@@ -7,6 +7,8 @@ import {
   useRef,
   useState,
 } from 'react';
+import { getBackendErrorMessage } from '../api/errorMessages';
+import { subscribeToBackendErrors } from '../api/errorNotifications';
 import Toast, { ToastContainer } from './ui/Toast/Toast';
 
 const ToastContext = createContext(null);
@@ -17,6 +19,20 @@ let nextToastId = 0;
 function makeToastId() {
   nextToastId += 1;
   return `toast-${nextToastId}`;
+}
+
+function BackendErrorToastBridge() {
+  const { showErrorToast } = useToast();
+
+  useEffect(
+    () =>
+      subscribeToBackendErrors((error) => {
+        showErrorToast(getBackendErrorMessage(error));
+      }),
+    [showErrorToast]
+  );
+
+  return null;
 }
 
 export function ToastProvider({ children }) {
@@ -56,13 +72,15 @@ export function ToastProvider({ children }) {
   );
 
   const showErrorToast = useCallback(
-    (message, options = {}) =>
-      showToast({
-        title: 'Request failed',
-        message,
+    (message, options = {}) => {
+      const { title = message, ...rest } = options;
+
+      return showToast({
+        title,
         variant: 'danger',
-        ...options,
-      }),
+        ...rest,
+      });
+    },
     [showToast]
   );
 
@@ -81,6 +99,7 @@ export function ToastProvider({ children }) {
 
   return (
     <ToastContext.Provider value={value}>
+      <BackendErrorToastBridge />
       {children}
       <ToastContainer>
         {toasts.map(({ id, title, message, variant, action, dismissLabel }) => (

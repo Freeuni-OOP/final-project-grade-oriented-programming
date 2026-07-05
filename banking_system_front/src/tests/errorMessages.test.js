@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_BACKEND_ERROR_MESSAGE,
+  NETWORK_ERROR_MESSAGE,
   getBackendErrorMessage,
   getBackendStatusCode,
 } from '../api/errorMessages';
@@ -31,6 +32,10 @@ describe('backend error messages', () => {
     expect(getBackendErrorMessage({ response: { status: 500 } })).toBe(
       DEFAULT_BACKEND_ERROR_MESSAGE
     );
+  });
+
+  it('uses a clear message for network errors', () => {
+    expect(getBackendErrorMessage({ code: 'ERR_NETWORK' })).toBe(NETWORK_ERROR_MESSAGE);
   });
 
   it('reads status from axios-style and plain errors', () => {

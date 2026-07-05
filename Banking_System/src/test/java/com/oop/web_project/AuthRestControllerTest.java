@@ -127,6 +127,29 @@ class AuthRestControllerTest {
     }
 
     @Test
+    void testRegisterCustomerValidationErrorsReturnFieldMessages() throws Exception {
+        String body = """
+                {
+                  "firstName": "John",
+                  "lastName": "Doe",
+                  "phoneNumber" : "",
+                  "address" : "someaddress",
+                  "dateOfBirth" : "2001-12-12",
+                  "email": "john@example.com",
+                  "password": "Password1!"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.phoneNumber").value("Phone number must contain only digits."));
+
+        verify(customerApiMapper, never()).toCustomerOnRegistration(any());
+    }
+
+    @Test
     void testLoginCustomerValidCredentialsReturnsOk() throws Exception {
         when(authService.authenticateCustomer("john@example.com", "Password1!")).thenReturn("jwt-token");
 
