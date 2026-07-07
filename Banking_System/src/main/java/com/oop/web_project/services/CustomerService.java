@@ -13,9 +13,10 @@ public interface CustomerService {
 
 
     /**
-     * registers new customer
+     * registers new customer and
+     * returns id of the newly registered customer
      */
-    void registerCustomer(Customer customer);
+    long registerCustomer(Customer customer);
 
     /**
      * Retrieves a customer by their email address.

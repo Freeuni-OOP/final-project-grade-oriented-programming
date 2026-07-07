@@ -31,7 +31,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     @Transactional
-    public void registerCustomer(Customer customer) {
+    public long registerCustomer(Customer customer) {
         if(customer == null) {
             throw new IllegalArgumentException("customer cannot be null!");
         }
@@ -41,7 +41,8 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         customer.setHashedPassword(passwordEncoder.encode(customer.getHashedPassword()));
-        customerRepository.save(customer);
+        Customer createdCustomer = customerRepository.save(customer);
+        return createdCustomer.getId();
     }
 
     @Override

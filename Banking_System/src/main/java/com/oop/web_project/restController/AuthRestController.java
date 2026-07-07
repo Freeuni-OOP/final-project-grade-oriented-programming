@@ -36,19 +36,23 @@ public class AuthRestController {
     @Operation(summary = "Register a new customer", description = "Creates a new customer account")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Customer registered successfully",
-                    content = @Content(schema = @Schema(type = "string"))),
+                    content = @Content(schema = @Schema(type = "map"))),
             @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content),
             @ApiResponse(responseCode = "409", description = "Customer already exists", content = @Content)
     })
     @PostMapping("/register")
-    public ResponseEntity<String> registerCustomer(
+    public ResponseEntity<Map<String, Object>> registerCustomer(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Customer registration details", required = true,
                     content = @Content(schema = @Schema(implementation = CustomerRegistrationRequest.class)))
             @Valid @RequestBody CustomerRegistrationRequest request) {
         Customer customer = customerApiMapper.toCustomerOnRegistration(request);
-        customerService.registerCustomer(customer);
-        return ResponseEntity.status(HttpStatus.CREATED).body("The Customer has been registered successfully.");
+        long customerId = customerService.registerCustomer(customer);
+        return ResponseEntity.status(HttpStatus.CREATED).
+                body(Map.of(
+                "statusMessage","The Customer has been registered successfully!",
+                "registeredCustomerId", customerId
+                ));
     }
 
     @Operation(summary = "Authenticate a customer", description = "Validates customer credentials and returns a JWT token")

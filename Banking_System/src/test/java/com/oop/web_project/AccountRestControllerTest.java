@@ -1,5 +1,6 @@
 package com.oop.web_project;
 
+import com.jayway.jsonpath.JsonPath;
 import com.oop.web_project.dto.responses.AccountProfileResponse;
 import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.entities.Account;
@@ -37,8 +38,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AccountRestController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -77,6 +77,7 @@ class AccountRestControllerTest {
     @Test
     void testCreateAccountReturnsCreated() throws Exception {
         when(accountMapper.toAccount(any())).thenReturn(mock(Account.class));
+        when(accountService.createAccount(any(Account.class))).thenReturn(1L);
 
         String body = """
                 {
@@ -89,15 +90,18 @@ class AccountRestControllerTest {
         mockMvc.perform(post("/api/account")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isCreated())
-                .andExpect(content().string("Account has been successfully created."));
+                .andExpect(jsonPath("$.statusMessage").value("Account has been created successfully!"))
+                .andExpect(jsonPath("$.createdAccountId").value(1L));
 
         verify(accountService).createAccount(any(Account.class));
     }
 
     @Test
     void testCreateCardReturnsCreated() throws Exception {
-        when(cardApiMapper.toCardOnCardCreation(any())).thenReturn(mock(Card.class));
+        Card card = new Card();
+        card.setId(1L);
+        when(cardApiMapper.toCardOnCardCreation(any())).thenReturn(card);
+        when(cardService.createCard(1L, card)).thenReturn(1L);
 
         String body = """
                 {
@@ -111,8 +115,8 @@ class AccountRestControllerTest {
         mockMvc.perform(post("/api/account/1/cards")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isCreated())
-                .andExpect(content().string("Card has been successfully created!"));
+                .andExpect(jsonPath("$.statusMessage").value("Card has been successfully created!"))
+                .andExpect(jsonPath("$.createdCardId").value(1L));
 
         verify(cardService).createCard(eq(1L), any(Card.class));
     }

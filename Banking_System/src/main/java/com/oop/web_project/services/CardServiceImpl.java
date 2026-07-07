@@ -65,7 +65,7 @@ public class CardServiceImpl implements CardService {
     @Override
     @AccountAccessPermissionRequired
     @Transactional
-    public void createCard(long accountId, Card card) {
+    public long createCard(long accountId, Card card) {
         Account account = accountRepository.findById(accountId)
                         .orElseThrow(
                                 () -> new AccountNotFoundException("Account not found!")
@@ -77,7 +77,8 @@ public class CardServiceImpl implements CardService {
         }
 
         card.setAccount(account);
-        cardRepository.save(card);
+        Card createdCard = cardRepository.save(card);
+        return createdCard.getId();
     }
 
     @Override
