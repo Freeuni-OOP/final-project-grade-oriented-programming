@@ -45,5 +45,52 @@ describe('accountApi read endpoints', () => {
     expect(adapter).toHaveBeenLastCalledWith(
       expect.objectContaining({ method: 'get', url: '/api/account/customer/42' })
     );
+
+    await accountApi.getBalanceByCurrency(10, 'USD');
+    expect(adapter).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        method: 'get',
+        params: { currencyCode: 'USD' },
+        url: '/api/account/10/balance',
+      })
+    );
+  });
+
+  it('uses account write endpoints for part 2 actions', async () => {
+    const adapter = mockAdapter();
+    const payload = { accountName: 'Daily', category: 'CHECKING' };
+
+    await accountApi.create(payload);
+    expect(adapter).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        data: JSON.stringify(payload),
+        method: 'post',
+        url: '/api/account',
+      })
+    );
+
+    await accountApi.updateName(10, 'Travel');
+    expect(adapter).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        data: 'Travel',
+        method: 'put',
+        url: '/api/account/10',
+      })
+    );
+
+    await accountApi.activate(10);
+    expect(adapter).toHaveBeenLastCalledWith(
+      expect.objectContaining({ method: 'patch', url: '/api/account/10/activate' })
+    );
+
+    await accountApi.deactivate(10);
+    expect(adapter).toHaveBeenLastCalledWith(
+      expect.objectContaining({ method: 'patch', url: '/api/account/10/deactivate' })
+    );
+
+    await accountApi.registerCustomer(10, 42);
+    expect(adapter).toHaveBeenLastCalledWith(
+      expect.objectContaining({ method: 'put', url: '/api/account/10/customers/42' })
+    );
   });
 });

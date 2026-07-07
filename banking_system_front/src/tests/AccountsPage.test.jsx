@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../components/ToastProvider';
@@ -10,6 +10,12 @@ vi.mock('../api/accountApi', () => ({
     getByEmail: vi.fn(),
     getByCustomerId: vi.fn(),
     getById: vi.fn(),
+    getBalanceByCurrency: vi.fn(),
+    create: vi.fn(),
+    updateName: vi.fn(),
+    activate: vi.fn(),
+    deactivate: vi.fn(),
+    registerCustomer: vi.fn(),
   },
 }));
 
@@ -28,6 +34,10 @@ function renderWithProviders(ui) {
       <ToastProvider>{ui}</ToastProvider>
     </QueryClientProvider>
   );
+}
+
+function getSectionByHeading(name) {
+  return screen.getByRole('heading', { name }).closest('section');
 }
 
 describe('AccountsPage', () => {
@@ -73,8 +83,9 @@ describe('AccountsPage', () => {
 
     renderWithProviders(<AccountsPage />);
 
-    await user.type(screen.getByLabelText(/customer id/i), '42');
-    await user.click(screen.getByRole('button', { name: 'Load profiles' }));
+    const section = within(getSectionByHeading('Find accounts'));
+    await user.type(section.getByLabelText(/customer id/i), '42');
+    await user.click(section.getByRole('button', { name: 'Load profiles' }));
 
     await waitFor(() => expect(accountApi.getByCustomerId).toHaveBeenCalledWith('42'));
     expect(await screen.findByText('Family account')).toBeInTheDocument();
@@ -114,8 +125,9 @@ describe('AccountsPage', () => {
 
     renderWithProviders(<AccountsPage />);
 
-    await user.type(screen.getByLabelText(/account id/i), '10');
-    await user.click(screen.getByRole('button', { name: 'Load detail' }));
+    const section = within(getSectionByHeading('Find accounts'));
+    await user.type(section.getByLabelText(/account id/i), '10');
+    await user.click(section.getByRole('button', { name: 'Load detail' }));
 
     await waitFor(() => expect(accountApi.getById).toHaveBeenCalledWith('10'));
     expect(await screen.findByText('Travel account')).toBeInTheDocument();
@@ -123,5 +135,84 @@ describe('AccountsPage', () => {
     expect(screen.getByText('**** 5555')).toBeInTheDocument();
     expect(screen.getByText('25.50 GEL')).toBeInTheDocument();
     expect(screen.getByText('ATM withdrawal')).toBeInTheDocument();
+  });
+
+  it('creates an account', async () => {
+    const user = userEvent.setup();
+    accountApi.create.mockResolvedValue('ok');
+
+    renderWithProviders(<AccountsPage />);
+
+    const section = within(getSectionByHeading('Create account'));
+    await user.type(section.getByLabelText(/^account name/i), 'Daily');
+    await user.selectOptions(section.getByLabelText(/category/i), 'CHECKING');
+    await user.click(section.getByRole('button', { name: 'Create account' }));
+
+    await waitFor(() =>
+      expect(accountApi.create).toHaveBeenCalledWith({
+        accountName: 'Daily',
+        category: 'CHECKING',
+      })
+    );
+  });
+
+  it('updates account name', async () => {
+    const user = userEvent.setup();
+    accountApi.updateName.mockResolvedValue('ok');
+
+    renderWithProviders(<AccountsPage />);
+
+    const section = within(getSectionByHeading('Update account name'));
+    await user.type(section.getByLabelText(/account id/i), '10');
+    await user.type(section.getByLabelText(/new account name/i), 'Travel');
+    await user.click(section.getByRole('button', { name: 'Save name' }));
+
+    await waitFor(() => expect(accountApi.updateName).toHaveBeenCalledWith('10', 'Travel'));
+  });
+
+  it('activates and deactivates an account', async () => {
+    const user = userEvent.setup();
+    accountApi.activate.mockResolvedValue('ok');
+    accountApi.deactivate.mockResolvedValue('ok');
+
+    renderWithProviders(<AccountsPage />);
+
+    const section = within(getSectionByHeading('Account status'));
+    await user.type(section.getByLabelText(/account id/i), '10');
+    await user.click(section.getByRole('button', { name: 'Activate' }));
+    await waitFor(() => expect(accountApi.activate).toHaveBeenCalledWith('10'));
+
+    await user.click(section.getByRole('button', { name: 'Deactivate' }));
+    await waitFor(() => expect(accountApi.deactivate).toHaveBeenCalledWith('10'));
+  });
+
+  it('registers an existing customer to an account', async () => {
+    const user = userEvent.setup();
+    accountApi.registerCustomer.mockResolvedValue('ok');
+
+    renderWithProviders(<AccountsPage />);
+
+    const section = within(getSectionByHeading('Register customer'));
+    await user.type(section.getByLabelText(/account id/i), '10');
+    await user.type(section.getByLabelText(/customer id/i), '42');
+    await user.click(section.getByRole('button', { name: 'Register customer' }));
+
+    await waitFor(() => expect(accountApi.registerCustomer).toHaveBeenCalledWith('10', '42'));
+  });
+
+  it('loads converted balance by currency', async () => {
+    const user = userEvent.setup();
+    accountApi.getBalanceByCurrency.mockResolvedValue('125.30');
+
+    renderWithProviders(<AccountsPage />);
+
+    const section = within(getSectionByHeading('Balance by currency'));
+    await user.type(section.getByLabelText(/account id/i), '10');
+    await user.clear(section.getByLabelText(/currency code/i));
+    await user.type(section.getByLabelText(/currency code/i), 'usd');
+    await user.click(section.getByRole('button', { name: 'View balance' }));
+
+    await waitFor(() => expect(accountApi.getBalanceByCurrency).toHaveBeenCalledWith('10', 'USD'));
+    expect(await screen.findByText('125.30 USD')).toBeInTheDocument();
   });
 });

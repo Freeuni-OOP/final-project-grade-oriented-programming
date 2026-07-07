@@ -49,6 +49,35 @@
   gap: var(--space-6);
 }
 
+.managementGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
+.formStack {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.twoColumnForm,
+.balanceForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.balanceForm {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 12rem) auto;
+  align-items: end;
+}
+
+.actionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
 .profileGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -88,6 +117,24 @@
   line-height: var(--line-height-base);
 }
 
+.balanceResult {
+  display: grid;
+  gap: var(--space-1);
+  width: fit-content;
+  min-width: min(100%, 16rem);
+  padding: var(--space-4);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-soft);
+}
+
+.balanceValue {
+  color: var(--color-primary-active);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
 .badge {
   display: inline-flex;
   width: fit-content;
@@ -122,8 +169,11 @@
 
 @media (max-width: 920px) {
   .lookupGrid,
+  .managementGrid,
   .sectionGrid,
-  .profileGrid {
+  .profileGrid,
+  .twoColumnForm,
+  .balanceForm {
     grid-template-columns: 1fr;
   }
 }

@@ -1,10 +1,22 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { accountApi } from '../api/accountApi';
 import { accountKeys } from '../api/accountQueryKeys';
-import { Button, Card, Table, TextField, Toast } from '../components/ui';
+import { applyBackendFormErrors } from '../api/formErrors';
+import { Button, Card, Select, Table, TextField, Toast, useToast } from '../components/ui';
 import styles from './AccountsPage.module.css';
+
+const ACCOUNT_CATEGORIES = [
+  { value: 'CHECKING', label: 'Checking' },
+  { value: 'SAVINGS', label: 'Savings' },
+  { value: 'CREDIT', label: 'Credit' },
+];
+
+const CREATE_FIELDS = ['accountName', 'category'];
+const UPDATE_NAME_FIELDS = ['accountId', 'accountName'];
+const STATUS_FIELDS = ['accountId'];
+const REGISTER_CUSTOMER_FIELDS = ['accountId', 'customerId'];
 
 function trimValue(value) {
   return String(value ?? '').trim();
@@ -12,6 +24,17 @@ function trimValue(value) {
 
 function formatValue(value) {
   return value === null || value === undefined || value === '' ? 'Not provided' : String(value);
+}
+
+function validatePositiveId(value, label) {
+  return /^\d+$/.test(trimValue(value)) || `${label} must be a positive number.`;
+}
+
+function buildCreatePayload(values) {
+  return {
+    accountName: trimValue(values.accountName),
+    category: values.category,
+  };
 }
 
 function getActiveValue(record) {
@@ -55,9 +78,12 @@ function DetailItem({ label, children }) {
 }
 
 export default function AccountsPage() {
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [emailLookup, setEmailLookup] = useState(null);
   const [customerIdLookup, setCustomerIdLookup] = useState(null);
   const [accountIdLookup, setAccountIdLookup] = useState(null);
+  const [balanceLookup, setBalanceLookup] = useState(null);
 
   const {
     register: registerEmailLookup,
@@ -77,6 +103,43 @@ export default function AccountsPage() {
     formState: { errors: accountIdLookupErrors },
   } = useForm({ defaultValues: { accountId: '' } });
 
+  const {
+    register: registerCreateAccount,
+    handleSubmit: handleCreateAccountSubmit,
+    reset: resetCreateAccount,
+    setError: setCreateAccountError,
+    formState: { errors: createAccountErrors, isSubmitting: isCreateAccountSubmitting },
+  } = useForm({ defaultValues: { accountName: '', category: '' } });
+
+  const {
+    register: registerUpdateName,
+    handleSubmit: handleUpdateNameSubmit,
+    reset: resetUpdateName,
+    setError: setUpdateNameError,
+    formState: { errors: updateNameErrors, isSubmitting: isUpdateNameSubmitting },
+  } = useForm({ defaultValues: { accountId: '', accountName: '' } });
+
+  const {
+    register: registerStatus,
+    handleSubmit: handleStatusSubmit,
+    setError: setStatusError,
+    formState: { errors: statusErrors, isSubmitting: isStatusSubmitting },
+  } = useForm({ defaultValues: { accountId: '' } });
+
+  const {
+    register: registerCustomer,
+    handleSubmit: handleRegisterCustomerSubmit,
+    reset: resetRegisterCustomer,
+    setError: setRegisterCustomerError,
+    formState: { errors: registerCustomerErrors, isSubmitting: isRegisterCustomerSubmitting },
+  } = useForm({ defaultValues: { accountId: '', customerId: '' } });
+
+  const {
+    register: registerBalance,
+    handleSubmit: handleBalanceSubmit,
+    formState: { errors: balanceErrors },
+  } = useForm({ defaultValues: { accountId: '', currencyCode: 'GEL' } });
+
   const emailAccountsQuery = useQuery({
     queryKey: emailLookup
       ? accountKeys.byCustomerEmail(emailLookup)
@@ -84,6 +147,59 @@ export default function AccountsPage() {
     queryFn: () => accountApi.getByEmail(emailLookup),
     enabled: Boolean(emailLookup),
     retry: false,
+  });
+
+  const balanceQuery = useQuery({
+    queryKey: balanceLookup
+      ? accountKeys.balance(balanceLookup.accountId, balanceLookup.currencyCode)
+      : [...accountKeys.all, 'balance', 'idle'],
+    queryFn: () =>
+      accountApi.getBalanceByCurrency(balanceLookup.accountId, balanceLookup.currencyCode),
+    enabled: Boolean(balanceLookup),
+    retry: false,
+  });
+
+  const createAccountMutation = useMutation({
+    mutationFn: (payload) => accountApi.create(payload),
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accountKeys.all });
+      resetCreateAccount();
+      showToast({ title: 'Account created.', variant: 'success' });
+    },
+  });
+
+  const updateNameMutation = useMutation({
+    mutationFn: ({ accountId, accountName }) => accountApi.updateName(accountId, accountName),
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accountKeys.all });
+      resetUpdateName();
+      showToast({ title: 'Account name updated.', variant: 'success' });
+    },
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ accountId, action }) =>
+      action === 'activate' ? accountApi.activate(accountId) : accountApi.deactivate(accountId),
+    retry: false,
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({ queryKey: accountKeys.all });
+      showToast({
+        title: variables.action === 'activate' ? 'Account activated.' : 'Account deactivated.',
+        variant: 'success',
+      });
+    },
+  });
+
+  const registerCustomerMutation = useMutation({
+    mutationFn: ({ accountId, customerId }) => accountApi.registerCustomer(accountId, customerId),
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accountKeys.all });
+      resetRegisterCustomer();
+      showToast({ title: 'Customer registered to account.', variant: 'success' });
+    },
   });
 
   const customerAccountsQuery = useQuery({
@@ -222,9 +338,55 @@ export default function AccountsPage() {
     setAccountIdLookup(trimValue(accountId));
   };
 
+  const submitCreateAccount = async (values) => {
+    try {
+      await createAccountMutation.mutateAsync(buildCreatePayload(values));
+    } catch (error) {
+      applyBackendFormErrors(error, setCreateAccountError, CREATE_FIELDS);
+    }
+  };
+
+  const submitUpdateName = async (values) => {
+    try {
+      await updateNameMutation.mutateAsync({
+        accountId: trimValue(values.accountId),
+        accountName: trimValue(values.accountName),
+      });
+    } catch (error) {
+      applyBackendFormErrors(error, setUpdateNameError, UPDATE_NAME_FIELDS);
+    }
+  };
+
+  const submitStatus = async ({ accountId }, action) => {
+    try {
+      await statusMutation.mutateAsync({ accountId: trimValue(accountId), action });
+    } catch (error) {
+      applyBackendFormErrors(error, setStatusError, STATUS_FIELDS);
+    }
+  };
+
+  const submitRegisterCustomer = async (values) => {
+    try {
+      await registerCustomerMutation.mutateAsync({
+        accountId: trimValue(values.accountId),
+        customerId: trimValue(values.customerId),
+      });
+    } catch (error) {
+      applyBackendFormErrors(error, setRegisterCustomerError, REGISTER_CUSTOMER_FIELDS);
+    }
+  };
+
+  const submitBalanceLookup = ({ accountId, currencyCode }) => {
+    setBalanceLookup({
+      accountId: trimValue(accountId),
+      currencyCode: trimValue(currencyCode).toUpperCase(),
+    });
+  };
+
   const emailAccounts = emailAccountsQuery.data ?? [];
   const customerAccounts = customerAccountsQuery.data ?? [];
   const accountDetail = accountDetailQuery.data;
+  const statusAction = statusMutation.isPending ? statusMutation.variables?.action : null;
 
   return (
     <div className={styles.page}>
@@ -295,6 +457,233 @@ export default function AccountsPage() {
               Load detail
             </Button>
           </form>
+        </div>
+      </Card>
+
+      <div className={styles.managementGrid}>
+        <Card title="Create account">
+          <form
+            className={styles.formStack}
+            onSubmit={handleCreateAccountSubmit(submitCreateAccount)}
+            noValidate
+          >
+            <TextField
+              id="create-account-name"
+              label="Account name"
+              error={createAccountErrors.accountName?.message}
+              required
+              {...registerCreateAccount('accountName', {
+                required: 'Account name is required.',
+                minLength: { value: 3, message: 'At least 3 characters.' },
+                maxLength: { value: 20, message: 'At most 20 characters.' },
+              })}
+            />
+            <Select
+              id="create-account-category"
+              label="Category"
+              placeholder="Choose category"
+              options={ACCOUNT_CATEGORIES}
+              error={createAccountErrors.category?.message}
+              required
+              {...registerCreateAccount('category', {
+                required: 'Category is required.',
+              })}
+            />
+
+            {createAccountErrors.root && (
+              <Toast variant="danger" message={createAccountErrors.root.message} />
+            )}
+
+            <Button
+              type="submit"
+              isLoading={createAccountMutation.isPending || isCreateAccountSubmitting}
+            >
+              Create account
+            </Button>
+          </form>
+        </Card>
+
+        <Card title="Update account name">
+          <form
+            className={styles.formStack}
+            onSubmit={handleUpdateNameSubmit(submitUpdateName)}
+            noValidate
+          >
+            <div className={styles.twoColumnForm}>
+              <TextField
+                id="update-name-account-id"
+                label="Account ID"
+                type="number"
+                min="1"
+                error={updateNameErrors.accountId?.message}
+                required
+                {...registerUpdateName('accountId', {
+                  required: 'Account ID is required.',
+                  validate: (value) => validatePositiveId(value, 'Account ID'),
+                })}
+              />
+              <TextField
+                id="update-account-name"
+                label="New account name"
+                error={updateNameErrors.accountName?.message}
+                required
+                {...registerUpdateName('accountName', {
+                  required: 'Account name is required.',
+                  minLength: { value: 3, message: 'At least 3 characters.' },
+                  maxLength: { value: 20, message: 'At most 20 characters.' },
+                })}
+              />
+            </div>
+
+            {updateNameErrors.root && (
+              <Toast variant="danger" message={updateNameErrors.root.message} />
+            )}
+
+            <Button
+              type="submit"
+              isLoading={updateNameMutation.isPending || isUpdateNameSubmitting}
+            >
+              Save name
+            </Button>
+          </form>
+        </Card>
+
+        <Card title="Account status">
+          <form className={styles.formStack} noValidate>
+            <TextField
+              id="status-account-id"
+              label="Account ID"
+              type="number"
+              min="1"
+              error={statusErrors.accountId?.message}
+              required
+              {...registerStatus('accountId', {
+                required: 'Account ID is required.',
+                validate: (value) => validatePositiveId(value, 'Account ID'),
+              })}
+            />
+
+            {statusErrors.root && <Toast variant="danger" message={statusErrors.root.message} />}
+
+            <div className={styles.actionsRow}>
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={statusMutation.isPending || isStatusSubmitting}
+                isLoading={statusAction === 'activate'}
+                onClick={handleStatusSubmit((values) => submitStatus(values, 'activate'))}
+              >
+                Activate
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                disabled={statusMutation.isPending || isStatusSubmitting}
+                isLoading={statusAction === 'deactivate'}
+                onClick={handleStatusSubmit((values) => submitStatus(values, 'deactivate'))}
+              >
+                Deactivate
+              </Button>
+            </div>
+          </form>
+        </Card>
+
+        <Card title="Register customer">
+          <form
+            className={styles.formStack}
+            onSubmit={handleRegisterCustomerSubmit(submitRegisterCustomer)}
+            noValidate
+          >
+            <div className={styles.twoColumnForm}>
+              <TextField
+                id="register-customer-account-id"
+                label="Account ID"
+                type="number"
+                min="1"
+                error={registerCustomerErrors.accountId?.message}
+                required
+                {...registerCustomer('accountId', {
+                  required: 'Account ID is required.',
+                  validate: (value) => validatePositiveId(value, 'Account ID'),
+                })}
+              />
+              <TextField
+                id="register-customer-id"
+                label="Customer ID"
+                type="number"
+                min="1"
+                error={registerCustomerErrors.customerId?.message}
+                required
+                {...registerCustomer('customerId', {
+                  required: 'Customer ID is required.',
+                  validate: (value) => validatePositiveId(value, 'Customer ID'),
+                })}
+              />
+            </div>
+
+            {registerCustomerErrors.root && (
+              <Toast variant="danger" message={registerCustomerErrors.root.message} />
+            )}
+
+            <Button
+              type="submit"
+              isLoading={registerCustomerMutation.isPending || isRegisterCustomerSubmitting}
+            >
+              Register customer
+            </Button>
+          </form>
+        </Card>
+      </div>
+
+      <Card title="Balance by currency">
+        <div className={styles.formStack}>
+          <form
+            className={styles.balanceForm}
+            onSubmit={handleBalanceSubmit(submitBalanceLookup)}
+            noValidate
+          >
+            <TextField
+              id="balance-account-id"
+              label="Account ID"
+              type="number"
+              min="1"
+              error={balanceErrors.accountId?.message}
+              required
+              {...registerBalance('accountId', {
+                required: 'Account ID is required.',
+                validate: (value) => validatePositiveId(value, 'Account ID'),
+              })}
+            />
+            <TextField
+              id="balance-currency-code"
+              label="Currency code"
+              error={balanceErrors.currencyCode?.message}
+              required
+              {...registerBalance('currencyCode', {
+                required: 'Currency code is required.',
+                pattern: {
+                  value: /^[A-Za-z]{3}$/,
+                  message: 'Use a three-letter currency code.',
+                },
+              })}
+            />
+            <Button type="submit" isLoading={balanceQuery.isFetching}>
+              View balance
+            </Button>
+          </form>
+
+          {balanceQuery.isError && (
+            <Toast variant="danger" message="Account balance could not be loaded." />
+          )}
+
+          {balanceLookup && balanceQuery.isSuccess && (
+            <div className={styles.balanceResult}>
+              <span className={styles.detailLabel}>Converted balance</span>
+              <strong className={styles.balanceValue}>
+                {formatValue(balanceQuery.data)} {balanceLookup.currencyCode}
+              </strong>
+            </div>
+          )}
         </div>
       </Card>
 
