@@ -1,0 +1,168 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.pageHeader {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.kicker {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+  line-height: var(--line-height-tight);
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.lookupGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.inlineForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.stack {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.centerState {
+  display: grid;
+  min-height: 10rem;
+  place-items: center;
+  color: var(--color-text-muted);
+}
+
+.mutedText {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+}
+
+.profileGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.detailItem {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailLabel {
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+  line-height: var(--line-height-tight);
+  text-transform: uppercase;
+}
+
+.detailValue {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 1.5rem;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  padding: var(--space-1) var(--space-2);
+}
+
+.active {
+  border-color: var(--color-success-border);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.inactive {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.unknown {
+  border-color: var(--color-border);
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.actionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.tableActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.modalText {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+}
+
+@media (max-width: 760px) {
+  .lookupGrid,
+  .profileGrid,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .inlineForm {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: var(--font-size-2xl);
+  }
+}

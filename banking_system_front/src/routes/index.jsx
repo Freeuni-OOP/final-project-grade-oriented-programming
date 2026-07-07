@@ -3,6 +3,8 @@ import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import ErrorPage from '../pages/ErrorPage';
 import LoginPage from '../pages/LoginPage';
+import CustomersPage from '../pages/CustomersPage';
+import ManagerCustomersPage from '../pages/ManagerCustomersPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import PlaceholderPage from '../pages/PlaceholderPage';
 import RegisterPage from '../pages/RegisterPage';
@@ -15,11 +17,6 @@ const protectedFeatureRoutes = [
     description: 'Summary screen placeholder for authenticated users.',
   },
   {
-    path: 'customers',
-    title: 'Customers',
-    description: 'Customer feature placeholder. Real customer screens can replace this later.',
-  },
-  {
     path: 'accounts',
     title: 'Accounts',
     description: 'Account feature placeholder. Real account screens can replace this later.',
@@ -28,19 +25,6 @@ const protectedFeatureRoutes = [
     path: 'cards',
     title: 'Cards',
     description: 'Card feature placeholder. Real card screens can replace this later.',
-  },
-];
-
-const managerFeatureRoutes = [
-  {
-    path: 'admin',
-    title: 'Admin',
-    description: 'Manager-only admin view placeholder.',
-  },
-  {
-    path: 'admin/delete',
-    title: 'Delete Records',
-    description: 'Manager-only delete view placeholder.',
   },
 ];
 
@@ -63,11 +47,17 @@ export const appRoutes = [
       { path: 'unauthorized', element: <UnauthorizedPage /> },
       {
         element: <ProtectedRoute />,
-        children: protectedFeatureRoutes.map(makePlaceholderRoute),
+        children: [
+          ...protectedFeatureRoutes.map(makePlaceholderRoute),
+          { path: 'customers', element: <CustomersPage /> },
+        ],
       },
       {
         element: <ProtectedRoute requiredRole="MANAGER" />,
-        children: managerFeatureRoutes.map(makePlaceholderRoute),
+        children: [
+          { path: 'admin', element: <ManagerCustomersPage title="Admin" /> },
+          { path: 'admin/delete', element: <ManagerCustomersPage title="Delete Records" /> },
+        ],
       },
       { path: '*', element: <NotFoundPage /> },
     ],

@@ -8,9 +8,7 @@ async function getById(id) {
 }
 
 async function getByEmail(email) {
-  const response = await httpClient.get(BASE_PATH, {
-    params: { email: email },
-  });
+  const response = await httpClient.get(`${BASE_PATH}/email/${encodeURIComponent(email)}`);
   return response.data;
 }
 
