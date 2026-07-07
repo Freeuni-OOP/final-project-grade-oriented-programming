@@ -61,6 +61,7 @@ class CustomerServiceImplTest {
     @Test
     void testRegisterCustomerValidCustomerSavesCustomer() {
         when(passwordEncoder.encode(customer.getHashedPassword())).thenReturn("");
+        when(customerRepository.save(customer)).thenReturn(customer);
         customerService.registerCustomer(customer);
         verify(customerRepository, times(1)).save(customer);
     }

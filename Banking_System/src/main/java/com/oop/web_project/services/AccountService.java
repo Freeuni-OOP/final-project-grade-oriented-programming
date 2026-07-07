@@ -14,9 +14,10 @@ import java.util.List;
 public interface AccountService {
 
     /**
-     * Creates a new account
+     * Creates a new account and
+     * returns id of the newly created account
      */
-    void createAccount(Account account);
+    long createAccount(Account account);
 
     /**
      * activates the account

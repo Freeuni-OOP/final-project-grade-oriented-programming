@@ -41,8 +41,9 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    public void createAccount(Account account) {
-        accountRepository.save(account);
+    public long createAccount(Account account) {
+        Account createdAccount = accountRepository.save(account);
+        return createdAccount.getId();
     }
 
     @Override

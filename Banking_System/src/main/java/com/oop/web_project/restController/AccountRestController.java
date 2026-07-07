@@ -30,7 +30,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/account")
@@ -56,22 +58,26 @@ public class AccountRestController {
     @Operation(summary = "Create a new account", description = "Creates a new bank account from the provided details")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Account created successfully",
-                    content = @Content(schema = @Schema(type = "string"))),
+                    content = @Content(schema = @Schema(type = "map"))),
             @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content),
             @ApiResponse(responseCode = "403", description = "Caller does not have the required role", content = @Content)
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PostMapping
-    public ResponseEntity<String> createAccount(@RequestBody @Valid AccountCreationRequest request) {
+    public ResponseEntity<Map<String, Object>> createAccount(@RequestBody @Valid AccountCreationRequest request) {
         Account account = accountMapper.toAccount(request);
-        accountService.createAccount(account);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Account has been successfully created.");
+        long accountId= accountService.createAccount(account);
+        return ResponseEntity.status(HttpStatus.CREATED).
+                body(Map.of(
+                        "statusMessage", "Account has been created successfully!",
+                        "createdAccountId", accountId
+                ));
     }
 
     @Operation(summary = "Create a card for an account", description = "Creates a new card and links it to the specified account")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Card created successfully",
-                    content = @Content(schema = @Schema(type = "string"))),
+                    content = @Content(schema = @Schema(type = "map"))),
             @ApiResponse(responseCode = "400", description = "Invalid account ID or request body", content = @Content),
             @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "Account not found", content = @Content),
@@ -79,11 +85,16 @@ public class AccountRestController {
     })
     @PreAuthorize("hasAuthority(\"STANDARD\")")
     @PostMapping("/{account-id}/cards")
-    public ResponseEntity<String> createCard(
+    public ResponseEntity<Map<String, Object>> createCard(
             @NotNull @Positive @PathVariable("account-id") Long accountId,
             @Valid @RequestBody CardCreationRequest cardCreationRequest) {
-        cardService.createCard(accountId, cardApiMapper.toCardOnCardCreation(cardCreationRequest));
-        return ResponseEntity.status(HttpStatus.CREATED).body("Card has been successfully created!");
+
+        long cardId = cardService.createCard(accountId, cardApiMapper.toCardOnCardCreation(cardCreationRequest));
+
+        return ResponseEntity.status(HttpStatus.CREATED).
+                body(Map.of("statusMessage", "Card has been successfully created!",
+                        "createdCardId", cardId
+                ));
     }
 
     @Operation(summary = "Activate an account", description = "Sets the account status to active")

@@ -164,12 +164,13 @@ class CardServiceImplTest {
 
     @Test
     void testCreateCardSavesCard() {
-
         Account account = new Account();
         account.setId(1L);
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
-        cardService.createCard(1L, card);
+        when(accountRepository.findById(anyLong())).thenReturn(Optional.of(account));
+        when(cardRepository.save(card)).thenReturn(card);
+        long cardId = cardService.createCard(1L, card);
         verify(cardRepository, times(1)).save(card);
+        assertEquals(1L, cardId);
     }
 
     @Test

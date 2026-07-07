@@ -58,6 +58,7 @@ class AccountServiceImplTest {
 
     @Test
     void testCreateAccountSavesAccount() {
+        when(accountRepository.save(account)).thenReturn(account);
         accountService.createAccount(account);
         verify(accountRepository, times(1)).save(account);
     }
