@@ -57,7 +57,10 @@ class AuthRestControllerTest {
 
     @Test
     void testRegisterCustomerValidRequestReturnsCreated() throws Exception {
-        when(customerApiMapper.toCustomerOnRegistration(any())).thenReturn(mock(Customer.class));
+        Customer customer = new Customer();
+        customer.setId(1L);
+        when(customerApiMapper.toCustomerOnRegistration(any())).thenReturn(customer);
+        when(customerService.registerCustomer(customer)).thenReturn(1L);
 
         String body = """
                 {
@@ -75,7 +78,8 @@ class AuthRestControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
-                .andExpect(content().string("The Customer has been registered successfully."));
+                .andExpect(jsonPath("$.statusMessage").value("The Customer has been registered successfully!"))
+                .andExpect(jsonPath("$.registeredCustomerId").value(1L));
     }
 
     @Test

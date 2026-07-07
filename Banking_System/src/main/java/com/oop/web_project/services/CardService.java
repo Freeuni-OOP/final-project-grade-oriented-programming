@@ -24,9 +24,10 @@ public interface CardService {
     void deactivateCard(long cardId);
 
     /**
-     * Creates new card
+     * Creates new card and
+     * returns id of the newly created card
      */
-    void createCard(long accountId, Card card);
+    long createCard(long accountId, Card card);
 
 
     /**
