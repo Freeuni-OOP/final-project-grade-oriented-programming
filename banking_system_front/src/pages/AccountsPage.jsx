@@ -24,10 +24,9 @@ const CARD_BRANDS = [
   { value: 'MASTERCARD', label: 'Mastercard' },
 ];
 
-const CREATE_FIELDS = ['accountName', 'category'];
 const UPDATE_NAME_FIELDS = ['accountId', 'accountName'];
 const STATUS_FIELDS = ['accountId'];
-const REGISTER_CUSTOMER_FIELDS = ['accountId', 'customerId'];
+const CREATE_ACCOUNT_FIELDS = ['accountName', 'category', 'customerId'];
 const CREATE_CARD_FIELDS = ['accountId', 'cardType', 'cardBrand', 'spendingLimit', 'pan'];
 const DELETE_ACCOUNT_FIELDS = ['accountId'];
 
@@ -48,6 +47,11 @@ function buildCreatePayload(values) {
     accountName: trimValue(values.accountName),
     category: values.category,
   };
+}
+
+// Backend now sends createdAccountId, but this keeps it safe if the name changes.
+function getCreatedAccountId(response) {
+  return response?.createdAccountId ?? response?.accountId ?? response?.id ?? null;
 }
 
 function buildCreateCardPayload(values) {
@@ -108,6 +112,7 @@ export default function AccountsPage() {
   const [accountIdLookup, setAccountIdLookup] = useState(null);
   const [balanceLookup, setBalanceLookup] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [createdAccountLink, setCreatedAccountLink] = useState(null);
   const isManager = authority === 'MANAGER';
 
   const {
@@ -134,7 +139,7 @@ export default function AccountsPage() {
     reset: resetCreateAccount,
     setError: setCreateAccountError,
     formState: { errors: createAccountErrors, isSubmitting: isCreateAccountSubmitting },
-  } = useForm({ defaultValues: { accountName: '', category: '' } });
+  } = useForm({ defaultValues: { accountName: '', category: '', customerId: '' } });
 
   const {
     register: registerUpdateName,
@@ -150,14 +155,6 @@ export default function AccountsPage() {
     setError: setStatusError,
     formState: { errors: statusErrors, isSubmitting: isStatusSubmitting },
   } = useForm({ defaultValues: { accountId: '' } });
-
-  const {
-    register: registerCustomer,
-    handleSubmit: handleRegisterCustomerSubmit,
-    reset: resetRegisterCustomer,
-    setError: setRegisterCustomerError,
-    formState: { errors: registerCustomerErrors, isSubmitting: isRegisterCustomerSubmitting },
-  } = useForm({ defaultValues: { accountId: '', customerId: '' } });
 
   const {
     register: registerBalance,
@@ -209,12 +206,31 @@ export default function AccountsPage() {
   });
 
   const createAccountMutation = useMutation({
-    mutationFn: (payload) => accountApi.create(payload),
+    mutationFn: async ({ payload, customerId }) => {
+      const createdAccount = await accountApi.create(payload);
+      const createdAccountId = getCreatedAccountId(createdAccount);
+
+      if (!createdAccountId) {
+        const error = new Error('Account id was not returned.');
+        error.missingCreatedAccountId = true;
+        throw error;
+      }
+
+      // Backend gives us the new account id, so the user does not have to copy it.
+      await accountApi.registerCustomer(createdAccountId, customerId);
+
+      return { createdAccountId, customerId };
+    },
     retry: false,
-    onSuccess: () => {
+    onSuccess: ({ createdAccountId, customerId }) => {
       queryClient.invalidateQueries({ queryKey: accountKeys.all });
       resetCreateAccount();
-      showToast({ title: 'Account created.', variant: 'success' });
+      setCreatedAccountLink({ createdAccountId, customerId });
+      showToast({
+        title: 'Account created and linked.',
+        message: `New account ID: ${createdAccountId}`,
+        variant: 'success',
+      });
     },
   });
 
@@ -238,16 +254,6 @@ export default function AccountsPage() {
         title: variables.action === 'activate' ? 'Account activated.' : 'Account deactivated.',
         variant: 'success',
       });
-    },
-  });
-
-  const registerCustomerMutation = useMutation({
-    mutationFn: ({ accountId, customerId }) => accountApi.registerCustomer(accountId, customerId),
-    retry: false,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountKeys.all });
-      resetRegisterCustomer();
-      showToast({ title: 'Customer registered to account.', variant: 'success' });
     },
   });
 
@@ -413,9 +419,20 @@ export default function AccountsPage() {
 
   const submitCreateAccount = async (values) => {
     try {
-      await createAccountMutation.mutateAsync(buildCreatePayload(values));
+      await createAccountMutation.mutateAsync({
+        payload: buildCreatePayload(values),
+        customerId: trimValue(values.customerId),
+      });
     } catch (error) {
-      applyBackendFormErrors(error, setCreateAccountError, CREATE_FIELDS);
+      if (error.missingCreatedAccountId) {
+        setCreateAccountError('root', {
+          type: 'server',
+          message: 'Account was created, but the backend did not return its ID.',
+        });
+        return;
+      }
+
+      applyBackendFormErrors(error, setCreateAccountError, CREATE_ACCOUNT_FIELDS);
     }
   };
 
@@ -435,17 +452,6 @@ export default function AccountsPage() {
       await statusMutation.mutateAsync({ accountId: trimValue(accountId), action });
     } catch (error) {
       applyBackendFormErrors(error, setStatusError, STATUS_FIELDS);
-    }
-  };
-
-  const submitRegisterCustomer = async (values) => {
-    try {
-      await registerCustomerMutation.mutateAsync({
-        accountId: trimValue(values.accountId),
-        customerId: trimValue(values.customerId),
-      });
-    } catch (error) {
-      applyBackendFormErrors(error, setRegisterCustomerError, REGISTER_CUSTOMER_FIELDS);
     }
   };
 
@@ -585,9 +591,33 @@ export default function AccountsPage() {
                 required: 'Category is required.',
               })}
             />
+            <TextField
+              id="create-account-customer-id"
+              label="Customer ID"
+              type="number"
+              min="1"
+              error={createAccountErrors.customerId?.message}
+              required
+              {...registerCreateAccount('customerId', {
+                required: 'Customer ID is required.',
+                validate: (value) => validatePositiveId(value, 'Customer ID'),
+              })}
+            />
 
             {createAccountErrors.root && (
               <Toast variant="danger" message={createAccountErrors.root.message} />
+            )}
+
+            {createdAccountLink && (
+              <div className={styles.createdResult}>
+                <span className={styles.detailLabel}>Created account ID</span>
+                <strong className={styles.createdValue}>
+                  {createdAccountLink.createdAccountId}
+                </strong>
+                <p className={styles.mutedText}>
+                  Linked to customer {createdAccountLink.customerId}.
+                </p>
+              </div>
             )}
 
             <Button
@@ -681,52 +711,6 @@ export default function AccountsPage() {
                 Deactivate
               </Button>
             </div>
-          </form>
-        </Card>
-
-        <Card title="Register customer">
-          <form
-            className={styles.formStack}
-            onSubmit={handleRegisterCustomerSubmit(submitRegisterCustomer)}
-            noValidate
-          >
-            <div className={styles.twoColumnForm}>
-              <TextField
-                id="register-customer-account-id"
-                label="Account ID"
-                type="number"
-                min="1"
-                error={registerCustomerErrors.accountId?.message}
-                required
-                {...registerCustomer('accountId', {
-                  required: 'Account ID is required.',
-                  validate: (value) => validatePositiveId(value, 'Account ID'),
-                })}
-              />
-              <TextField
-                id="register-customer-id"
-                label="Customer ID"
-                type="number"
-                min="1"
-                error={registerCustomerErrors.customerId?.message}
-                required
-                {...registerCustomer('customerId', {
-                  required: 'Customer ID is required.',
-                  validate: (value) => validatePositiveId(value, 'Customer ID'),
-                })}
-              />
-            </div>
-
-            {registerCustomerErrors.root && (
-              <Toast variant="danger" message={registerCustomerErrors.root.message} />
-            )}
-
-            <Button
-              type="submit"
-              isLoading={registerCustomerMutation.isPending || isRegisterCustomerSubmitting}
-            >
-              Register customer
-            </Button>
           </form>
         </Card>
 

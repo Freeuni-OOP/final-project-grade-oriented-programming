@@ -150,13 +150,15 @@ describe('AccountsPage', () => {
 
   it('creates an account', async () => {
     const user = userEvent.setup();
-    accountApi.create.mockResolvedValue('ok');
+    accountApi.create.mockResolvedValue({ createdAccountId: 77 });
+    accountApi.registerCustomer.mockResolvedValue('ok');
 
     renderWithProviders(<AccountsPage />);
 
     const section = within(getSectionByHeading('Create account'));
     await user.type(section.getByLabelText(/^account name/i), 'Daily');
     await user.selectOptions(section.getByLabelText(/category/i), 'CHECKING');
+    await user.type(section.getByLabelText(/customer id/i), '42');
     await user.click(section.getByRole('button', { name: 'Create account' }));
 
     await waitFor(() =>
@@ -165,6 +167,9 @@ describe('AccountsPage', () => {
         category: 'CHECKING',
       })
     );
+    expect(accountApi.registerCustomer).toHaveBeenCalledWith(77, '42');
+    expect(await section.findByText('77')).toBeInTheDocument();
+    expect(section.getByText('Linked to customer 42.')).toBeInTheDocument();
   });
 
   it('updates account name', async () => {
@@ -195,20 +200,6 @@ describe('AccountsPage', () => {
 
     await user.click(section.getByRole('button', { name: 'Deactivate' }));
     await waitFor(() => expect(accountApi.deactivate).toHaveBeenCalledWith('10'));
-  });
-
-  it('registers an existing customer to an account', async () => {
-    const user = userEvent.setup();
-    accountApi.registerCustomer.mockResolvedValue('ok');
-
-    renderWithProviders(<AccountsPage />);
-
-    const section = within(getSectionByHeading('Register customer'));
-    await user.type(section.getByLabelText(/account id/i), '10');
-    await user.type(section.getByLabelText(/customer id/i), '42');
-    await user.click(section.getByRole('button', { name: 'Register customer' }));
-
-    await waitFor(() => expect(accountApi.registerCustomer).toHaveBeenCalledWith('10', '42'));
   });
 
   it('loads converted balance by currency', async () => {
