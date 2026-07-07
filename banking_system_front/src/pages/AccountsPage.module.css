@@ -135,6 +135,13 @@
   line-height: var(--line-height-tight);
 }
 
+.modalText {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+}
+
 .badge {
   display: inline-flex;
   width: fit-content;

@@ -92,5 +92,25 @@ describe('accountApi read endpoints', () => {
     expect(adapter).toHaveBeenLastCalledWith(
       expect.objectContaining({ method: 'put', url: '/api/account/10/customers/42' })
     );
+
+    const cardPayload = {
+      cardType: 'DEBIT',
+      cardBrand: 'VISA',
+      spendingLimit: '1000',
+      pan: '123456789012',
+    };
+    await accountApi.createCard(10, cardPayload);
+    expect(adapter).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        data: JSON.stringify(cardPayload),
+        method: 'post',
+        url: '/api/account/10/cards',
+      })
+    );
+
+    await accountApi.delete(10);
+    expect(adapter).toHaveBeenLastCalledWith(
+      expect.objectContaining({ method: 'delete', url: '/api/account/10' })
+    );
   });
 });

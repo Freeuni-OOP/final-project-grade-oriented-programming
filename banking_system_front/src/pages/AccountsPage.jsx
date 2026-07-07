@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form';
 import { accountApi } from '../api/accountApi';
 import { accountKeys } from '../api/accountQueryKeys';
 import { applyBackendFormErrors } from '../api/formErrors';
-import { Button, Card, Select, Table, TextField, Toast, useToast } from '../components/ui';
+import { useAuth } from '../components/AuthContext';
+import { Button, Card, Modal, Select, Table, TextField, Toast, useToast } from '../components/ui';
 import styles from './AccountsPage.module.css';
 
 const ACCOUNT_CATEGORIES = [
@@ -13,10 +14,22 @@ const ACCOUNT_CATEGORIES = [
   { value: 'CREDIT', label: 'Credit' },
 ];
 
+const CARD_TYPES = [
+  { value: 'DEBIT', label: 'Debit' },
+  { value: 'CREDIT', label: 'Credit' },
+];
+
+const CARD_BRANDS = [
+  { value: 'VISA', label: 'Visa' },
+  { value: 'MASTERCARD', label: 'Mastercard' },
+];
+
 const CREATE_FIELDS = ['accountName', 'category'];
 const UPDATE_NAME_FIELDS = ['accountId', 'accountName'];
 const STATUS_FIELDS = ['accountId'];
 const REGISTER_CUSTOMER_FIELDS = ['accountId', 'customerId'];
+const CREATE_CARD_FIELDS = ['accountId', 'cardType', 'cardBrand', 'spendingLimit', 'pan'];
+const DELETE_ACCOUNT_FIELDS = ['accountId'];
 
 function trimValue(value) {
   return String(value ?? '').trim();
@@ -34,6 +47,15 @@ function buildCreatePayload(values) {
   return {
     accountName: trimValue(values.accountName),
     category: values.category,
+  };
+}
+
+function buildCreateCardPayload(values) {
+  return {
+    cardType: values.cardType,
+    cardBrand: values.cardBrand,
+    spendingLimit: trimValue(values.spendingLimit),
+    pan: trimValue(values.pan),
   };
 }
 
@@ -79,11 +101,14 @@ function DetailItem({ label, children }) {
 
 export default function AccountsPage() {
   const queryClient = useQueryClient();
+  const { authority } = useAuth();
   const { showToast } = useToast();
   const [emailLookup, setEmailLookup] = useState(null);
   const [customerIdLookup, setCustomerIdLookup] = useState(null);
   const [accountIdLookup, setAccountIdLookup] = useState(null);
   const [balanceLookup, setBalanceLookup] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const isManager = authority === 'MANAGER';
 
   const {
     register: registerEmailLookup,
@@ -139,6 +164,30 @@ export default function AccountsPage() {
     handleSubmit: handleBalanceSubmit,
     formState: { errors: balanceErrors },
   } = useForm({ defaultValues: { accountId: '', currencyCode: 'GEL' } });
+
+  const {
+    register: registerCreateCard,
+    handleSubmit: handleCreateCardSubmit,
+    reset: resetCreateCard,
+    setError: setCreateCardError,
+    formState: { errors: createCardErrors, isSubmitting: isCreateCardSubmitting },
+  } = useForm({
+    defaultValues: {
+      accountId: '',
+      cardType: '',
+      cardBrand: '',
+      spendingLimit: '',
+      pan: '',
+    },
+  });
+
+  const {
+    register: registerDeleteAccount,
+    handleSubmit: handleDeleteAccountSubmit,
+    reset: resetDeleteAccount,
+    setError: setDeleteAccountError,
+    formState: { errors: deleteAccountErrors },
+  } = useForm({ defaultValues: { accountId: '' } });
 
   const emailAccountsQuery = useQuery({
     queryKey: emailLookup
@@ -199,6 +248,30 @@ export default function AccountsPage() {
       queryClient.invalidateQueries({ queryKey: accountKeys.all });
       resetRegisterCustomer();
       showToast({ title: 'Customer registered to account.', variant: 'success' });
+    },
+  });
+
+  const createCardMutation = useMutation({
+    mutationFn: ({ accountId, payload }) => accountApi.createCard(accountId, payload),
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accountKeys.all });
+      resetCreateCard();
+      showToast({ title: 'Card created for account.', variant: 'success' });
+    },
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: (accountId) => accountApi.delete(accountId),
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accountKeys.all });
+      resetDeleteAccount();
+      setPendingDelete(null);
+      showToast({ title: 'Account deleted.', variant: 'success' });
+    },
+    onError: (error) => {
+      applyBackendFormErrors(error, setDeleteAccountError, DELETE_ACCOUNT_FIELDS);
     },
   });
 
@@ -381,6 +454,29 @@ export default function AccountsPage() {
       accountId: trimValue(accountId),
       currencyCode: trimValue(currencyCode).toUpperCase(),
     });
+  };
+
+  const submitCreateCard = async (values) => {
+    try {
+      await createCardMutation.mutateAsync({
+        accountId: trimValue(values.accountId),
+        payload: buildCreateCardPayload(values),
+      });
+    } catch (error) {
+      applyBackendFormErrors(error, setCreateCardError, CREATE_CARD_FIELDS);
+    }
+  };
+
+  const requestDeleteAccount = ({ accountId }) => {
+    setPendingDelete({ accountId: trimValue(accountId) });
+  };
+
+  const confirmDeleteAccount = () => {
+    if (!pendingDelete?.accountId) {
+      return;
+    }
+
+    deleteAccountMutation.mutate(pendingDelete.accountId);
   };
 
   const emailAccounts = emailAccountsQuery.data ?? [];
@@ -633,6 +729,87 @@ export default function AccountsPage() {
             </Button>
           </form>
         </Card>
+
+        <Card title="Create card">
+          <form
+            className={styles.formStack}
+            onSubmit={handleCreateCardSubmit(submitCreateCard)}
+            noValidate
+          >
+            <div className={styles.twoColumnForm}>
+              <TextField
+                id="create-card-account-id"
+                label="Account ID"
+                type="number"
+                min="1"
+                error={createCardErrors.accountId?.message}
+                required
+                {...registerCreateCard('accountId', {
+                  required: 'Account ID is required.',
+                  validate: (value) => validatePositiveId(value, 'Account ID'),
+                })}
+              />
+              <TextField
+                id="create-card-spending-limit"
+                label="Spending limit"
+                type="number"
+                min="100"
+                max="100000"
+                step="0.01"
+                error={createCardErrors.spendingLimit?.message}
+                required
+                {...registerCreateCard('spendingLimit', {
+                  required: 'Spending limit is required.',
+                  min: { value: 100, message: 'Spending limit must be at least 100.' },
+                  max: { value: 100000, message: 'Spending limit must be at most 100000.' },
+                })}
+              />
+              <Select
+                id="create-card-type"
+                label="Card type"
+                placeholder="Choose type"
+                options={CARD_TYPES}
+                error={createCardErrors.cardType?.message}
+                required
+                {...registerCreateCard('cardType', { required: 'Card type is required.' })}
+              />
+              <Select
+                id="create-card-brand"
+                label="Card brand"
+                placeholder="Choose brand"
+                options={CARD_BRANDS}
+                error={createCardErrors.cardBrand?.message}
+                required
+                {...registerCreateCard('cardBrand', { required: 'Card brand is required.' })}
+              />
+            </div>
+
+            <TextField
+              id="create-card-pan"
+              label="PAN"
+              inputMode="numeric"
+              error={createCardErrors.pan?.message}
+              required
+              {...registerCreateCard('pan', {
+                required: 'PAN is required.',
+                minLength: { value: 12, message: 'PAN must be at least 12 digits.' },
+                maxLength: { value: 19, message: 'PAN must be at most 19 digits.' },
+                pattern: { value: /^\d+$/, message: 'PAN must contain only digits.' },
+              })}
+            />
+
+            {createCardErrors.root && (
+              <Toast variant="danger" message={createCardErrors.root.message} />
+            )}
+
+            <Button
+              type="submit"
+              isLoading={createCardMutation.isPending || isCreateCardSubmitting}
+            >
+              Create card
+            </Button>
+          </form>
+        </Card>
       </div>
 
       <Card title="Balance by currency">
@@ -686,6 +863,39 @@ export default function AccountsPage() {
           )}
         </div>
       </Card>
+
+      {isManager && (
+        <Card title="Delete account" subtitle="Manager-only action. Confirmation is required.">
+          <form
+            className={styles.formStack}
+            onSubmit={handleDeleteAccountSubmit(requestDeleteAccount)}
+            noValidate
+          >
+            <TextField
+              id="delete-account-id"
+              label="Account ID"
+              type="number"
+              min="1"
+              error={deleteAccountErrors.accountId?.message}
+              required
+              {...registerDeleteAccount('accountId', {
+                required: 'Account ID is required.',
+                validate: (value) => validatePositiveId(value, 'Account ID'),
+              })}
+            />
+
+            {deleteAccountErrors.root && (
+              <Toast variant="danger" message={deleteAccountErrors.root.message} />
+            )}
+
+            <div className={styles.actionsRow}>
+              <Button type="submit" variant="danger" disabled={deleteAccountMutation.isPending}>
+                Delete account
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
 
       <div className={styles.sectionGrid}>
         <Card
@@ -781,6 +991,36 @@ export default function AccountsPage() {
           </>
         )}
       </Card>
+
+      <Modal
+        open={Boolean(pendingDelete)}
+        title="Delete account"
+        onClose={() => setPendingDelete(null)}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={deleteAccountMutation.isPending}
+              onClick={() => setPendingDelete(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              isLoading={deleteAccountMutation.isPending}
+              onClick={confirmDeleteAccount}
+            >
+              Delete account
+            </Button>
+          </>
+        }
+      >
+        <p className={styles.modalText}>
+          Delete account {pendingDelete?.accountId}? This action cannot be undone.
+        </p>
+      </Modal>
     </div>
   );
 }

@@ -5,6 +5,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../components/ToastProvider';
 import AccountsPage from '../pages/AccountsPage';
 
+const mockAuth = vi.hoisted(() => ({
+  authority: 'STANDARD',
+}));
+
+vi.mock('../components/AuthContext', () => ({
+  useAuth: () => mockAuth,
+}));
+
 vi.mock('../api/accountApi', () => ({
   accountApi: {
     getByEmail: vi.fn(),
@@ -16,6 +24,8 @@ vi.mock('../api/accountApi', () => ({
     activate: vi.fn(),
     deactivate: vi.fn(),
     registerCustomer: vi.fn(),
+    createCard: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
@@ -43,6 +53,7 @@ function getSectionByHeading(name) {
 describe('AccountsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAuth.authority = 'STANDARD';
   });
 
   it('loads account summaries by customer email', async () => {
@@ -214,5 +225,55 @@ describe('AccountsPage', () => {
 
     await waitFor(() => expect(accountApi.getBalanceByCurrency).toHaveBeenCalledWith('10', 'USD'));
     expect(await screen.findByText('125.30 USD')).toBeInTheDocument();
+  });
+
+  it('creates a card for an account', async () => {
+    const user = userEvent.setup();
+    accountApi.createCard.mockResolvedValue('ok');
+
+    renderWithProviders(<AccountsPage />);
+
+    const section = within(getSectionByHeading('Create card'));
+    await user.type(section.getByLabelText(/account id/i), '10');
+    await user.type(section.getByLabelText(/spending limit/i), '1000');
+    await user.selectOptions(section.getByLabelText(/card type/i), 'DEBIT');
+    await user.selectOptions(section.getByLabelText(/card brand/i), 'VISA');
+    await user.type(section.getByLabelText(/pan/i), '123456789012');
+    await user.click(section.getByRole('button', { name: 'Create card' }));
+
+    await waitFor(() =>
+      expect(accountApi.createCard).toHaveBeenCalledWith('10', {
+        cardType: 'DEBIT',
+        cardBrand: 'VISA',
+        spendingLimit: '1000',
+        pan: '123456789012',
+      })
+    );
+  });
+
+  it('hides account deletion from standard users', () => {
+    renderWithProviders(<AccountsPage />);
+
+    expect(screen.queryByRole('heading', { name: 'Delete account' })).not.toBeInTheDocument();
+  });
+
+  it('confirms manager account deletion before calling the API', async () => {
+    const user = userEvent.setup();
+    mockAuth.authority = 'MANAGER';
+    accountApi.delete.mockResolvedValue('ok');
+
+    renderWithProviders(<AccountsPage />);
+
+    const section = within(getSectionByHeading('Delete account'));
+    await user.type(section.getByLabelText(/account id/i), '10');
+    await user.click(section.getByRole('button', { name: 'Delete account' }));
+
+    expect(accountApi.delete).not.toHaveBeenCalled();
+    const dialog = screen.getByRole('dialog', { name: 'Delete account' });
+    expect(dialog).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Delete account' }));
+
+    await waitFor(() => expect(accountApi.delete).toHaveBeenCalledWith('10'));
   });
 });
