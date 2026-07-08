@@ -3,6 +3,7 @@ package com.oop.web_project.exceptionHandler;
 import com.oop.web_project.exceptions.accountExceptions.*;
 import com.oop.web_project.exceptions.cardExceptions.*;
 import com.oop.web_project.exceptions.customerExceptions.*;
+import com.oop.web_project.exceptions.otherExceptions.CouldNotExtractIdException;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
 import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -165,6 +166,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<String> handleAuthFailure(AuthenticationException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+    }
+
+    @ExceptionHandler(CouldNotExtractIdException.class)
+    public ResponseEntity<String> handleIdExtractionFailure(CouldNotExtractIdException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Identification is not present!");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
