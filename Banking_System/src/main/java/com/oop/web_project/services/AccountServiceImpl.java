@@ -47,7 +47,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @AccountAccessPermissionRequired
+    @AccountAccessPermissionRequired(idArgName = "accountId")
     @Transactional
     public void activateAccount(long accountId) {
         Account account = accountRepository.findWithLockById(accountId).orElseThrow(
@@ -59,7 +59,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @AccountAccessPermissionRequired
+    @AccountAccessPermissionRequired(idArgName = "accountId")
     @Transactional
     public void deactivateAccount(long accountId) {
         Account account = accountRepository.findWithLockById(accountId).orElseThrow(
@@ -82,7 +82,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @AccountAccessPermissionRequired
+    @AccountAccessPermissionRequired(idArgName = "accountId")
     public Account selectAccountById(long accountId) {
         return accountRepository.findById(accountId).orElseThrow(
                 () -> new AccountNotFoundException("Could not find account!")
@@ -90,7 +90,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @CardAccessPermissionRequired
+    @CardAccessPermissionRequired(idArgName = "cardId")
     public Account selectAccountByCardId(long cardId) {
         return accountRepository.findByCardsId(cardId)
                 .orElseThrow(
@@ -109,7 +109,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @CustomerAccessPermissionRequired
+    @CustomerAccessPermissionRequired(idArgName = "customerId")
     public List<Account> selectAccountsByCustomerId(long customerId) {
         List<Account> accountList = accountRepository.findAllByCustomersId(customerId);
         if(accountList == null || accountList.isEmpty()) {
@@ -119,7 +119,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @AccountAccessPermissionRequired
+    @AccountAccessPermissionRequired(idArgName = "accountId")
     @ActivityCheckRequired(checkActivityTarget = CheckActivityTarget.ACCOUNT)
     @Transactional
     public void updateAccount(long accountId, String accountName) {
@@ -130,7 +130,8 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @AccountAccessPermissionRequired
+    @AccountAccessPermissionRequired(idArgName = "accountId")
+    @CustomerAccessPermissionRequired(idArgName = "customerId")
     @ActivityCheckRequired(checkActivityTarget = CheckActivityTarget.ACCOUNT)
     @Transactional
     public void registerCustomerToAccount(long accountId, long customerId) {
@@ -145,7 +146,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @AccountAccessPermissionRequired
+    @AccountAccessPermissionRequired(idArgName = "accountId")
     @Transactional(readOnly = true)
     public BigDecimal getAccountBalanceByCurrency(long accountId, String currencyCode) {
         return cardRepository.getBalanceForAccount(accountId, currencyCode).orElseThrow(
