@@ -55,7 +55,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    @CustomerAccessPermissionRequired
+    @CustomerAccessPermissionRequired(idArgName = "customerId")
     public Customer getCustomerById(long customerId) {
         return customerRepository.findById(customerId)
                 .orElseThrow(
@@ -64,7 +64,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    @CustomerAccessPermissionRequired
+    @CustomerAccessPermissionRequired(idArgName = "customerId")
     @Transactional
     public void activateCustomer(long customerId) {
         Customer customer = customerRepository.findWithLockById(customerId).orElseThrow(
@@ -76,7 +76,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    @CustomerAccessPermissionRequired
+    @CustomerAccessPermissionRequired(idArgName = "customerId")
     @Transactional
     public void deactivateCustomer(long customerId) {
         Customer customer = customerRepository.findWithLockById(customerId).orElseThrow(
@@ -104,7 +104,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    @CustomerAccessPermissionRequired
+    @CustomerAccessPermissionRequired(idArgName = "customerId")
     @ActivityCheckRequired(checkActivityTarget = CheckActivityTarget.CUSTOMER)
     @Transactional
     public void updateCustomer(long customerId, String firstName, String lastName, String phoneNumber, String address) {
