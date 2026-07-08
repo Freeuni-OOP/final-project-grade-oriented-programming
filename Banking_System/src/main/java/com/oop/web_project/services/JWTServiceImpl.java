@@ -1,5 +1,6 @@
 package com.oop.web_project.services;
 
+import com.oop.web_project.entities.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -24,8 +25,9 @@ public class JWTServiceImpl implements JWTService {
     private Long expiration;
 
     @Override
-    public String generateToken(String email) {
+    public String generateToken(String email, Role role) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("authorities", role.name());
         String generatedToken = null;
         try {
             generatedToken = Jwts.builder()

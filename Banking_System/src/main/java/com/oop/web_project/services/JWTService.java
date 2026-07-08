@@ -1,5 +1,6 @@
 package com.oop.web_project.services;
 
+import com.oop.web_project.entities.Role;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
@@ -11,9 +12,10 @@ public interface JWTService {
      * Method takes in email of the customer and generates appropriate JWT token, which then will serve as a way to
      * authenticate the user
      * @param email email of the customer who is trying to authenticate
+     * @param role role of the customer who is trying to authenticate
      * @return generated JWT Token
      */
-    String generateToken(String email);
+    String generateToken(String email, Role role);
 
     /**
      * Method takes in jwt token and extracts email out of the token
