@@ -1,5 +1,6 @@
 package com.oop.web_project;
 
+import com.oop.web_project.entities.Role;
 import com.oop.web_project.exceptions.customerExceptions.CustomerCannotBeAuthenticatedException;
 import com.oop.web_project.services.JWTServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -35,29 +36,29 @@ class JWTServiceImplTest {
 
     @Test
     void testGenerateTokenReturnsNonNullToken() {
-        String token = jwtService.generateToken("test@example.com");
+        String token = jwtService.generateToken("test@example.com", Role.STANDARD);
 
         assertNotNull(token);
     }
 
     @Test
     void testGenerateTokenReturnsNonEmptyToken() {
-        String token = jwtService.generateToken("test@example.com");
+        String token = jwtService.generateToken("test@example.com", Role.STANDARD);
 
         assertFalse(token.isBlank());
     }
 
     @Test
     void testGenerateTokenReturnsDifferentTokensForDifferentEmails() {
-        String token1 = jwtService.generateToken("user1@example.com");
-        String token2 = jwtService.generateToken("user2@example.com");
+        String token1 = jwtService.generateToken("user1@example.com", Role.STANDARD);
+        String token2 = jwtService.generateToken("user2@example.com", Role.STANDARD);
 
         assertNotEquals(token1, token2);
     }
 
     @Test
     void testExtractEmailReturnsCorrectEmail() {
-        String token = jwtService.generateToken("test@example.com");
+        String token = jwtService.generateToken("test@example.com", Role.STANDARD);
 
         String email = jwtService.extractEmail(token);
 
@@ -78,7 +79,7 @@ class JWTServiceImplTest {
 
     @Test
     void testValidateTokenValidTokenReturnsTrue() {
-        String token = jwtService.generateToken("test@example.com");
+        String token = jwtService.generateToken("test@example.com", Role.STANDARD);
         UserDetails userDetails = mock(UserDetails.class);
         when(userDetails.getUsername()).thenReturn("test@example.com");
 
@@ -89,7 +90,7 @@ class JWTServiceImplTest {
 
     @Test
     void testValidateTokenWrongEmailReturnsFalse() {
-        String token = jwtService.generateToken("test@example.com");
+        String token = jwtService.generateToken("test@example.com", Role.STANDARD);
         UserDetails userDetails = mock(UserDetails.class);
         when(userDetails.getUsername()).thenReturn("other@example.com");
 
@@ -101,14 +102,14 @@ class JWTServiceImplTest {
     @Test
     void testValidateTokenExpiredThrowsException() {
         ReflectionTestUtils.setField(jwtService, "expiration", -1000L);
-        String token = jwtService.generateToken("test@example.com");
+        String token = jwtService.generateToken("test@example.com", Role.STANDARD);
         UserDetails userDetails = mock(UserDetails.class);
         assertThrows(ExpiredJwtException.class, () -> jwtService.validateToken(token, userDetails));
     }
 
     @Test
     void testValidateTokenChecksUsernameAgainstToken() {
-        String token = jwtService.generateToken("test@example.com");
+        String token = jwtService.generateToken("test@example.com", Role.STANDARD);
         UserDetails userDetails = mock(UserDetails.class);
         when(userDetails.getUsername()).thenReturn("test@example.com");
 

@@ -1,10 +1,14 @@
 package com.oop.web_project.services;
 
+import com.oop.web_project.entities.Role;
 import com.oop.web_project.exceptions.customerExceptions.CustomerCannotBeAuthenticatedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+
+import javax.management.relation.RoleNotFoundException;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -29,6 +33,12 @@ public class AuthServiceImpl implements AuthService {
             throw new CustomerCannotBeAuthenticatedException("Customer cannot be authenticated!");
         }
 
-        return jwtService.generateToken(email);
+        GrantedAuthority grantedAuthority = authentication.getAuthorities().stream().findFirst()
+                .orElseThrow(
+                        () -> new CustomerCannotBeAuthenticatedException("Customer cannot be authenticated!")
+                );
+
+        return jwtService.generateToken(email, Role.valueOf(grantedAuthority.getAuthority()));
     }
+
 }

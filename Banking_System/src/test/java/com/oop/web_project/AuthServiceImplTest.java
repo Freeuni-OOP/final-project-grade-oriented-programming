@@ -1,5 +1,7 @@
 package com.oop.web_project;
 
+import com.mysql.cj.x.protobuf.MysqlxCrud;
+import com.oop.web_project.entities.Role;
 import com.oop.web_project.exceptions.customerExceptions.CustomerCannotBeAuthenticatedException;
 import com.oop.web_project.services.AuthServiceImpl;
 import com.oop.web_project.services.JWTService;
@@ -11,6 +13,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,9 +39,15 @@ class AuthServiceImplTest {
     @Test
     void testAuthenticateCustomerAuthenticatedReturnsToken() {
         Authentication auth = mock(Authentication.class);
+        GrantedAuthority grantedAuthority = mock(GrantedAuthority.class);
+
+        when(grantedAuthority.getAuthority()).thenReturn("STANDARD");
+        when(auth.getAuthorities()).thenAnswer(invocation -> List.of(grantedAuthority));
+
+
         when(auth.isAuthenticated()).thenReturn(true);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
-        when(jwtService.generateToken("test@example.com")).thenReturn("jwt-token");
+        when(jwtService.generateToken("test@example.com", Role.STANDARD)).thenReturn("jwt-token");
 
         String result = authService.authenticateCustomer("test@example.com", "password");
 
@@ -55,7 +69,11 @@ class AuthServiceImplTest {
         Authentication auth = mock(Authentication.class);
         when(auth.isAuthenticated()).thenReturn(true);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
-        when(jwtService.generateToken(any())).thenReturn("jwt-token");
+        when(jwtService.generateToken("test@example.com", Role.STANDARD)).thenReturn("jwt-token");
+        GrantedAuthority grantedAuthority = mock(GrantedAuthority.class);
+
+        when(grantedAuthority.getAuthority()).thenReturn("STANDARD");
+        when(auth.getAuthorities()).thenAnswer(invocation -> List.of(grantedAuthority));
 
         authService.authenticateCustomer("test@example.com", "password");
 
@@ -65,14 +83,19 @@ class AuthServiceImplTest {
     @Test
     void testAuthenticateCustomerCallsJwtServiceWithEmail() {
         Authentication auth = mock(Authentication.class);
+        GrantedAuthority grantedAuthority = mock(GrantedAuthority.class);
+
+        when(grantedAuthority.getAuthority()).thenReturn("STANDARD");
         when(auth.isAuthenticated()).thenReturn(true);
+        when(auth.getAuthorities()).thenAnswer(invocation -> List.of(grantedAuthority));
+
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
-        when(jwtService.generateToken("test@example.com")).thenReturn("jwt-token");
-
-        authService.authenticateCustomer("test@example.com", "password");
-
-        verify(jwtService, times(1)).generateToken("test@example.com");
+        when(jwtService.generateToken("test@example.com", Role.STANDARD)).thenReturn("jwt-token");
+        String token = authService.authenticateCustomer("test@example.com", "password");
+        verify(jwtService, times(1)).generateToken("test@example.com", Role.STANDARD);
+        assertEquals("jwt-token", token); // Optional: verifies the return value matches
     }
+
 
     @Test
     void testAuthenticateCustomerAuthenticationManagerThrowsExceptionPropagates() {
