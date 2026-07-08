@@ -1,6 +1,7 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
+import AccountsPage from '../pages/AccountsPage';
 import ErrorPage from '../pages/ErrorPage';
 import LoginPage from '../pages/LoginPage';
 import CustomersPage from '../pages/CustomersPage';
@@ -15,11 +16,6 @@ const protectedFeatureRoutes = [
     path: 'dashboard',
     title: 'Dashboard',
     description: 'Summary screen placeholder for authenticated users.',
-  },
-  {
-    path: 'accounts',
-    title: 'Accounts',
-    description: 'Account feature placeholder. Real account screens can replace this later.',
   },
   {
     path: 'cards',
@@ -50,6 +46,7 @@ export const appRoutes = [
         children: [
           ...protectedFeatureRoutes.map(makePlaceholderRoute),
           { path: 'customers', element: <CustomersPage /> },
+          { path: 'accounts', element: <AccountsPage /> },
         ],
       },
       {

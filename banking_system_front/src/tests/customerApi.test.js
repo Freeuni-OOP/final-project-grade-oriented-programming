@@ -34,7 +34,11 @@ describe('customerApi', () => {
 
     await customerApi.getByEmail('nino@test.com');
     expect(adapter).toHaveBeenLastCalledWith(
-      expect.objectContaining({ method: 'get', url: '/api/customer/email/nino%40test.com' })
+      expect.objectContaining({
+        method: 'get',
+        params: { email: 'nino@test.com' },
+        url: '/api/customer',
+      })
     );
 
     await customerApi.getByAccount(7);
