@@ -1058,7 +1058,7 @@ class CustomerProfileResponseTest {
 class CustomerSummaryResponseTest {
 
     private CustomerSummaryResponse createCustomerSummaryResponse() {
-        return new CustomerSummaryResponse("Giorgi", "Maisuradze", "giorgi@example.com");
+        return new CustomerSummaryResponse(1, "Giorgi", "Maisuradze", "giorgi@example.com");
     }
 
     @Test

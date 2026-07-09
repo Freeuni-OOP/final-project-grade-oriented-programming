@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 public class CustomerSummaryApiMapper {
     public CustomerSummaryResponse toSummaryResponse(Customer customer){
         CustomerSummaryResponse response = new CustomerSummaryResponse();
+        response.setId(customer.getId());
         response.setEmail(customer.getEmail());
         response.setFirstName(customer.getFirstName());
         response.setLastName(customer.getLastName());
