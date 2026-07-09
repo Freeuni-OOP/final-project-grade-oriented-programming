@@ -3,12 +3,7 @@ export const PUBLIC_NAV_ITEMS = [
   { to: '/register', label: 'Register' },
 ];
 
-export const PROTECTED_NAV_ITEMS = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/customers', label: 'Profile' },
-  { to: '/accounts', label: 'Accounts' },
-  { to: '/cards', label: 'Cards' },
-];
+export const PROTECTED_NAV_ITEMS = [{ to: '/customers', label: 'Profile' }];
 
 export const MANAGER_NAV_ITEMS = [
   { to: '/admin', label: 'Admin' },

@@ -21,7 +21,7 @@ export default function Layout() {
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <NavLink to={isAuthenticated ? '/dashboard' : '/login'} className={styles.brand}>
+        <NavLink to={isAuthenticated ? '/customers' : '/login'} className={styles.brand}>
           Banking System
         </NavLink>
 
