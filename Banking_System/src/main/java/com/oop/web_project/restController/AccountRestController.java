@@ -3,6 +3,7 @@ package com.oop.web_project.restController;
 import com.oop.web_project.dto.requests.AccountCreationRequest;
 import com.oop.web_project.dto.requests.AccountFilterRequest;
 import com.oop.web_project.dto.requests.CardCreationRequest;
+import com.oop.web_project.dto.requests.PageRequest;
 import com.oop.web_project.dto.responses.AccountProfileResponse;
 import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.entities.Account;
@@ -149,10 +150,11 @@ public class AccountRestController {
 
     @PreAuthorize("hasAuthority(\"MANAGER\")")
     @GetMapping("/filter")
-    public ResponseEntity<List<AccountSummaryResponse>> filterAccounts(AccountFilterRequest accountFilterRequest) {
+    public ResponseEntity<List<AccountSummaryResponse>> filterAccounts(AccountFilterRequest accountFilterRequest,
+                                                                       @Valid PageRequest pageRequest) {
 
         Page<Account> accountPages = accountService.filterAccounts(
-               accountFilterRequest
+               accountFilterRequest, pageRequest
         );
         List<AccountSummaryResponse> accountSummaryResponses =
                 accountPages.map(accountSummaryApiMapper::toAccountSummaryResponse).toList();

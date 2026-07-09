@@ -4,14 +4,20 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
-public class CustomerFilterRequest {
-    private String firstName;
-    private String lastName;
+public class PageRequest {
+    @NotNull
+    private Integer page;
+    @NotNull
+    private Integer size;
+    @NotNull
+    @NotEmpty
+    private String sortBy;
+    @NotNull
+    @NotEmpty
+    private String sortDirection;
 }

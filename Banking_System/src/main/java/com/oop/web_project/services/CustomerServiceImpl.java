@@ -3,17 +3,16 @@ package com.oop.web_project.services;
 import com.oop.web_project.annotations.ActivityCheckRequired;
 import com.oop.web_project.annotations.CustomerAccessPermissionRequired;
 import com.oop.web_project.dto.requests.CustomerFilterRequest;
+import com.oop.web_project.dto.requests.PageRequest;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.CheckActivityTarget;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
 import com.oop.web_project.exceptions.customerExceptions.*;
 import com.oop.web_project.persistence.*;
+import com.oop.web_project.utils.PageUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -136,25 +135,20 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Page<Customer> filterCustomers(CustomerFilterRequest customerFilterRequest) {
+    @CustomerAccessPermissionRequired
+    public Page<Customer> filterCustomers(CustomerFilterRequest customerFilterRequest, PageRequest pageRequest) {
 
         Specification<Customer> specification = Specification.unrestricted();
 
-        if (customerFilterRequest.getFirstName() != null) {
+        if (customerFilterRequest.getFirstName() != null && !customerFilterRequest.getFirstName().isEmpty()) {
             specification = specification.and((root, query, cb) ->
                     cb.equal(root.get("firstName"), customerFilterRequest.getFirstName()));
         }
-        if (customerFilterRequest.getLastName() != null) {
+        if (customerFilterRequest.getLastName() != null && !customerFilterRequest.getLastName().isEmpty()) {
             specification = specification.and((root, query, cb) ->
                     cb.equal(root.get("lastName"), customerFilterRequest.getLastName()));
         }
 
-        Sort sort = customerFilterRequest.getSortDirection().equalsIgnoreCase("desc") ?
-                Sort.by(customerFilterRequest.getSortBy()).descending() :
-                Sort.by(customerFilterRequest.getSortBy()).ascending();
-
-        Pageable pageable = PageRequest.of(customerFilterRequest.getPage(), customerFilterRequest.getSize(), sort);
-
-        return customerRepository.findAll(specification, pageable);
+        return customerRepository.findAll(specification, PageUtils.buildPageable(pageRequest));
     }
 }

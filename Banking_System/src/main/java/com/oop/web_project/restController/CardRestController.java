@@ -70,10 +70,11 @@ public class CardRestController {
 
     @PreAuthorize("hasAuthority(\"MANAGER\")")
     @GetMapping("/filter")
-    public ResponseEntity<List<CardSummaryResponse>> filterCards(CardFilterRequest cardFilterRequest) {
+    public ResponseEntity<List<CardSummaryResponse>> filterCards(CardFilterRequest cardFilterRequest,
+                                                                 @Valid PageRequest pageRequest) {
 
         Page<Card> cardPages = cardService.filterCards(
-                cardFilterRequest
+                cardFilterRequest, pageRequest
         );
         List<CardSummaryResponse> cardSummaryResponses =
                 cardPages.map(cardApiMapper::toCardSummaryResponse).toList();

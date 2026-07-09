@@ -8,6 +8,7 @@ import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyActiveEx
 import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactivatedException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
 import com.oop.web_project.mapping.CustomerApiMapper;
+import com.oop.web_project.mapping.CustomerSummaryApiMapper;
 import com.oop.web_project.restController.CustomerRestController;
 import com.oop.web_project.services.CustomerService;
 import com.oop.web_project.services.JWTService;
@@ -61,6 +62,9 @@ class CustomerRestControllerTest {
 
     @MockitoBean
     private CustomerApiMapper customerApiMapper;
+
+    @MockitoBean
+    private CustomerSummaryApiMapper customerSummaryApiMapper;
 
     @MockitoBean
     private JWTService jwtService;

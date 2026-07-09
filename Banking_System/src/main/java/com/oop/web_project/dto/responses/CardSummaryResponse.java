@@ -20,7 +20,7 @@ public class CardSummaryResponse {
     private CardType type;
     private CardBrand brand;
     private BigDecimal spendingLimit;
-    private LocalDate expirationDate;
+    private String panMasked;
     private BigDecimal totalBalance;
 
 }

@@ -1,6 +1,7 @@
 package com.oop.web_project.services;
 
 import com.oop.web_project.dto.requests.CustomerFilterRequest;
+import com.oop.web_project.dto.requests.PageRequest;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Customer;
 import org.springframework.data.domain.Page;
@@ -58,5 +59,5 @@ public interface CustomerService {
     /**
      * Retrieves customers based on given parameters, applies paging and sorting
      */
-    Page<Customer> filterCustomers(CustomerFilterRequest customerFilterRequest);
+    Page<Customer> filterCustomers(CustomerFilterRequest customerFilterRequest, PageRequest pageRequest);
 }

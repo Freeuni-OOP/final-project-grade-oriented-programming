@@ -58,7 +58,7 @@ public class CardApiMapper {
         response.setType(card.getType());
         response.setBrand(card.getBrand());
         response.setSpendingLimit(card.getSpendingLimit());
-        response.setExpirationDate(card.getExpirationDate());
+        response.setPanMasked(card.getPanMasked());
         response.setTotalBalance(
                 BigDecimal.valueOf(getBalances(card).stream()
                 .map(CardBalanceResponse::getAmount).

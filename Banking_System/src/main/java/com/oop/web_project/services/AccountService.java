@@ -1,6 +1,7 @@
 package com.oop.web_project.services;
 
 import com.oop.web_project.dto.requests.AccountFilterRequest;
+import com.oop.web_project.dto.requests.PageRequest;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.AccountCategory;
 import com.oop.web_project.entities.Card;
@@ -89,5 +90,5 @@ public interface AccountService {
     /**
      * Retrieves accounts based on given parameters, applies paging and sorting
      */
-    Page<Account> filterAccounts(AccountFilterRequest accountFilterRequest);
+    Page<Account> filterAccounts(AccountFilterRequest accountFilterRequest, PageRequest pageRequest);
 }

@@ -1,6 +1,8 @@
 package com.oop.web_project.dto.requests;
 
 import com.oop.web_project.entities.AccountCategory;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,8 +19,4 @@ public class AccountFilterRequest {
     private AccountCategory category;
     private LocalDate dateOpened;
     private Boolean isActive;
-    private Integer page;
-    private Integer size;
-    private String sortBy;
-    private String sortDirection;
 }

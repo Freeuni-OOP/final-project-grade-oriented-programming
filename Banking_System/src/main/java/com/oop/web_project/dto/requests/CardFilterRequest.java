@@ -19,8 +19,4 @@ public class CardFilterRequest {
     private CardBrand brand;
     private BigDecimal spendingLimit;
     private LocalDate expirationDate;
-    private Integer page;
-    private Integer size;
-    private String sortBy;
-    private String sortDirection;
 }

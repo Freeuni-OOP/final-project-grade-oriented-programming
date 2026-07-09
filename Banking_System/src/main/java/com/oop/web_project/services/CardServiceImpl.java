@@ -1,15 +1,14 @@
 package com.oop.web_project.services;
 import com.oop.web_project.annotations.*;
 import com.oop.web_project.dto.requests.CardFilterRequest;
+import com.oop.web_project.dto.requests.PageRequest;
 import com.oop.web_project.entities.*;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
 import com.oop.web_project.exceptions.cardExceptions.*;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
 import com.oop.web_project.persistence.*;
+import com.oop.web_project.utils.PageUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -267,7 +266,8 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public Page<Card> filterCards(CardFilterRequest cardFilterRequest) {
+    @CardAccessPermissionRequired
+    public Page<Card> filterCards(CardFilterRequest cardFilterRequest, PageRequest pageRequest) {
 
         Specification<Card> specification = Specification.unrestricted();
 
@@ -291,13 +291,7 @@ public class CardServiceImpl implements CardService {
                     cb.lessThanOrEqualTo(root.get("expirationDate"), cardFilterRequest.getExpirationDate()));
         }
 
-        Sort sort = cardFilterRequest.getSortDirection().equalsIgnoreCase("desc") ?
-                Sort.by(cardFilterRequest.getSortBy()).descending() :
-                Sort.by(cardFilterRequest.getSortBy()).ascending();
-
-        Pageable pageable = PageRequest.of(cardFilterRequest.getPage(), cardFilterRequest.getSize(), sort);
-
-        return cardRepository.findAll(specification, pageable);
+        return cardRepository.findAll(specification, PageUtils.buildPageable(pageRequest));
     }
 
     /**

@@ -2,6 +2,7 @@ package com.oop.web_project.restController;
 
 import com.oop.web_project.dto.requests.CustomerFilterRequest;
 import com.oop.web_project.dto.requests.CustomerUpdateRequest;
+import com.oop.web_project.dto.requests.PageRequest;
 import com.oop.web_project.dto.responses.CustomerProfileResponse;
 import com.oop.web_project.dto.responses.CustomerSummaryResponse;
 import com.oop.web_project.entities.Customer;
@@ -62,10 +63,11 @@ public class CustomerRestController {
 
     @PreAuthorize("hasAuthority(\"MANAGER\")")
     @GetMapping("/filter")
-    public ResponseEntity<List<CustomerSummaryResponse>> filterCustomers(CustomerFilterRequest customerFilterRequest) {
+    public ResponseEntity<List<CustomerSummaryResponse>> filterCustomers(CustomerFilterRequest customerFilterRequest,
+                                                                         @Valid PageRequest pageRequest) {
 
         Page<Customer> customerPages = customerService.filterCustomers(
-                customerFilterRequest
+                customerFilterRequest, pageRequest
         );
         List<CustomerSummaryResponse> customerSummaryResponses =
                 customerPages.map(customerSummaryApiMapper::toSummaryResponse).toList();
