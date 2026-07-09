@@ -7,7 +7,7 @@ import { cardApi } from '../api/cardApi';
 import { customerKeys } from '../api/customerQueryKeys';
 import { accountKeys } from '../api/accountQueryKeys';
 import { cardKeys } from '../api/cardQueryKeys';
-import { Button, Card, Spinner, Table, Toast } from '../components/ui';
+import { Card, Spinner, Table, Toast } from '../components/ui';
 import ScrollStrip from '../components/customer/ScrollStrip';
 import {
   DetailItem,
@@ -38,7 +38,6 @@ const balanceColumns = [
 export default function CustomersPage() {
   const { email } = useAuth();
 
-  const [profileRequested, setProfileRequested] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [selectedCardId, setSelectedCardId] = useState(null);
 
@@ -47,7 +46,7 @@ export default function CustomersPage() {
   const profileQuery = useQuery({
     queryKey: email ? customerKeys.byEmail(email) : [...customerKeys.all, IDLE],
     queryFn: () => customerApi.getByEmail(email),
-    enabled: profileRequested && Boolean(email),
+    enabled: Boolean(email),
     retry: false,
   });
 
@@ -72,12 +71,15 @@ export default function CustomersPage() {
   const card = cardQuery.data;
 
   const selectAccount = (nextAccount) => {
-    setSelectedAccountId(getId(nextAccount));
-    setSelectedCardId(null); // a new account clears any previously opened card
+    const id = getId(nextAccount);
+    // clicking the account that's already open closes it (and its cards/detail)
+    setSelectedAccountId((current) => (String(current) === String(id) ? null : id));
+    setSelectedCardId(null);
   };
 
   const selectCard = (nextCard) => {
-    setSelectedCardId(getId(nextCard));
+    const id = getId(nextCard);
+    setSelectedCardId((current) => (String(current) === String(id) ? null : id));
   };
 
   const renderAccountChip = (item) => (
@@ -101,39 +103,25 @@ export default function CustomersPage() {
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
-        <p className={styles.kicker}>Customer area</p>
+        <p className={styles.kicker}>Profile</p>
         <h1 className={styles.title}>Your banking</h1>
       </header>
 
       {/* ---- Profile ---- */}
       <Card title="Your profile">
-        {!profileRequested && (
-          <div className={styles.stack}>
-            <p className={styles.mutedText}>See your profile, accounts, and cards.</p>
-            <div className={styles.actionsRow}>
-              <Button type="button" onClick={() => setProfileRequested(true)} disabled={!email}>
-                View my profile
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {profileRequested && profileQuery.isLoading && (
+        {profileQuery.isLoading && (
           <div className={styles.centerState}>
             <Spinner label="Loading your profile..." />
           </div>
         )}
 
-        {profileRequested && profileQuery.isError && (
+        {profileQuery.isError && (
           <Toast variant="danger" message="We couldn't load your profile. Try again in a moment." />
         )}
 
         {profile && (
           <dl className={styles.profileGrid}>
             <DetailItem label="Name">{getCustomerName(profile)}</DetailItem>
-            <DetailItem label="Status">
-              <StatusBadge active={getActiveValue(profile)} />
-            </DetailItem>
             <DetailItem label="Email">{formatValue(profile.email)}</DetailItem>
             <DetailItem label="Phone">{formatValue(profile.phoneNumber)}</DetailItem>
             <DetailItem label="Date of birth">{formatValue(profile.dateOfBirth)}</DetailItem>
@@ -215,7 +203,7 @@ export default function CustomersPage() {
                 </DetailItem>
                 <DetailItem label="Spending limit">{formatValue(card.spendingLimit)}</DetailItem>
                 <DetailItem label="Expiration">{formatValue(card.expirationDate)}</DetailItem>
-                <DetailItem label="Card number">{formatValue(card.panMasked)}</DetailItem>
+                <DetailItem label="Card number">{formatValue(card.panToken)}</DetailItem>
               </dl>
 
               <Table

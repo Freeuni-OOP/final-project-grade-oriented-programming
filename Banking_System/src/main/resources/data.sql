@@ -113,7 +113,7 @@ INSERT INTO Account_customer (Account_id, Customer_id) VALUES  (9,  9);   -- Iri
 
 
 INSERT INTO Cards (Card_id, Card_type, Brand, Account_id, Spending_limit, Expiration_date, Pan_masked,            Pan_token,               Is_active) VALUES
-    ( 1, 'DEBIT',  'VISA',       1,  5000, '2027-12-31', '4111 **** **** 1001', 'tok_visa_debit_1001', TRUE);
+    ( 1, 'DEBIT',  'VISA',       1,  5000, '2027-12-31', '4111 **** **** 1001', '4111 1234 1234 1001', TRUE);
 
 INSERT INTO Cards (Card_id, Card_type, Brand, Account_id, Spending_limit, Expiration_date, Pan_masked,            Pan_token,               Is_active) VALUES
     ( 2, 'CREDIT', 'VISA',       2, 10000, '2026-09-30', '4111 **** **** 1002', 'tok_visa_cred_1002',  TRUE);

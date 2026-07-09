@@ -5,7 +5,7 @@ export const PUBLIC_NAV_ITEMS = [
 
 export const PROTECTED_NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard' },
-  { to: '/customers', label: 'Customers' },
+  { to: '/customers', label: 'Profile' },
   { to: '/accounts', label: 'Accounts' },
   { to: '/cards', label: 'Cards' },
 ];
