@@ -9,7 +9,7 @@ import { customerKeys } from '../api/customerQueryKeys';
 import { accountKeys } from '../api/accountQueryKeys';
 import { cardKeys } from '../api/cardQueryKeys';
 import { applyBackendFormErrors } from '../api/formErrors';
-import { Button, Card, Spinner, Table, TextField, Toast, useToast } from '../components/ui';
+import { Button, Card, Select, Spinner, Table, TextField, Toast, useToast } from '../components/ui';
 import ScrollStrip from '../components/customer/ScrollStrip';
 import {
   DetailItem,
@@ -23,6 +23,22 @@ import {
 import styles from './CustomerPage.module.css';
 
 const IDLE = 'idle';
+
+const ACCOUNT_CATEGORIES = [
+  { value: 'CHECKING', label: 'Checking' },
+  { value: 'SAVINGS', label: 'Savings' },
+  { value: 'CREDIT', label: 'Credit' },
+];
+
+const CARD_TYPES = [
+  { value: 'DEBIT', label: 'Debit' },
+  { value: 'CREDIT', label: 'Credit' },
+];
+
+const CARD_BRANDS = [
+  { value: 'VISA', label: 'Visa' },
+  { value: 'MASTERCARD', label: 'Mastercard' },
+];
 
 const balanceColumns = [
   {
@@ -82,6 +98,27 @@ function sortTransactionsDesc(transactions) {
   });
 }
 
+function buildCreateAccountPayload(values) {
+  return {
+    accountName: trimValue(values.accountName),
+    category: values.category,
+  };
+}
+
+// Backend sends createdAccountId, but this keeps it safe if the shape ever changes.
+function getCreatedAccountId(response) {
+  return response?.createdAccountId ?? response?.accountId ?? response?.id ?? null;
+}
+
+function buildCreateCardPayload(values) {
+  return {
+    cardType: values.cardType,
+    cardBrand: values.cardBrand,
+    spendingLimit: trimValue(values.spendingLimit),
+    pan: trimValue(values.pan),
+  };
+}
+
 // Small chrome shared by the three editable profile fields: a read-only
 // view with an "Edit" trigger, or an inline form with Save/Cancel.
 function EditableDetail({
@@ -136,6 +173,8 @@ export default function CustomersPage() {
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [editingSection, setEditingSection] = useState(null); // null | 'name' | 'phone' | 'address'
   const [showTransactions, setShowTransactions] = useState(false);
+  const [showCreateAccount, setShowCreateAccount] = useState(false);
+  const [showCreateCard, setShowCreateCard] = useState(false);
 
   const profileQueryKey = email ? customerKeys.byEmail(email) : [...customerKeys.all, IDLE];
 
@@ -291,11 +330,101 @@ export default function CustomersPage() {
   // be swapped out from under an in-progress submit.
   const editDisabled = !customerId || updateMutation.isPending;
 
+  // ---- create account / create card forms ----
+  const {
+    register: registerCreateAccount,
+    handleSubmit: handleCreateAccountSubmit,
+    reset: resetCreateAccountForm,
+    setError: setCreateAccountError,
+    formState: { errors: createAccountErrors, isSubmitting: isCreateAccountSubmitting },
+  } = useForm({ defaultValues: { accountName: '', category: '' } });
+
+  const {
+    register: registerCreateCard,
+    handleSubmit: handleCreateCardSubmit,
+    reset: resetCreateCardForm,
+    setError: setCreateCardError,
+    formState: { errors: createCardErrors, isSubmitting: isCreateCardSubmitting },
+  } = useForm({ defaultValues: { cardType: '', cardBrand: '', spendingLimit: '', pan: '' } });
+
+  // Creating an account is two backend calls: create the (unlinked) account,
+  // then link it to the current customer. That link is what "attaches" it in
+  // the database -- AccountCreationRequest itself has no customer field.
+  const createAccountMutation = useMutation({
+    mutationFn: async ({ payload, ownerId }) => {
+      const createdAccount = await accountApi.create(payload);
+      const createdAccountId = getCreatedAccountId(createdAccount);
+
+      if (!createdAccountId) {
+        const error = new Error('Account id was not returned.');
+        error.missingCreatedAccountId = true;
+        throw error;
+      }
+
+      await accountApi.registerCustomer(createdAccountId, ownerId);
+      return createdAccountId;
+    },
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileQueryKey });
+      showToast({ title: 'Account created and added to your profile.', variant: 'success' });
+      resetCreateAccountForm();
+      setShowCreateAccount(false);
+    },
+  });
+
+  // Cards attach directly to an account via the URL -- one call is enough.
+  const createCardMutation = useMutation({
+    mutationFn: ({ accountId, payload }) => accountApi.createCard(accountId, payload),
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accountKeys.byId(selectedAccountId) });
+      showToast({ title: 'Card created for this account.', variant: 'success' });
+      resetCreateCardForm();
+      setShowCreateCard(false);
+    },
+  });
+
+  const submitCreateAccount = async (values) => {
+    try {
+      await createAccountMutation.mutateAsync({
+        payload: buildCreateAccountPayload(values),
+        ownerId: customerId,
+      });
+    } catch (error) {
+      if (error.missingCreatedAccountId) {
+        setCreateAccountError('root', {
+          type: 'server',
+          message: 'The account was created, but its ID was not returned.',
+        });
+        return;
+      }
+      applyBackendFormErrors(error, setCreateAccountError, ['accountName', 'category']);
+    }
+  };
+
+  const submitCreateCard = async (values) => {
+    try {
+      await createCardMutation.mutateAsync({
+        accountId: selectedAccountId,
+        payload: buildCreateCardPayload(values),
+      });
+    } catch (error) {
+      applyBackendFormErrors(error, setCreateCardError, [
+        'cardType',
+        'cardBrand',
+        'spendingLimit',
+        'pan',
+      ]);
+    }
+  };
+
   const selectAccount = (nextAccount) => {
     const id = getId(nextAccount);
     // clicking the account that's already open closes it (and its cards/detail)
     setSelectedAccountId((current) => (String(current) === String(id) ? null : id));
     setSelectedCardId(null);
+    setShowCreateCard(false);
   };
 
   const selectCard = (nextCard) => {
@@ -427,15 +556,86 @@ export default function CustomersPage() {
       {/* ---- Accounts strip ---- */}
       {profile && (
         <Card title="Accounts" subtitle="Select an account to see its details.">
-          <ScrollStrip
-            items={profile.accounts ?? []}
-            getKey={(item) => getId(item)}
-            renderItem={renderAccountChip}
-            selectedKey={selectedAccountId}
-            onSelect={selectAccount}
-            emptyMessage="You don't have any accounts yet."
-            ariaLabel="Your accounts"
-          />
+          <div className={styles.stack}>
+            <ScrollStrip
+              items={profile.accounts ?? []}
+              getKey={(item) => getId(item)}
+              renderItem={renderAccountChip}
+              selectedKey={selectedAccountId}
+              onSelect={selectAccount}
+              emptyMessage="You don't have any accounts yet."
+              ariaLabel="Your accounts"
+            />
+
+            {showCreateAccount ? (
+              <form
+                className={styles.editForm}
+                onSubmit={handleCreateAccountSubmit(submitCreateAccount)}
+                noValidate
+              >
+                <div className={styles.editFields}>
+                  <TextField
+                    id="create-account-name"
+                    label="Account name"
+                    error={createAccountErrors.accountName?.message}
+                    required
+                    {...registerCreateAccount('accountName', {
+                      required: 'Account name is required.',
+                      minLength: { value: 3, message: 'At least 3 characters.' },
+                      maxLength: { value: 20, message: 'At most 20 characters.' },
+                    })}
+                  />
+                  <Select
+                    id="create-account-category"
+                    label="Category"
+                    placeholder="Choose category"
+                    options={ACCOUNT_CATEGORIES}
+                    error={createAccountErrors.category?.message}
+                    required
+                    {...registerCreateAccount('category', { required: 'Category is required.' })}
+                  />
+                </div>
+
+                {createAccountErrors.root && (
+                  <Toast variant="danger" message={createAccountErrors.root.message} />
+                )}
+
+                <div className={styles.actionsRow}>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    isLoading={createAccountMutation.isPending || isCreateAccountSubmitting}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={createAccountMutation.isPending}
+                    onClick={() => {
+                      resetCreateAccountForm();
+                      setShowCreateAccount(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className={styles.actionsRow}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={!customerId}
+                  onClick={() => setShowCreateAccount(true)}
+                >
+                  + New account
+                </Button>
+              </div>
+            )}
+          </div>
         </Card>
       )}
 
@@ -492,15 +692,111 @@ export default function CustomersPage() {
       {/* ---- Cards strip (belongs to the selected account) ---- */}
       {account && (
         <Card title="Cards" subtitle="Select a card to see its details.">
-          <ScrollStrip
-            items={account.cards ?? []}
-            getKey={(item) => getId(item)}
-            renderItem={renderCardChip}
-            selectedKey={selectedCardId}
-            onSelect={selectCard}
-            emptyMessage="This account has no cards."
-            ariaLabel="Cards in this account"
-          />
+          <div className={styles.stack}>
+            <ScrollStrip
+              items={account.cards ?? []}
+              getKey={(item) => getId(item)}
+              renderItem={renderCardChip}
+              selectedKey={selectedCardId}
+              onSelect={selectCard}
+              emptyMessage="This account has no cards."
+              ariaLabel="Cards in this account"
+            />
+
+            {showCreateCard ? (
+              <form
+                className={styles.editForm}
+                onSubmit={handleCreateCardSubmit(submitCreateCard)}
+                noValidate
+              >
+                <div className={styles.editFields}>
+                  <Select
+                    id="create-card-type"
+                    label="Card type"
+                    placeholder="Choose type"
+                    options={CARD_TYPES}
+                    error={createCardErrors.cardType?.message}
+                    required
+                    {...registerCreateCard('cardType', { required: 'Card type is required.' })}
+                  />
+                  <Select
+                    id="create-card-brand"
+                    label="Card brand"
+                    placeholder="Choose brand"
+                    options={CARD_BRANDS}
+                    error={createCardErrors.cardBrand?.message}
+                    required
+                    {...registerCreateCard('cardBrand', { required: 'Card brand is required.' })}
+                  />
+                  <TextField
+                    id="create-card-spending-limit"
+                    label="Spending limit"
+                    type="number"
+                    min="100"
+                    max="100000"
+                    step="0.01"
+                    error={createCardErrors.spendingLimit?.message}
+                    required
+                    {...registerCreateCard('spendingLimit', {
+                      required: 'Spending limit is required.',
+                      min: { value: 100, message: 'Spending limit must be at least 100.' },
+                      max: { value: 100000, message: 'Spending limit must be at most 100000.' },
+                    })}
+                  />
+                  <TextField
+                    id="create-card-pan"
+                    label="PAN"
+                    inputMode="numeric"
+                    error={createCardErrors.pan?.message}
+                    required
+                    {...registerCreateCard('pan', {
+                      required: 'PAN is required.',
+                      minLength: { value: 12, message: 'PAN must be at least 12 digits.' },
+                      maxLength: { value: 19, message: 'PAN must be at most 19 digits.' },
+                      pattern: { value: /^\d+$/, message: 'PAN must contain only digits.' },
+                    })}
+                  />
+                </div>
+
+                {createCardErrors.root && (
+                  <Toast variant="danger" message={createCardErrors.root.message} />
+                )}
+
+                <div className={styles.actionsRow}>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    isLoading={createCardMutation.isPending || isCreateCardSubmitting}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={createCardMutation.isPending}
+                    onClick={() => {
+                      resetCreateCardForm();
+                      setShowCreateCard(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className={styles.actionsRow}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowCreateCard(true)}
+                >
+                  + New card
+                </Button>
+              </div>
+            )}
+          </div>
         </Card>
       )}
 

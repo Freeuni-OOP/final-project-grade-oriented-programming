@@ -12,11 +12,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CustomerUpdateRequest {
-
-    @NotBlank(message =  "First name should not be blank.")
+    
     private String firstName;
 
-    @NotBlank(message =  "Last name should not be blank.")
     private String lastName;
 
     @Pattern(regexp = "\\d+", message = "Phone number must contain only digits.")

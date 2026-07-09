@@ -46,37 +46,37 @@ SELECT 12, f.Currency_id, t.Currency_id, 0.8496, '2025-06-01 08:00:00' FROM Curr
 
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    ( 1,'Giga',    'Beradze',   '+995551001002', '22 Chavchavadze Ave, Tbilisi',   '1990-07-22', 'gbera23@example.com',      '$2a$10$S9MUPRmdpGtXvQ2DOCILUuo69JZE1L.1rIqkkzLEqycFDxzMAz3VW',   TRUE,  'MANAGER');
+    ( 1,'Giga',    'Beradze',   '995551001002', '22 Chavchavadze Ave, Tbilisi',   '1990-07-22', 'gbera23@example.com',      '$2a$10$S9MUPRmdpGtXvQ2DOCILUuo69JZE1L.1rIqkkzLEqycFDxzMAz3VW',   TRUE,  'MANAGER');
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    ( 2,'Carol',  'White',   '+995551001003', '5 Agmashenebeli Ave, Tbilisi',   '1992-11-30', 'carol.white@example.com',    '$2a$10$standardHash001',  TRUE,  'STANDARD');
+    ( 2,'Carol',  'White',   '995551001003', '5 Agmashenebeli Ave, Tbilisi',   '1992-11-30', 'carol.white@example.com',    '$2a$10$standardHash001',  TRUE,  'STANDARD');
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    ( 3,'David',  'Brown',   '+995551001004', '18 Kostava St, Tbilisi',         '1988-05-14', 'david.brown@example.com',    '$2a$10$standardHash002',  TRUE,  'STANDARD');
+    ( 3,'David',  'Brown',   '995551001004', '18 Kostava St, Tbilisi',         '1988-05-14', 'david.brown@example.com',    '$2a$10$standardHash002',  TRUE,  'STANDARD');
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    ( 4,'Emma',   'Davis',   '+995551001005', '7 Freedom Square, Tbilisi',      '1995-09-03', 'emma.davis@example.com',     '$2a$10$standardHash003',  TRUE,  'STANDARD');
+    ( 4,'Emma',   'Davis',   '995551001005', '7 Freedom Square, Tbilisi',      '1995-09-03', 'emma.davis@example.com',     '$2a$10$standardHash003',  TRUE,  'STANDARD');
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    ( 5,'Frank',  'Miller',  '+995551001006', '33 Pekini Ave, Tbilisi',         '1987-12-19', 'frank.miller@example.com',   '$2a$10$standardHash004',  TRUE,  'STANDARD');
+    ( 5,'Frank',  'Miller',  '995551001006', '33 Pekini Ave, Tbilisi',         '1987-12-19', 'frank.miller@example.com',   '$2a$10$standardHash004',  TRUE,  'STANDARD');
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    ( 6,'Grace',  'Wilson',  '+995551001007', '9 Marjanishvili St, Tbilisi',    '1993-04-27', 'grace.wilson@example.com',   '$2a$10$standardHash005',  TRUE,  'STANDARD');
+    ( 6,'Grace',  'Wilson',  '995551001007', '9 Marjanishvili St, Tbilisi',    '1993-04-27', 'grace.wilson@example.com',   '$2a$10$standardHash005',  TRUE,  'STANDARD');
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    ( 7,'Henry',  'Moore',   '+995551001008', '45 Vake Park Rd, Tbilisi',       '1980-08-11', 'henry.moore@example.com',    '$2a$10$standardHash006',  FALSE, 'STANDARD');
+    ( 7,'Henry',  'Moore',   '995551001008', '45 Vake Park Rd, Tbilisi',       '1980-08-11', 'henry.moore@example.com',    '$2a$10$standardHash006',  FALSE, 'STANDARD');
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    ( 8,'Iris',   'Taylor',  '+995551001009', '2 Saburtalo St, Tbilisi',        '1991-01-05', 'iris.taylor@example.com',    '$2a$10$managerHash002',   TRUE,  'MANAGER');
+    ( 8,'Iris',   'Taylor',  '995551001009', '2 Saburtalo St, Tbilisi',        '1991-01-05', 'iris.taylor@example.com',    '$2a$10$managerHash002',   TRUE,  'MANAGER');
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    (9,'Jack',   'Anderson','+995551001010', '11 Isani St, Tbilisi',           '1997-06-18', 'jack.anderson@example.com',  '$2a$10$standardHash007',  TRUE,  'STANDARD');
+    (9,'Jack',   'Anderson','995551001010', '11 Isani St, Tbilisi',           '1997-06-18', 'jack.anderson@example.com',  '$2a$10$standardHash007',  TRUE,  'STANDARD');
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    (10,'Karen',  'Thomas',  '+995551001011', '66 Gldani Rd, Tbilisi',          '1986-10-29', 'karen.thomas@example.com',   '$2a$10$standardHash008',  TRUE,  'STANDARD');
+    (10,'Karen',  'Thomas',  '995551001011', '66 Gldani Rd, Tbilisi',          '1986-10-29', 'karen.thomas@example.com',   '$2a$10$standardHash008',  TRUE,  'STANDARD');
 
 INSERT INTO Customers (Customer_id, First_name, Last_name, Phone_number, Address, Date_of_birth, Email, Hashed_password, Is_active, Role) VALUES
-    (11,'Liam',   'Jackson', '+995551001012', '3 Nadzaladevi Blvd, Tbilisi',    '1999-02-14', 'liam.jackson@example.com',   '$2a$10$standardHash009',  TRUE,  'STANDARD');
+    (11,'Liam',   'Jackson', '995551001012', '3 Nadzaladevi Blvd, Tbilisi',    '1999-02-14', 'liam.jackson@example.com',   '$2a$10$standardHash009',  TRUE,  'STANDARD');
 
 
 INSERT INTO Accounts (Account_id, Account_name, Account_category, Date_opened, Is_active) VALUES  (1,  'Alice Main Checking',   'CHECKING', '2020-01-10', TRUE);
