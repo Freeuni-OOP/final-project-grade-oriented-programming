@@ -26,6 +26,8 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.data.domain.PageImpl;
+import com.oop.web_project.dto.responses.CustomerSummaryResponse;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -296,5 +298,37 @@ class CustomerRestControllerTest {
         mockMvc.perform(delete("/api/customer/99/delete"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Customer not found"));
+    }
+
+    @Test
+    void testFilterCustomersReturnsOk() throws Exception {
+        Customer customer = mock(Customer.class);
+        CustomerSummaryResponse summaryResponse = mock(CustomerSummaryResponse.class);
+
+        when(customerService.filterCustomers(any(), any())).thenReturn(new PageImpl<>(List.of(customer)));
+        when(customerSummaryApiMapper.toSummaryResponse(customer)).thenReturn(summaryResponse);
+
+        mockMvc.perform(get("/api/customer/filter")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sortBy", "firstName")
+                        .param("sortDirection", "ASC"))
+                .andExpect(status().isOk());
+
+        verify(customerService).filterCustomers(any(), any());
+        verify(customerSummaryApiMapper).toSummaryResponse(customer);
+    }
+
+    @Test
+    void testFilterCustomersReturnsEmptyListWhenNoMatch() throws Exception {
+        when(customerService.filterCustomers(any(), any())).thenReturn(new PageImpl<>(List.of()));
+
+        mockMvc.perform(get("/api/customer/filter")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sortBy", "firstName")
+                        .param("sortDirection", "ASC"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 }

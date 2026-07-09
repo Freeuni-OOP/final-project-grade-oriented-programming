@@ -29,6 +29,8 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.data.domain.PageImpl;
+import com.oop.web_project.dto.responses.CardSummaryResponse;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -274,5 +276,37 @@ class CardRestControllerTest {
                 .andExpect(content().string("Card has been successfully deleted!"));
 
         verify(cardService).deleteCard(1L);
+    }
+
+    @Test
+    void testFilterCardsReturnsOk() throws Exception {
+        Card card = mock(Card.class);
+        CardSummaryResponse summaryResponse = mock(CardSummaryResponse.class);
+
+        when(cardService.filterCards(any(), any())).thenReturn(new PageImpl<>(List.of(card)));
+        when(cardApiMapper.toCardSummaryResponse(card)).thenReturn(summaryResponse);
+
+        mockMvc.perform(get("/api/card/filter")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sortBy", "brand")
+                        .param("sortDirection", "ASC"))
+                .andExpect(status().isOk());
+
+        verify(cardService).filterCards(any(), any());
+        verify(cardApiMapper).toCardSummaryResponse(card);
+    }
+
+    @Test
+    void testFilterCardsReturnsEmptyListWhenNoMatch() throws Exception {
+        when(cardService.filterCards(any(), any())).thenReturn(new PageImpl<>(List.of()));
+
+        mockMvc.perform(get("/api/card/filter")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sortBy", "brand")
+                        .param("sortDirection", "ASC"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 }
