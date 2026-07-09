@@ -61,6 +61,13 @@ public class CustomerRestController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @Operation(summary = "Filter customers", description = "Returns a paginated list of customer summaries matching the given filter criteria")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Customers retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = CustomerSummaryResponse.class)))),
+            @ApiResponse(responseCode = "400", description = "Invalid filter or pagination parameters", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not have the required role", content = @Content)
+    })
     @PreAuthorize("hasAuthority(\"MANAGER\")")
     @GetMapping("/filter")
     public ResponseEntity<List<CustomerSummaryResponse>> filterCustomers(CustomerFilterRequest customerFilterRequest,

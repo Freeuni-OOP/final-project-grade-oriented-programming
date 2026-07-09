@@ -55,16 +55,11 @@ public class CardApiMapper {
 
     public CardSummaryResponse toCardSummaryResponse(Card card) {
         CardSummaryResponse response = new CardSummaryResponse();
+
         response.setType(card.getType());
         response.setBrand(card.getBrand());
         response.setSpendingLimit(card.getSpendingLimit());
         response.setPanMasked(card.getPanMasked());
-        response.setTotalBalance(
-                BigDecimal.valueOf(getBalances(card).stream()
-                .map(CardBalanceResponse::getAmount).
-                mapToDouble(BigDecimal::doubleValue).
-                sum())
-        );
         return response;
     }
 

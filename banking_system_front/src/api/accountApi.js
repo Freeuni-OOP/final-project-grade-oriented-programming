@@ -63,6 +63,13 @@ async function getBalanceByCurrency(id, currencyCode) {
   return response.data;
 }
 
+async function filter(filterRequest, pageRequest) {
+  const response = await httpClient.get(`${BASE_PATH}/filter`, {
+    params: { ...filterRequest, ...pageRequest },
+  });
+  return response.data;
+}
+
 export const accountApi = {
   create,
   createCard,
@@ -75,4 +82,5 @@ export const accountApi = {
   updateName,
   registerCustomer,
   getBalanceByCurrency,
+  filter,
 };

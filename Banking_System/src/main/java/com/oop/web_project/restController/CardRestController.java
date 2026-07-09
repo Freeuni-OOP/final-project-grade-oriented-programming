@@ -67,7 +67,14 @@ public class CardRestController {
         Card card = cardService.selectCardById(cardId);
         return ResponseEntity.ok(cardApiMapper.toCardResponse(card));
     }
-
+    
+    @Operation(summary = "Filter cards", description = "Returns a paginated list of card summaries matching the given filter criteria")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cards retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = CardSummaryResponse.class)))),
+            @ApiResponse(responseCode = "400", description = "Invalid filter or pagination parameters", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not have the required role", content = @Content)
+    })
     @PreAuthorize("hasAuthority(\"MANAGER\")")
     @GetMapping("/filter")
     public ResponseEntity<List<CardSummaryResponse>> filterCards(CardFilterRequest cardFilterRequest,

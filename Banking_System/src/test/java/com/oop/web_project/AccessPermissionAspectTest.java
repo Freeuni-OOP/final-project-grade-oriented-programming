@@ -75,8 +75,14 @@ class AccessPermissionAspectTest {
         when(cardAnnotation.idArgName()).thenReturn("cardId");
         setupJoinPointForExtractId("cardId", "not-a-long");
 
-        assertThrows(IllegalArgumentException.class,
-                () -> accessPermissionAspect.checkCardAccessPermission(joinPoint, cardAnnotation));
+        try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
+            SecurityContext context = mockAuthenticatedContext("test@example.com");
+            holder.when(SecurityContextHolder::getContext).thenReturn(context);
+            when(customerRepository.existsByEmailAndRole("test@example.com", Role.MANAGER)).thenReturn(false);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> accessPermissionAspect.checkCardAccessPermission(joinPoint, cardAnnotation));
+        }
     }
 
     @Test
@@ -84,25 +90,18 @@ class AccessPermissionAspectTest {
         when(cardAnnotation.idArgName()).thenReturn("cardId");
         setupJoinPointForExtractId("cardId", 42);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> accessPermissionAspect.checkCardAccessPermission(joinPoint, cardAnnotation));
-    }
+        try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
+            SecurityContext context = mockAuthenticatedContext("test@example.com");
+            holder.when(SecurityContextHolder::getContext).thenReturn(context);
+            when(customerRepository.existsByEmailAndRole("test@example.com", Role.MANAGER)).thenReturn(false);
 
-    @Test
-    void testCheckCardAccessPermissionParamNameNotFoundThrowsCouldNotExtractIdException() {
-        when(cardAnnotation.idArgName()).thenReturn("cardId");
-        when(joinPoint.getArgs()).thenReturn(new Object[]{1L});
-        when(joinPoint.getSignature()).thenReturn(methodSignature);
-        when(methodSignature.getParameterNames()).thenReturn(new String[]{"otherId"});
-
-        assertThrows(CouldNotExtractIdException.class,
-                () -> accessPermissionAspect.checkCardAccessPermission(joinPoint, cardAnnotation));
+            assertThrows(IllegalArgumentException.class,
+                    () -> accessPermissionAspect.checkCardAccessPermission(joinPoint, cardAnnotation));
+        }
     }
 
     @Test
     void testCheckCardAccessPermissionNullAuthenticationThrowsException() {
-        when(cardAnnotation.idArgName()).thenReturn("cardId");
-        setupJoinPointForExtractId("cardId", 1L);
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mock(SecurityContext.class);
@@ -116,8 +115,6 @@ class AccessPermissionAspectTest {
 
     @Test
     void testCheckCardAccessPermissionAnonymousAuthThrowsException() {
-        when(cardAnnotation.idArgName()).thenReturn("cardId");
-        setupJoinPointForExtractId("cardId", 1L);
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mock(SecurityContext.class);
@@ -133,8 +130,6 @@ class AccessPermissionAspectTest {
 
     @Test
     void testCheckCardAccessPermissionNotAuthenticatedThrowsException() {
-        when(cardAnnotation.idArgName()).thenReturn("cardId");
-        setupJoinPointForExtractId("cardId", 1L);
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mock(SecurityContext.class);
@@ -150,8 +145,6 @@ class AccessPermissionAspectTest {
 
     @Test
     void testCheckCardAccessPermissionManagerBypassesOwnershipCheck() {
-        when(cardAnnotation.idArgName()).thenReturn("cardId");
-        setupJoinPointForExtractId("cardId", 1L);
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mockAuthenticatedContext("manager@example.com");
@@ -231,13 +224,20 @@ class AccessPermissionAspectTest {
         }
     }
 
+
     @Test
     void testCheckAccountAccessPermissionArgIsNotLongThrowsIllegalArgumentException() {
         when(accountAnnotation.idArgName()).thenReturn("accountId");
         setupJoinPointForExtractId("accountId", "not-a-long");
 
-        assertThrows(IllegalArgumentException.class,
-                () -> accessPermissionAspect.checkAccountAccessPermission(joinPoint, accountAnnotation));
+        try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
+            SecurityContext context = mockAuthenticatedContext("test@example.com");
+            holder.when(SecurityContextHolder::getContext).thenReturn(context);
+            when(customerRepository.existsByEmailAndRole("test@example.com", Role.MANAGER)).thenReturn(false);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> accessPermissionAspect.checkAccountAccessPermission(joinPoint, accountAnnotation));
+        }
     }
 
     @Test
@@ -245,25 +245,18 @@ class AccessPermissionAspectTest {
         when(accountAnnotation.idArgName()).thenReturn("accountId");
         setupJoinPointForExtractId("accountId", 42);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> accessPermissionAspect.checkAccountAccessPermission(joinPoint, accountAnnotation));
-    }
+        try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
+            SecurityContext context = mockAuthenticatedContext("test@example.com");
+            holder.when(SecurityContextHolder::getContext).thenReturn(context);
+            when(customerRepository.existsByEmailAndRole("test@example.com", Role.MANAGER)).thenReturn(false);
 
-    @Test
-    void testCheckAccountAccessPermissionParamNameNotFoundThrowsCouldNotExtractIdException() {
-        when(accountAnnotation.idArgName()).thenReturn("accountId");
-        when(joinPoint.getArgs()).thenReturn(new Object[]{1L});
-        when(joinPoint.getSignature()).thenReturn(methodSignature);
-        when(methodSignature.getParameterNames()).thenReturn(new String[]{"otherId"});
-
-        assertThrows(CouldNotExtractIdException.class,
-                () -> accessPermissionAspect.checkAccountAccessPermission(joinPoint, accountAnnotation));
+            assertThrows(IllegalArgumentException.class,
+                    () -> accessPermissionAspect.checkAccountAccessPermission(joinPoint, accountAnnotation));
+        }
     }
 
     @Test
     void testCheckAccountAccessPermissionNullAuthenticationThrowsException() {
-        when(accountAnnotation.idArgName()).thenReturn("accountId");
-        setupJoinPointForExtractId("accountId", 1L);
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mock(SecurityContext.class);
@@ -277,8 +270,6 @@ class AccessPermissionAspectTest {
 
     @Test
     void testCheckAccountAccessPermissionAnonymousAuthThrowsException() {
-        when(accountAnnotation.idArgName()).thenReturn("accountId");
-        setupJoinPointForExtractId("accountId", 1L);
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mock(SecurityContext.class);
@@ -294,8 +285,6 @@ class AccessPermissionAspectTest {
 
     @Test
     void testCheckAccountAccessPermissionNotAuthenticatedThrowsException() {
-        when(accountAnnotation.idArgName()).thenReturn("accountId");
-        setupJoinPointForExtractId("accountId", 1L);
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mock(SecurityContext.class);
@@ -311,18 +300,16 @@ class AccessPermissionAspectTest {
 
     @Test
     void testCheckAccountAccessPermissionManagerBypassesOwnershipCheck() {
-        when(accountAnnotation.idArgName()).thenReturn("accountId");
-        setupJoinPointForExtractId("accountId", 1L);
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mockAuthenticatedContext("manager@example.com");
             holder.when(SecurityContextHolder::getContext).thenReturn(context);
-            // Both repository calls happen before the isManager guard, so both must be stubbed.
             when(customerRepository.existsByEmailAndRole("manager@example.com", Role.MANAGER)).thenReturn(true);
-            when(customerRepository.existsCustomerByAccounts_Id(1L)).thenReturn(false);
-            when(customerRepository.existsByEmailAndAccountsId("manager@example.com", 1L)).thenReturn(false);
 
             assertDoesNotThrow(() -> accessPermissionAspect.checkAccountAccessPermission(joinPoint, accountAnnotation));
+
+            verify(customerRepository, never()).existsCustomerByAccounts_Id(anyLong());
+            verify(customerRepository, never()).existsByEmailAndAccountsId(anyString(), anyLong());
         }
     }
 
@@ -336,8 +323,6 @@ class AccessPermissionAspectTest {
             holder.when(SecurityContextHolder::getContext).thenReturn(context);
             when(customerRepository.existsByEmailAndRole("test@example.com", Role.MANAGER)).thenReturn(false);
             when(customerRepository.existsCustomerByAccounts_Id(1L)).thenReturn(false);
-            // existsByEmailAndAccountsId is evaluated unconditionally before the guard.
-            when(customerRepository.existsByEmailAndAccountsId("test@example.com", 1L)).thenReturn(false);
 
             assertDoesNotThrow(() -> accessPermissionAspect.checkAccountAccessPermission(joinPoint, accountAnnotation));
         }
@@ -416,7 +401,6 @@ class AccessPermissionAspectTest {
 
     @Test
     void testCheckCustomerAccessPermissionNullAuthenticationThrowsException() {
-        when(joinPoint.getArgs()).thenReturn(new Object[]{1L});
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mock(SecurityContext.class);
@@ -430,7 +414,6 @@ class AccessPermissionAspectTest {
 
     @Test
     void testCheckCustomerAccessPermissionAnonymousAuthThrowsException() {
-        when(joinPoint.getArgs()).thenReturn(new Object[]{1L});
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mock(SecurityContext.class);
@@ -446,7 +429,6 @@ class AccessPermissionAspectTest {
 
     @Test
     void testCheckCustomerAccessPermissionNotAuthenticatedThrowsException() {
-        when(joinPoint.getArgs()).thenReturn(new Object[]{1L});
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mock(SecurityContext.class);
@@ -491,7 +473,6 @@ class AccessPermissionAspectTest {
 
     @Test
     void testCheckCustomerAccessPermissionManagerWithStringArgBypassesEmailCheck() {
-        when(joinPoint.getArgs()).thenReturn(new Object[]{"other@example.com"});
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mockAuthenticatedContext("manager@example.com");
@@ -504,7 +485,6 @@ class AccessPermissionAspectTest {
 
     @Test
     void testCheckCustomerAccessPermissionManagerWithLongArgBypassesOwnershipCheck() {
-        when(joinPoint.getArgs()).thenReturn(new Object[]{1L});
 
         try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext context = mockAuthenticatedContext("manager@example.com");
