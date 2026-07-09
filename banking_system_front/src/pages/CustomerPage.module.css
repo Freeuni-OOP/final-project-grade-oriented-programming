@@ -151,6 +151,21 @@
   line-height: var(--line-height-base);
 }
 
+.chipTitle {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  overflow-wrap: anywhere;
+}
+
+.chipMeta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-tight);
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 760px) {
   .lookupGrid,
   .profileGrid,

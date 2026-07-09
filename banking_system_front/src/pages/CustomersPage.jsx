@@ -1,384 +1,234 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '../components/AuthContext';
 import { customerApi } from '../api/customerApi';
+import { accountApi } from '../api/accountApi';
+import { cardApi } from '../api/cardApi';
 import { customerKeys } from '../api/customerQueryKeys';
-import { applyBackendFormErrors } from '../api/formErrors';
-import { Button, Card, Spinner, Table, TextField, Toast, useToast } from '../components/ui';
+import { accountKeys } from '../api/accountQueryKeys';
+import { cardKeys } from '../api/cardQueryKeys';
+import { Button, Card, Spinner, Table, Toast } from '../components/ui';
+import ScrollStrip from '../components/customer/ScrollStrip';
+import {
+  DetailItem,
+  StatusBadge,
+  formatValue,
+  getActiveValue,
+  getCustomerName,
+  getId,
+} from '../components/customer/shared';
 import styles from './CustomerPage.module.css';
 
-const UPDATE_FIELDS = ['firstName', 'lastName', 'phoneNumber', 'address'];
+const IDLE = 'idle';
 
-const UPDATE_DEFAULTS = {
-  firstName: '',
-  lastName: '',
-  phoneNumber: '',
-  address: '',
-};
-
-function trimValue(value) {
-  return String(value ?? '').trim();
-}
-
-function blankToNull(value) {
-  const trimmed = trimValue(value);
-  return trimmed ? trimmed : null;
-}
-
-function formatValue(value) {
-  return value === null || value === undefined || value === '' ? 'Not provided' : String(value);
-}
-
-function getCustomerId(customer) {
-  return (
-    customer?.id ?? customer?.customerId ?? customer?.customerID ?? customer?.customer_id ?? null
-  );
-}
-
-function getActiveValue(record) {
-  if (typeof record?.active === 'boolean') return record.active;
-  if (typeof record?.isActive === 'boolean') return record.isActive;
-  return null;
-}
-
-function getCustomerName(customer) {
-  const firstName = trimValue(customer?.firstName);
-  const lastName = trimValue(customer?.lastName);
-  const fullName = `${firstName} ${lastName}`.trim();
-  return fullName || 'Customer';
-}
-
-function buildUpdateDefaults(customer) {
-  return {
-    firstName: customer?.firstName ?? '',
-    lastName: customer?.lastName ?? '',
-    phoneNumber: customer?.phoneNumber ?? '',
-    address: customer?.address ?? '',
-  };
-}
-
-function buildUpdatePayload(values) {
-  return {
-    firstName: trimValue(values.firstName),
-    lastName: trimValue(values.lastName),
-    phoneNumber: blankToNull(values.phoneNumber),
-    address: blankToNull(values.address),
-  };
-}
-
-function DetailItem({ label, children }) {
-  return (
-    <div className={styles.detailItem}>
-      <dt className={styles.detailLabel}>{label}</dt>
-      <dd className={styles.detailValue}>{children}</dd>
-    </div>
-  );
-}
-
-function StatusBadge({ active }) {
-  const className =
-    active === true ? styles.active : active === false ? styles.inactive : styles.unknown;
-  const label = active === true ? 'Active' : active === false ? 'Inactive' : 'Unknown';
-
-  return <span className={`${styles.badge} ${className}`}>{label}</span>;
-}
+const balanceColumns = [
+  {
+    key: 'currencyCode',
+    header: 'Currency',
+    render: (balance) => formatValue(balance.currencyCode),
+  },
+  {
+    key: 'amount',
+    header: 'Amount',
+    align: 'right',
+    render: (balance) => formatValue(balance.amount),
+  },
+];
 
 export default function CustomersPage() {
-  const queryClient = useQueryClient();
-  const { showToast } = useToast();
-  const [lookup, setLookup] = useState(null);
+  const { email } = useAuth();
 
-  const {
-    register: registerIdLookup,
-    handleSubmit: handleIdLookupSubmit,
-    formState: { errors: idLookupErrors },
-  } = useForm({ defaultValues: { customerId: '' } });
+  const [profileRequested, setProfileRequested] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const [selectedCardId, setSelectedCardId] = useState(null);
 
-  const {
-    register: registerEmailLookup,
-    handleSubmit: handleEmailLookupSubmit,
-    formState: { errors: emailLookupErrors },
-  } = useForm({ defaultValues: { email: '' } });
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm({ defaultValues: UPDATE_DEFAULTS });
-
-  const lookupQueryKey = useMemo(() => {
-    if (!lookup) {
-      return [...customerKeys.all, 'lookup', 'idle'];
-    }
-
-    return lookup.type === 'id'
-      ? customerKeys.byId(lookup.value)
-      : customerKeys.byEmail(lookup.value);
-  }, [lookup]);
-
-  const customerQuery = useQuery({
-    queryKey: lookupQueryKey,
-    queryFn: () =>
-      lookup.type === 'id'
-        ? customerApi.getById(lookup.value)
-        : customerApi.getByEmail(lookup.value),
-    enabled: Boolean(lookup),
+  // My profile (email comes from the JWT via AuthContext). The response already
+  // embeds account summaries, so this one call also feeds the accounts strip.
+  const profileQuery = useQuery({
+    queryKey: email ? customerKeys.byEmail(email) : [...customerKeys.all, IDLE],
+    queryFn: () => customerApi.getByEmail(email),
+    enabled: profileRequested && Boolean(email),
     retry: false,
   });
 
-  const customer = customerQuery.data;
-  const responseCustomerId = getCustomerId(customer);
-  const customerId = responseCustomerId ?? (lookup?.type === 'id' ? lookup.value : null);
-  const activeValue = getActiveValue(customer);
-  const canWriteCustomer = Boolean(customerId);
-
-  useEffect(() => {
-    if (customer) {
-      reset(buildUpdateDefaults(customer));
-    }
-  }, [customer, reset]);
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, payload }) => customerApi.update(id, payload),
+  // Selected account detail. Response embeds card summaries -> feeds the cards strip.
+  const accountQuery = useQuery({
+    queryKey: selectedAccountId ? accountKeys.byId(selectedAccountId) : [...accountKeys.all, IDLE],
+    queryFn: () => accountApi.getById(selectedAccountId),
+    enabled: Boolean(selectedAccountId),
     retry: false,
-    onSuccess: (updatedCustomer, variables) => {
-      queryClient.setQueryData(customerKeys.byId(variables.id), updatedCustomer);
-      if (updatedCustomer?.email) {
-        queryClient.setQueryData(customerKeys.byEmail(updatedCustomer.email), updatedCustomer);
-      }
-      queryClient.invalidateQueries({ queryKey: customerKeys.all });
-      showToast({ title: 'Customer profile updated.', variant: 'success' });
-    },
   });
 
-  const statusMutation = useMutation({
-    mutationFn: ({ id, action }) =>
-      action === 'activate' ? customerApi.activate(id) : customerApi.deactivate(id),
+  // Selected card detail. Response embeds card balances.
+  const cardQuery = useQuery({
+    queryKey: selectedCardId ? cardKeys.byId(selectedCardId) : [...cardKeys.all, IDLE],
+    queryFn: () => cardApi.getById(selectedCardId),
+    enabled: Boolean(selectedCardId),
     retry: false,
-    onSuccess: (_result, variables) => {
-      queryClient.invalidateQueries({ queryKey: customerKeys.all });
-      showToast({
-        title: variables.action === 'activate' ? 'Customer activated.' : 'Customer deactivated.',
-        variant: 'success',
-      });
-    },
   });
 
-  const submitIdLookup = ({ customerId: value }) => {
-    setLookup({ type: 'id', value: trimValue(value) });
+  const profile = profileQuery.data;
+  const account = accountQuery.data;
+  const card = cardQuery.data;
+
+  const selectAccount = (nextAccount) => {
+    setSelectedAccountId(getId(nextAccount));
+    setSelectedCardId(null); // a new account clears any previously opened card
   };
 
-  const submitEmailLookup = ({ email }) => {
-    setLookup({ type: 'email', value: trimValue(email) });
+  const selectCard = (nextCard) => {
+    setSelectedCardId(getId(nextCard));
   };
 
-  const submitUpdate = async (values) => {
-    if (!customerId) {
-      setError('root', { message: 'Customer ID is required before updating.' });
-      return;
-    }
-
-    try {
-      await updateMutation.mutateAsync({
-        id: customerId,
-        payload: buildUpdatePayload(values),
-      });
-    } catch (error) {
-      applyBackendFormErrors(error, setError, UPDATE_FIELDS);
-    }
-  };
-
-  const changeStatus = (action) => {
-    if (!customerId) {
-      return;
-    }
-
-    statusMutation.mutate({ id: customerId, action });
-  };
-
-  const accountColumns = useMemo(
-    () => [
-      { key: 'name', header: 'Name', render: (account) => formatValue(account.name) },
-      { key: 'category', header: 'Category', render: (account) => formatValue(account.category) },
-      {
-        key: 'dateOpened',
-        header: 'Opened',
-        render: (account) => formatValue(account.dateOpened),
-      },
-      {
-        key: 'status',
-        header: 'Status',
-        render: (account) => <StatusBadge active={getActiveValue(account)} />,
-      },
-    ],
-    []
+  const renderAccountChip = (item) => (
+    <>
+      <span className={styles.chipTitle}>{formatValue(item.name)}</span>
+      <span className={styles.chipMeta}>{formatValue(item.category)}</span>
+      <StatusBadge active={getActiveValue(item)} />
+    </>
   );
 
-  const statusAction = statusMutation.isPending ? statusMutation.variables?.action : null;
-  const isUpdatePending = updateMutation.isPending || isSubmitting;
+  const renderCardChip = (item) => (
+    <>
+      <span className={styles.chipTitle}>
+        {formatValue(item.brand)} &middot; {formatValue(item.type)}
+      </span>
+      <span className={styles.chipMeta}>{formatValue(item.panMasked)}</span>
+      <span className={styles.chipMeta}>Limit {formatValue(item.spendingLimit)}</span>
+    </>
+  );
 
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
         <p className={styles.kicker}>Customer area</p>
-        <h1 className={styles.title}>Customers</h1>
+        <h1 className={styles.title}>Your banking</h1>
       </header>
 
-      <Card title="Customer lookup">
-        <div className={styles.lookupGrid}>
-          <form className={styles.inlineForm} onSubmit={handleIdLookupSubmit(submitIdLookup)}>
-            <TextField
-              id="customer-id-lookup"
-              label="Customer ID"
-              type="number"
-              min="1"
-              error={idLookupErrors.customerId?.message}
-              required
-              {...registerIdLookup('customerId', {
-                required: 'Customer ID is required.',
-                validate: (value) =>
-                  /^\d+$/.test(trimValue(value)) || 'Customer ID must be a positive number.',
-              })}
-            />
-            <Button type="submit" isLoading={customerQuery.isFetching && lookup?.type === 'id'}>
-              Search ID
-            </Button>
-          </form>
-
-          <form className={styles.inlineForm} onSubmit={handleEmailLookupSubmit(submitEmailLookup)}>
-            <TextField
-              id="customer-email-lookup"
-              label="Email"
-              type="email"
-              error={emailLookupErrors.email?.message}
-              required
-              {...registerEmailLookup('email', {
-                required: 'Email is required.',
-                pattern: { value: /\S+@\S+\.\S+/, message: 'Enter a valid email.' },
-              })}
-            />
-            <Button type="submit" isLoading={customerQuery.isFetching && lookup?.type === 'email'}>
-              Search Email
-            </Button>
-          </form>
-        </div>
-      </Card>
-
-      <Card
-        title="Customer profile"
-        actions={
-          customer && (
+      {/* ---- Profile ---- */}
+      <Card title="Your profile">
+        {!profileRequested && (
+          <div className={styles.stack}>
+            <p className={styles.mutedText}>See your profile, accounts, and cards.</p>
             <div className={styles.actionsRow}>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={!canWriteCustomer || activeValue === true}
-                isLoading={statusAction === 'activate'}
-                onClick={() => changeStatus('activate')}
-              >
-                Activate
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                disabled={!canWriteCustomer || activeValue === false}
-                isLoading={statusAction === 'deactivate'}
-                onClick={() => changeStatus('deactivate')}
-              >
-                Deactivate
+              <Button type="button" onClick={() => setProfileRequested(true)} disabled={!email}>
+                View my profile
               </Button>
             </div>
-          )
-        }
-      >
-        {!lookup && <p className={styles.mutedText}>No customer selected.</p>}
+          </div>
+        )}
 
-        {lookup && customerQuery.isLoading && (
+        {profileRequested && profileQuery.isLoading && (
           <div className={styles.centerState}>
-            <Spinner label="Loading customer..." />
+            <Spinner label="Loading your profile..." />
           </div>
         )}
 
-        {lookup && customerQuery.isError && (
-          <Toast variant="danger" message="Customer profile could not be loaded." />
+        {profileRequested && profileQuery.isError && (
+          <Toast variant="danger" message="We couldn't load your profile. Try again in a moment." />
         )}
 
-        {customer && (
-          <div className={styles.stack}>
+        {profile && (
+          <dl className={styles.profileGrid}>
+            <DetailItem label="Name">{getCustomerName(profile)}</DetailItem>
+            <DetailItem label="Status">
+              <StatusBadge active={getActiveValue(profile)} />
+            </DetailItem>
+            <DetailItem label="Email">{formatValue(profile.email)}</DetailItem>
+            <DetailItem label="Phone">{formatValue(profile.phoneNumber)}</DetailItem>
+            <DetailItem label="Date of birth">{formatValue(profile.dateOfBirth)}</DetailItem>
+            <DetailItem label="Address">{formatValue(profile.address)}</DetailItem>
+          </dl>
+        )}
+      </Card>
+
+      {/* ---- Accounts strip ---- */}
+      {profile && (
+        <Card title="Accounts" subtitle="Select an account to see its details.">
+          <ScrollStrip
+            items={profile.accounts ?? []}
+            getKey={(item) => getId(item)}
+            renderItem={renderAccountChip}
+            selectedKey={selectedAccountId}
+            onSelect={selectAccount}
+            emptyMessage="You don't have any accounts yet."
+            ariaLabel="Your accounts"
+          />
+        </Card>
+      )}
+
+      {/* ---- Account detail ---- */}
+      {selectedAccountId && (
+        <Card title="Account detail">
+          {accountQuery.isLoading && (
+            <div className={styles.centerState}>
+              <Spinner label="Loading account..." />
+            </div>
+          )}
+          {accountQuery.isError && (
+            <Toast variant="danger" message="We couldn't load that account." />
+          )}
+          {account && (
             <dl className={styles.profileGrid}>
-              <DetailItem label="Name">{getCustomerName(customer)}</DetailItem>
+              <DetailItem label="Name">{formatValue(account.name)}</DetailItem>
               <DetailItem label="Status">
-                <StatusBadge active={activeValue} />
+                <StatusBadge active={getActiveValue(account)} />
               </DetailItem>
-              <DetailItem label="Customer ID">{formatValue(customerId)}</DetailItem>
-              <DetailItem label="Email">{formatValue(customer.email)}</DetailItem>
-              <DetailItem label="Phone">{formatValue(customer.phoneNumber)}</DetailItem>
-              <DetailItem label="Date of birth">{formatValue(customer.dateOfBirth)}</DetailItem>
-              <DetailItem label="Address">{formatValue(customer.address)}</DetailItem>
+              <DetailItem label="Category">{formatValue(account.category)}</DetailItem>
+              <DetailItem label="Opened">{formatValue(account.dateOpened)}</DetailItem>
             </dl>
+          )}
+        </Card>
+      )}
 
-            <Table
-              columns={accountColumns}
-              data={customer.accounts ?? []}
-              getRowKey={(account, index) =>
-                `${account.name ?? 'account'}-${account.dateOpened ?? index}`
-              }
-              emptyMessage="No linked accounts."
-              caption="Linked accounts"
-            />
-          </div>
-        )}
-      </Card>
+      {/* ---- Cards strip (belongs to the selected account) ---- */}
+      {account && (
+        <Card title="Cards" subtitle="Select a card to see its details.">
+          <ScrollStrip
+            items={account.cards ?? []}
+            getKey={(item) => getId(item)}
+            renderItem={renderCardChip}
+            selectedKey={selectedCardId}
+            onSelect={selectCard}
+            emptyMessage="This account has no cards."
+            ariaLabel="Cards in this account"
+          />
+        </Card>
+      )}
 
-      <Card title="Update profile">
-        <form className={styles.stack} onSubmit={handleSubmit(submitUpdate)} noValidate>
-          <div className={styles.formGrid}>
-            <TextField
-              id="customer-first-name"
-              label="First name"
-              error={errors.firstName?.message}
-              disabled={!customer}
-              required
-              {...register('firstName', { required: 'First name is required.' })}
-            />
-            <TextField
-              id="customer-last-name"
-              label="Last name"
-              error={errors.lastName?.message}
-              disabled={!customer}
-              required
-              {...register('lastName', { required: 'Last name is required.' })}
-            />
-            <TextField
-              id="customer-phone-number"
-              label="Phone number"
-              type="tel"
-              error={errors.phoneNumber?.message}
-              disabled={!customer}
-              {...register('phoneNumber', {
-                pattern: { value: /^\d+$/, message: 'Phone number must contain only digits.' },
-              })}
-            />
-            <TextField
-              id="customer-address"
-              label="Address"
-              error={errors.address?.message}
-              disabled={!customer}
-              {...register('address')}
-            />
-          </div>
+      {/* ---- Card detail ---- */}
+      {selectedCardId && (
+        <Card title="Card detail">
+          {cardQuery.isLoading && (
+            <div className={styles.centerState}>
+              <Spinner label="Loading card..." />
+            </div>
+          )}
+          {cardQuery.isError && <Toast variant="danger" message="We couldn't load that card." />}
+          {card && (
+            <div className={styles.stack}>
+              <dl className={styles.profileGrid}>
+                <DetailItem label="Brand">{formatValue(card.brand)}</DetailItem>
+                <DetailItem label="Type">{formatValue(card.type)}</DetailItem>
+                <DetailItem label="Status">
+                  <StatusBadge active={getActiveValue(card)} />
+                </DetailItem>
+                <DetailItem label="Spending limit">{formatValue(card.spendingLimit)}</DetailItem>
+                <DetailItem label="Expiration">{formatValue(card.expirationDate)}</DetailItem>
+                <DetailItem label="Card number">{formatValue(card.panToken)}</DetailItem>
+              </dl>
 
-          {errors.root && <Toast variant="danger" message={errors.root.message} />}
-
-          <div className={styles.actionsRow}>
-            <Button type="submit" isLoading={isUpdatePending} disabled={!customer || !customerId}>
-              Save changes
-            </Button>
-          </div>
-        </form>
-      </Card>
+              <Table
+                columns={balanceColumns}
+                data={card.cardBalances ?? []}
+                getRowKey={(balance, index) => balance.currencyCode ?? index}
+                emptyMessage="No balances on this card."
+                caption="Card balances"
+              />
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   );
 }
