@@ -30,7 +30,7 @@ export default function LoginPage() {
       }
 
       login(token);
-      navigate('/dashboard', { replace: true });
+      navigate('/customers', { replace: true });
     } catch (err) {
       applyBackendFormErrors(err, setError, LOGIN_FIELDS);
     }

@@ -17,11 +17,20 @@ function decodeAuthority(token) {
   }
 }
 
+function decodeEmail(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1])).sub ?? null;
+  } catch {
+    return null;
+  }
+}
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [authority, setAuthority] = useState(null);
+  const [email, setEmail] = useState(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -37,6 +46,7 @@ export function AuthProvider({ children }) {
         const auth = decodeAuthority(stored);
         setToken(stored);
         setAuthority(auth);
+        setEmail(decodeEmail(stored));
       })
       .catch(() => {
         localStorage.removeItem(TOKEN_KEY);
@@ -49,18 +59,22 @@ export function AuthProvider({ children }) {
     const auth = decodeAuthority(newToken);
     setToken(newToken);
     setAuthority(auth);
+    setEmail(decodeEmail(newToken));
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setAuthority(null);
+    setEmail(null);
   }, []);
 
   const isAuthenticated = Boolean(token);
 
   return (
-    <AuthContext.Provider value={{ token, authority, login, logout, isAuthenticated, ready }}>
+    <AuthContext.Provider
+      value={{ token, authority, email, login, logout, isAuthenticated, ready }}
+    >
       {children}
     </AuthContext.Provider>
   );

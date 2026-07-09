@@ -28,6 +28,9 @@
 }
 
 .th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   background: var(--color-surface-muted);
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);

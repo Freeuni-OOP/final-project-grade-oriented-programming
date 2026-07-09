@@ -51,7 +51,6 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    @CustomerAccessPermissionRequired
     public Customer getCustomerByEmail(String email) {
         return customerRepository.getCustomerByEmail(email)
                 .orElseThrow(

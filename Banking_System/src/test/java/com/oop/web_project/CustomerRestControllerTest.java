@@ -74,7 +74,7 @@ class CustomerRestControllerTest {
     @Test
     void testGetCustomerProfileWithEmailReturnsOk() throws Exception {
         Customer customer = mock(Customer.class);
-        CustomerProfileResponse response = new CustomerProfileResponse(
+        CustomerProfileResponse response = new CustomerProfileResponse(1,
                 "John", "Doe", LocalDate.of(2000, 1, 1),
                 "123 Main St", "john@example.com", "1234567890", List.of());
 
@@ -107,7 +107,7 @@ class CustomerRestControllerTest {
     @Test
     void testGetCustomerProfilesByAccountReturnsOk() throws Exception {
         Customer customer = mock(Customer.class);
-        CustomerProfileResponse response = new CustomerProfileResponse(
+        CustomerProfileResponse response = new CustomerProfileResponse(1,
                 "John", "Doe", LocalDate.of(2000, 1, 1),
                 "123 Main St", "john@example.com", "1234567890", List.of());
 
@@ -140,7 +140,7 @@ class CustomerRestControllerTest {
     @Test
     void testGetCustomerProfileReturnsOk() throws Exception {
         Customer customer = mock(Customer.class);
-        CustomerProfileResponse response = new CustomerProfileResponse(
+        CustomerProfileResponse response = new CustomerProfileResponse(1,
                 "John", "Doe", LocalDate.of(2000, 1, 1),
                 "123 Main St", "john@example.com", "1234567890", List.of());
 
@@ -173,7 +173,7 @@ class CustomerRestControllerTest {
     @Test
     void testUpdateCustomerProfileReturnsOk() throws Exception {
         Customer customer = mock(Customer.class);
-        CustomerProfileResponse response = new CustomerProfileResponse(
+        CustomerProfileResponse response = new CustomerProfileResponse(1,
                 "Jane", "Smith", LocalDate.of(1995, 5, 5),
                 "456 Oak Ave", "jane@example.com", "0987654321", List.of());
 
