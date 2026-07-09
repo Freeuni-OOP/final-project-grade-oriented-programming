@@ -178,11 +178,16 @@ export default function CustomersPage() {
 
   const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [selectedCardId, setSelectedCardId] = useState(null);
-  const [editingSection, setEditingSection] = useState(null); // null | 'name' | 'phone' | 'address'
+  const [editingSection, setEditingSection] = useState(null);
   const [showTransactions, setShowTransactions] = useState(false);
   const [showCreateAccount, setShowCreateAccount] = useState(false);
   const [showCreateCard, setShowCreateCard] = useState(false);
   const [showAddCurrency, setShowAddCurrency] = useState(false);
+  const [activeMoneyAction, setActiveMoneyAction] = useState(null);
+  const [transferRecipient, setTransferRecipient] = useState(null);
+  const [resolvedReceiverCardId, setResolvedReceiverCardId] = useState(null);
+  const [searchedEmail, setSearchedEmail] = useState(null);
+  const [recipientCards, setRecipientCards] = useState([]);
 
   const profileQueryKey = email ? customerKeys.byEmail(email) : [...customerKeys.all, IDLE];
 
@@ -220,6 +225,9 @@ export default function CustomersPage() {
   );
   const availableCurrencyOptions = CURRENCY_OPTIONS.filter(
     (option) => !cardCurrencyCodes.has(option.value)
+  );
+  const cardOwnedCurrencyOptions = CURRENCY_OPTIONS.filter((option) =>
+    cardCurrencyCodes.has(option.value)
   );
 
   // ---- profile edit forms (one per section, so each can be edited independently) ----
@@ -464,6 +472,185 @@ export default function CustomersPage() {
     }
   };
 
+  const {
+    register: registerDeposit,
+    handleSubmit: handleDepositSubmit,
+    reset: resetDepositForm,
+    setError: setDepositError,
+    formState: { errors: depositErrors, isSubmitting: isDepositSubmitting },
+  } = useForm({ defaultValues: { amountToDeposit: '', currencyCode: '' } });
+
+  const {
+    register: registerWithdraw,
+    handleSubmit: handleWithdrawSubmit,
+    reset: resetWithdrawForm,
+    setError: setWithdrawError,
+    formState: { errors: withdrawErrors, isSubmitting: isWithdrawSubmitting },
+  } = useForm({ defaultValues: { amountToWithdraw: '', currencyCode: '' } });
+
+  // Deposit/withdraw only return a plain confirmation string, not the updated
+  // balance, so refetch the card rather than trying to patch the cache by hand.
+  const depositMutation = useMutation({
+    mutationFn: ({ cardId, payload }) => cardApi.deposit(cardId, payload),
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cardKeys.byId(selectedCardId) });
+      showToast({ title: 'Deposit successful.', variant: 'success' });
+      resetDepositForm();
+      setActiveMoneyAction(null);
+    },
+  });
+
+  const withdrawMutation = useMutation({
+    mutationFn: ({ cardId, payload }) => cardApi.withdraw(cardId, payload),
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cardKeys.byId(selectedCardId) });
+      showToast({ title: 'Withdrawal successful.', variant: 'success' });
+      resetWithdrawForm();
+      setActiveMoneyAction(null);
+    },
+  });
+
+  const submitDeposit = async (values) => {
+    try {
+      await depositMutation.mutateAsync({
+        cardId: selectedCardId,
+        payload: {
+          amountToDeposit: trimValue(values.amountToDeposit),
+          currencyCode: values.currencyCode,
+        },
+      });
+    } catch (error) {
+      applyBackendFormErrors(error, setDepositError, ['amountToDeposit', 'currencyCode']);
+    }
+  };
+
+  const submitWithdraw = async (values) => {
+    try {
+      await withdrawMutation.mutateAsync({
+        cardId: selectedCardId,
+        payload: {
+          amountToWithdraw: trimValue(values.amountToWithdraw),
+          currencyCode: values.currencyCode,
+        },
+      });
+    } catch (error) {
+      applyBackendFormErrors(error, setWithdrawError, ['amountToWithdraw', 'currencyCode']);
+    }
+  };
+
+  const {
+    register: registerTransfer,
+    handleSubmit: handleTransferSubmit,
+    reset: resetTransferForm,
+    getValues: getTransferValues,
+    watch: watchTransfer,
+    setError: setTransferError,
+    clearErrors: clearTransferErrors,
+    formState: { errors: transferErrors, isSubmitting: isTransferSubmitting },
+  } = useForm({ defaultValues: { receiverEmail: '', amount: '', currencyCode: '' } });
+
+  const watchedReceiverEmail = watchTransfer('receiverEmail');
+
+  // If the email is edited after a match was found, drop the stale match so a
+  // transfer can never be sent to someone other than who's currently confirmed.
+  useEffect(() => {
+    if (transferRecipient && watchedReceiverEmail !== searchedEmail) {
+      setTransferRecipient(null);
+      setRecipientCards([]);
+      setResolvedReceiverCardId(null);
+    }
+  }, [watchedReceiverEmail, searchedEmail, transferRecipient]);
+
+  // Search step: find the customer by email, then collect every active card
+  // across all of their accounts (fetched in parallel) so the sender can pick
+  // which one to send to, instead of one being picked automatically.
+  const searchRecipientMutation = useMutation({
+    mutationFn: async (searchEmail) => {
+      const foundCustomer = await customerApi.getByEmail(searchEmail);
+      const accounts = foundCustomer.accounts ?? [];
+
+      const accountDetails = await Promise.all(
+        accounts.map((acc) => accountApi.getById(getId(acc)))
+      );
+
+      const activeCards = accountDetails.flatMap((accountDetail) =>
+        (accountDetail.cards ?? [])
+          .filter((cardItem) => getActiveValue(cardItem) === true)
+          .map((cardItem) => ({ ...cardItem, accountName: accountDetail.name }))
+      );
+
+      if (activeCards.length === 0) {
+        const error = new Error('Recipient has no active card to receive funds.');
+        error.noActiveCard = true;
+        throw error;
+      }
+
+      return { customer: foundCustomer, cards: activeCards };
+    },
+    retry: false,
+    onSuccess: ({ customer, cards }) => {
+      clearTransferErrors('receiverEmail');
+      setTransferRecipient(customer);
+      setRecipientCards(cards);
+      setResolvedReceiverCardId(null);
+    },
+    onError: (error) => {
+      setTransferRecipient(null);
+      setRecipientCards([]);
+      setResolvedReceiverCardId(null);
+      setTransferError('receiverEmail', {
+        type: 'server',
+        message: error?.noActiveCard
+          ? 'Recipient has no active card to receive funds.'
+          : 'No customer found with that email.',
+      });
+    },
+  });
+
+  // Reuses the existing transfer endpoint -- no new backend call needed here.
+  const transferMutation = useMutation({
+    mutationFn: (payload) => cardApi.transfer(payload),
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cardKeys.byId(selectedCardId) });
+      showToast({ title: 'Transfer successful.', variant: 'success' });
+      resetTransferForm();
+      setTransferRecipient(null);
+      setRecipientCards([]);
+      setResolvedReceiverCardId(null);
+      setSearchedEmail(null);
+      setActiveMoneyAction(null);
+    },
+  });
+
+  const searchRecipient = () => {
+    const searchEmail = getTransferValues('receiverEmail');
+    if (!searchEmail) {
+      setTransferError('receiverEmail', { type: 'manual', message: 'Enter an email to search.' });
+      return;
+    }
+    setTransferRecipient(null);
+    setRecipientCards([]);
+    setResolvedReceiverCardId(null);
+    setSearchedEmail(searchEmail);
+    searchRecipientMutation.mutate(searchEmail);
+  };
+
+  const submitTransfer = async (values) => {
+    try {
+      await transferMutation.mutateAsync({
+        senderCardId: selectedCardId,
+        receiverCardId: resolvedReceiverCardId,
+        amount: trimValue(values.amount),
+        currencyCode: values.currencyCode,
+      });
+    } catch (error) {
+      applyBackendFormErrors(error, setTransferError, ['amount', 'currencyCode']);
+    }
+  };
+
   const selectAccount = (nextAccount) => {
     const id = getId(nextAccount);
     // clicking the account that's already open closes it (and its cards/detail)
@@ -476,6 +663,11 @@ export default function CustomersPage() {
     const id = getId(nextCard);
     setSelectedCardId((current) => (String(current) === String(id) ? null : id));
     setShowAddCurrency(false);
+    setActiveMoneyAction(null);
+    setTransferRecipient(null);
+    setRecipientCards([]);
+    setResolvedReceiverCardId(null);
+    setSearchedEmail(null);
   };
 
   const renderAccountChip = (item) => (
@@ -493,6 +685,16 @@ export default function CustomersPage() {
       </span>
       <span className={styles.chipMeta}>{formatValue(item.panMasked)}</span>
       <span className={styles.chipMeta}>Limit {formatValue(item.spendingLimit)}</span>
+    </>
+  );
+
+  const renderRecipientCardChip = (item) => (
+    <>
+      <span className={styles.chipTitle}>
+        {formatValue(item.brand)} &middot; {formatValue(item.type)}
+      </span>
+      <span className={styles.chipMeta}>{formatValue(item.accountName)}</span>
+      <span className={styles.chipMeta}>{formatValue(item.panMasked)}</span>
     </>
   );
 
@@ -875,6 +1077,258 @@ export default function CustomersPage() {
                 emptyMessage="No balances on this card."
                 caption="Card balances"
               />
+
+              <div className={styles.actionsRow}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setActiveMoneyAction('deposit')}
+                >
+                  + Deposit
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setActiveMoneyAction('withdraw')}
+                >
+                  + Withdraw
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setActiveMoneyAction('transfer')}
+                >
+                  + Transfer
+                </Button>
+              </div>
+
+              {activeMoneyAction === 'deposit' && (
+                <form
+                  className={styles.editForm}
+                  onSubmit={handleDepositSubmit(submitDeposit)}
+                  noValidate
+                >
+                  <div className={styles.editFields}>
+                    <TextField
+                      id="deposit-amount"
+                      label="Amount"
+                      type="number"
+                      step="0.01"
+                      required
+                      error={depositErrors.amountToDeposit?.message}
+                      {...registerDeposit('amountToDeposit', {
+                        required: 'Amount is required.',
+                        min: { value: 0.01, message: 'Amount must be greater than 0.' },
+                      })}
+                    />
+                    <Select
+                      id="deposit-currency"
+                      label="Currency"
+                      placeholder="Choose currency"
+                      options={cardOwnedCurrencyOptions}
+                      error={depositErrors.currencyCode?.message}
+                      required
+                      {...registerDeposit('currencyCode', { required: 'Currency is required.' })}
+                    />
+                  </div>
+
+                  {depositErrors.root && (
+                    <Toast variant="danger" message={depositErrors.root.message} />
+                  )}
+
+                  <div className={styles.actionsRow}>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      isLoading={depositMutation.isPending || isDepositSubmitting}
+                    >
+                      Confirm deposit
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      disabled={depositMutation.isPending}
+                      onClick={() => {
+                        resetDepositForm();
+                        setActiveMoneyAction(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {activeMoneyAction === 'withdraw' && (
+                <form
+                  className={styles.editForm}
+                  onSubmit={handleWithdrawSubmit(submitWithdraw)}
+                  noValidate
+                >
+                  <div className={styles.editFields}>
+                    <TextField
+                      id="withdraw-amount"
+                      label="Amount"
+                      type="number"
+                      step="0.01"
+                      required
+                      error={withdrawErrors.amountToWithdraw?.message}
+                      {...registerWithdraw('amountToWithdraw', {
+                        required: 'Amount is required.',
+                        min: { value: 0.01, message: 'Amount must be greater than 0.' },
+                      })}
+                    />
+                    <Select
+                      id="withdraw-currency"
+                      label="Currency"
+                      placeholder="Choose currency"
+                      options={cardOwnedCurrencyOptions}
+                      error={withdrawErrors.currencyCode?.message}
+                      required
+                      {...registerWithdraw('currencyCode', { required: 'Currency is required.' })}
+                    />
+                  </div>
+
+                  {withdrawErrors.root && (
+                    <Toast variant="danger" message={withdrawErrors.root.message} />
+                  )}
+
+                  <div className={styles.actionsRow}>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      isLoading={withdrawMutation.isPending || isWithdrawSubmitting}
+                    >
+                      Confirm withdrawal
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      disabled={withdrawMutation.isPending}
+                      onClick={() => {
+                        resetWithdrawForm();
+                        setActiveMoneyAction(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {activeMoneyAction === 'transfer' && (
+                <div className={styles.editForm}>
+                  <div className={styles.editFields}>
+                    <TextField
+                      id="transfer-receiver-email"
+                      label="Recipient email"
+                      type="email"
+                      required
+                      error={transferErrors.receiverEmail?.message}
+                      {...registerTransfer('receiverEmail', {
+                        required: 'Enter an email to search.',
+                      })}
+                    />
+                  </div>
+
+                  <div className={styles.actionsRow}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      isLoading={searchRecipientMutation.isPending}
+                      onClick={searchRecipient}
+                    >
+                      Search
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        resetTransferForm();
+                        setTransferRecipient(null);
+                        setResolvedReceiverCardId(null);
+                        setSearchedEmail(null);
+                        setActiveMoneyAction(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+
+                  {transferRecipient && (
+                    <div className={styles.editForm}>
+                      <p className={styles.mutedText}>
+                        Sending to: {getCustomerName(transferRecipient)} -- choose a card to receive
+                        the funds.
+                      </p>
+
+                      <ScrollStrip
+                        items={recipientCards}
+                        getKey={(item) => getId(item)}
+                        renderItem={renderRecipientCardChip}
+                        selectedKey={resolvedReceiverCardId}
+                        onSelect={(pickedCard) => setResolvedReceiverCardId(getId(pickedCard))}
+                        emptyMessage="This customer has no active cards."
+                        ariaLabel="Recipient's cards"
+                      />
+
+                      {resolvedReceiverCardId && (
+                        <form
+                          className={styles.editForm}
+                          onSubmit={handleTransferSubmit(submitTransfer)}
+                          noValidate
+                        >
+                          <div className={styles.editFields}>
+                            <TextField
+                              id="transfer-amount"
+                              label="Amount"
+                              type="number"
+                              step="0.01"
+                              required
+                              error={transferErrors.amount?.message}
+                              {...registerTransfer('amount', {
+                                required: 'Amount is required.',
+                                min: { value: 0.01, message: 'Amount must be greater than 0.' },
+                              })}
+                            />
+                            <Select
+                              id="transfer-currency"
+                              label="Currency"
+                              placeholder="Choose currency"
+                              options={cardOwnedCurrencyOptions}
+                              error={transferErrors.currencyCode?.message}
+                              required
+                              {...registerTransfer('currencyCode', {
+                                required: 'Currency is required.',
+                              })}
+                            />
+                          </div>
+
+                          {transferErrors.root && (
+                            <Toast variant="danger" message={transferErrors.root.message} />
+                          )}
+
+                          <div className={styles.actionsRow}>
+                            <Button
+                              type="submit"
+                              size="sm"
+                              isLoading={transferMutation.isPending || isTransferSubmitting}
+                            >
+                              Confirm transfer
+                            </Button>
+                          </div>
+                        </form>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {showAddCurrency ? (
                 <form

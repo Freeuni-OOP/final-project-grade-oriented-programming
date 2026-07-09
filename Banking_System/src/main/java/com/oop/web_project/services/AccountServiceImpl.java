@@ -87,7 +87,6 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @AccountAccessPermissionRequired(idArgName = "accountId")
     public Account selectAccountById(long accountId) {
         return accountRepository.findById(accountId).orElseThrow(
                 () -> new AccountNotFoundException("Could not find account!")

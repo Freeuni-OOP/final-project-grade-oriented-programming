@@ -22,5 +22,6 @@ public class CardSummaryResponse {
     private CardBrand brand;
     private BigDecimal spendingLimit;
     private String panMasked;
+    private boolean isActive;
 
 }

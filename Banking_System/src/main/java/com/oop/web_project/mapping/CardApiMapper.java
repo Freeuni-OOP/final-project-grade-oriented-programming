@@ -61,6 +61,7 @@ public class CardApiMapper {
         response.setBrand(card.getBrand());
         response.setSpendingLimit(card.getSpendingLimit());
         response.setPanMasked(card.getPanMasked());
+        response.setActive(card.isActive());
         return response;
     }
 
