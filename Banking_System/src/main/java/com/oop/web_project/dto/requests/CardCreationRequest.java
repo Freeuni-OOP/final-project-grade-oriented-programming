@@ -28,7 +28,7 @@ public class CardCreationRequest {
     private BigDecimal spendingLimit;
 
     @NotBlank(message = "Pan number should not be blank.")
-    @Size(min = 12, max = 19, message = "Pan number should be between 12 and 19 digits.")
+    @Size(min = 16, max = 16, message = "Pan number should be between 16 digits long.")
     @Pattern(regexp = "\\d+", message = "Pan number must contain only digits.")
     private String pan;
 }

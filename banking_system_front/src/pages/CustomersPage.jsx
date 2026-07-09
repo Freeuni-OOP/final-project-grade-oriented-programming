@@ -40,6 +40,13 @@ const CARD_BRANDS = [
   { value: 'MASTERCARD', label: 'Mastercard' },
 ];
 
+const CURRENCY_OPTIONS = [
+  { value: 'GEL', label: 'GEL — Georgian Lari' },
+  { value: 'USD', label: 'USD — US Dollar' },
+  { value: 'EUR', label: 'EUR — Euro' },
+  { value: 'GBP', label: 'GBP — British Pound' },
+];
+
 const balanceColumns = [
   {
     key: 'currencyCode',
@@ -175,6 +182,7 @@ export default function CustomersPage() {
   const [showTransactions, setShowTransactions] = useState(false);
   const [showCreateAccount, setShowCreateAccount] = useState(false);
   const [showCreateCard, setShowCreateCard] = useState(false);
+  const [showAddCurrency, setShowAddCurrency] = useState(false);
 
   const profileQueryKey = email ? customerKeys.byEmail(email) : [...customerKeys.all, IDLE];
 
@@ -207,6 +215,12 @@ export default function CustomersPage() {
   const account = accountQuery.data;
   const card = cardQuery.data;
   const customerId = getId(profile);
+  const cardCurrencyCodes = new Set(
+    (card?.cardBalances ?? []).map((balance) => balance.currencyCode)
+  );
+  const availableCurrencyOptions = CURRENCY_OPTIONS.filter(
+    (option) => !cardCurrencyCodes.has(option.value)
+  );
 
   // ---- profile edit forms (one per section, so each can be edited independently) ----
   const {
@@ -418,6 +432,37 @@ export default function CustomersPage() {
       ]);
     }
   };
+  const {
+    register: registerAddCurrency,
+    handleSubmit: handleAddCurrencySubmit,
+    reset: resetAddCurrencyForm,
+    setError: setAddCurrencyError,
+    formState: { errors: addCurrencyErrors, isSubmitting: isAddCurrencySubmitting },
+  } = useForm({ defaultValues: { currencyCode: '' } });
+
+  // Endpoint returns the full updated card, so we can write it straight into
+  // the cache instead of refetching.
+  const addCurrencyMutation = useMutation({
+    mutationFn: ({ cardId, currencyCode }) => cardApi.addCurrency(cardId, currencyCode),
+    retry: false,
+    onSuccess: (updatedCard) => {
+      queryClient.setQueryData(cardKeys.byId(selectedCardId), updatedCard);
+      showToast({ title: 'Currency balance added.', variant: 'success' });
+      resetAddCurrencyForm();
+      setShowAddCurrency(false);
+    },
+  });
+
+  const submitAddCurrency = async (values) => {
+    try {
+      await addCurrencyMutation.mutateAsync({
+        cardId: selectedCardId,
+        currencyCode: values.currencyCode,
+      });
+    } catch (error) {
+      applyBackendFormErrors(error, setAddCurrencyError, ['currencyCode']);
+    }
+  };
 
   const selectAccount = (nextAccount) => {
     const id = getId(nextAccount);
@@ -430,6 +475,7 @@ export default function CustomersPage() {
   const selectCard = (nextCard) => {
     const id = getId(nextCard);
     setSelectedCardId((current) => (String(current) === String(id) ? null : id));
+    setShowAddCurrency(false);
   };
 
   const renderAccountChip = (item) => (
@@ -751,8 +797,8 @@ export default function CustomersPage() {
                     required
                     {...registerCreateCard('pan', {
                       required: 'PAN is required.',
-                      minLength: { value: 12, message: 'PAN must be at least 12 digits.' },
-                      maxLength: { value: 19, message: 'PAN must be at most 19 digits.' },
+                      minLength: { value: 16, message: 'PAN must be exactly 16 digits.' },
+                      maxLength: { value: 16, message: 'PAN must be exactly 16 digits.' },
                       pattern: { value: /^\d+$/, message: 'PAN must contain only digits.' },
                     })}
                   />
@@ -829,6 +875,63 @@ export default function CustomersPage() {
                 emptyMessage="No balances on this card."
                 caption="Card balances"
               />
+
+              {showAddCurrency ? (
+                <form
+                  className={styles.editForm}
+                  onSubmit={handleAddCurrencySubmit(submitAddCurrency)}
+                  noValidate
+                >
+                  <Select
+                    id="add-currency-code"
+                    label="Currency"
+                    placeholder="Choose currency"
+                    options={availableCurrencyOptions}
+                    error={addCurrencyErrors.currencyCode?.message}
+                    required
+                    {...registerAddCurrency('currencyCode', { required: 'Currency is required.' })}
+                  />
+
+                  {addCurrencyErrors.root && (
+                    <Toast variant="danger" message={addCurrencyErrors.root.message} />
+                  )}
+
+                  <div className={styles.actionsRow}>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      isLoading={addCurrencyMutation.isPending || isAddCurrencySubmitting}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      disabled={addCurrencyMutation.isPending}
+                      onClick={() => {
+                        resetAddCurrencyForm();
+                        setShowAddCurrency(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              ) : availableCurrencyOptions.length === 0 ? (
+                <p className={styles.mutedText}>All available currencies have been added.</p>
+              ) : (
+                <div className={styles.actionsRow}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowAddCurrency(true)}
+                  >
+                    + Add currency
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </Card>
