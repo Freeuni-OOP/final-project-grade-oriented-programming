@@ -687,7 +687,7 @@ class AccountProfileResponseTest {
 class AccountSummaryResponseTest {
 
     private AccountSummaryResponse createAccountSummaryResponse() {
-        return new AccountSummaryResponse("Main Account", AccountCategory.CHECKING,
+        return new AccountSummaryResponse(1, "Main Account", AccountCategory.CHECKING,
                 LocalDate.of(2022, 1, 1), true);
     }
 
@@ -936,7 +936,7 @@ class CardResponseTest {
 class CustomerProfileResponseTest {
 
     private CustomerProfileResponse createCustomerProfileResponse() {
-        return new CustomerProfileResponse("Giorgi", "Maisuradze", LocalDate.of(1995, 3, 20),
+        return new CustomerProfileResponse(1, "Giorgi", "Maisuradze", LocalDate.of(1995, 3, 20),
                 "Tbilisi, Rustaveli 1", "giorgi@example.com", "555123456",
                 List.of(new AccountSummaryResponse()));
     }

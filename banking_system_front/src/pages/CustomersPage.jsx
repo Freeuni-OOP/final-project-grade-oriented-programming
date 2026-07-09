@@ -215,7 +215,7 @@ export default function CustomersPage() {
                 </DetailItem>
                 <DetailItem label="Spending limit">{formatValue(card.spendingLimit)}</DetailItem>
                 <DetailItem label="Expiration">{formatValue(card.expirationDate)}</DetailItem>
-                <DetailItem label="Card number">{formatValue(card.panToken)}</DetailItem>
+                <DetailItem label="Card number">{formatValue(card.panMasked)}</DetailItem>
               </dl>
 
               <Table

@@ -17,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 public class CardSummaryResponse {
 
+    private long id;
     private CardType type;
     private CardBrand brand;
     private BigDecimal spendingLimit;

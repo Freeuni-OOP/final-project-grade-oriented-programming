@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 public class CustomerProfileResponse {
 
+    private long id;
     private String firstName;
     private String lastName;
     private LocalDate dateOfBirth;

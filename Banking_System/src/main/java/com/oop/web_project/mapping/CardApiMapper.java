@@ -56,6 +56,7 @@ public class CardApiMapper {
     public CardSummaryResponse toCardSummaryResponse(Card card) {
         CardSummaryResponse response = new CardSummaryResponse();
 
+        response.setId(card.getId());
         response.setType(card.getType());
         response.setBrand(card.getBrand());
         response.setSpendingLimit(card.getSpendingLimit());

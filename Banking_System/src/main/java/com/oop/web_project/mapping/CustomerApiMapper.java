@@ -37,6 +37,7 @@ public class CustomerApiMapper {
 
     public CustomerProfileResponse toProfileResponse(Customer customer){
         CustomerProfileResponse response = new CustomerProfileResponse();
+        response.setId(customer.getId());
         response.setFirstName(customer.getFirstName());
         response.setLastName(customer.getLastName());
         response.setDateOfBirth(customer.getDateOfBirth());
