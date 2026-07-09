@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 public class AccountSummaryApiMapper {
     public AccountSummaryResponse toAccountSummaryResponse(Account account){
         AccountSummaryResponse response = new AccountSummaryResponse();
+        response.setId(account.getId());
         response.setName(account.getName());
         response.setCategory(account.getCategory());
         response.setDateOpened(account.getDateOpened());

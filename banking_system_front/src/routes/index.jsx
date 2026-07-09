@@ -1,31 +1,13 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
-import AccountsPage from '../pages/AccountsPage';
-import CardsPage from '../pages/CardsPage';
 import ErrorPage from '../pages/ErrorPage';
 import LoginPage from '../pages/LoginPage';
 import CustomersPage from '../pages/CustomersPage';
 import ManagerCustomersPage from '../pages/ManagerCustomersPage';
 import NotFoundPage from '../pages/NotFoundPage';
-import PlaceholderPage from '../pages/PlaceholderPage';
 import RegisterPage from '../pages/RegisterPage';
 import UnauthorizedPage from '../pages/UnauthorizedPage';
-
-const protectedFeatureRoutes = [
-  {
-    path: 'dashboard',
-    title: 'Dashboard',
-    description: 'Summary screen placeholder for authenticated users.',
-  },
-];
-
-function makePlaceholderRoute(route) {
-  return {
-    path: route.path,
-    element: <PlaceholderPage title={route.title} description={route.description} />,
-  };
-}
 
 export const appRoutes = [
   {
@@ -33,18 +15,13 @@ export const appRoutes = [
     element: <Layout />,
     errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
+      { index: true, element: <Navigate to="/customers" replace /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: 'unauthorized', element: <UnauthorizedPage /> },
       {
         element: <ProtectedRoute />,
-        children: [
-          ...protectedFeatureRoutes.map(makePlaceholderRoute),
-          { path: 'customers', element: <CustomersPage /> },
-          { path: 'accounts', element: <AccountsPage /> },
-          { path: 'cards', element: <CardsPage /> },
-        ],
+        children: [{ path: 'customers', element: <CustomersPage /> }],
       },
       {
         element: <ProtectedRoute requiredRole="MANAGER" />,

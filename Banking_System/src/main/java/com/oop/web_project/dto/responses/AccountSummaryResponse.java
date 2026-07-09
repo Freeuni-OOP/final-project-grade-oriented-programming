@@ -15,6 +15,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class AccountSummaryResponse {
 
+    private long id;
     private String name;
     private AccountCategory category;
     private LocalDate dateOpened;

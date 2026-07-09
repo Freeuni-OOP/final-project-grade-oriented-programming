@@ -8,8 +8,8 @@ export default function NotFoundPage() {
       <p className={styles.code}>404</p>
       <h1 className={styles.title}>Page not found</h1>
       <p className={styles.message}>The route you opened does not exist in this app.</p>
-      <Button as={Link} to="/dashboard">
-        Go to dashboard
+      <Button as={Link} to="/customers">
+        Go to your profile
       </Button>
     </Card>
   );

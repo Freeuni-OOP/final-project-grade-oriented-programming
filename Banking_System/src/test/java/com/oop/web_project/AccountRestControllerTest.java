@@ -109,7 +109,7 @@ class AccountRestControllerTest {
                   "cardType": "DEBIT",
                   "cardBrand": "VISA",
                   "spendingLimit": 200,
-                  "pan": "123456789101123"
+                  "pan": "1234123412341234"
                 }
                 """;
 

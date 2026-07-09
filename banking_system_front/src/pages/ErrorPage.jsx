@@ -12,8 +12,8 @@ export function ErrorFallback({
         <p className={styles.kickerDanger}>Error</p>
         <h1 className={styles.title}>{title}</h1>
         <p className={styles.message}>{message}</p>
-        <Button as="a" href="/dashboard">
-          Go to dashboard
+        <Button as="a" href="/customers">
+          Go to your profile
         </Button>
       </Card>
     </div>

@@ -13,7 +13,7 @@ export default class ErrorBoundary extends Component {
       return (
         <ErrorFallback
           title="Something went wrong"
-          message="The page failed while rendering. Please try again from the dashboard."
+          message="The page failed while rendering. Please try again from your profile."
         />
       );
     }
