@@ -168,6 +168,8 @@ public class AccountRestController {
             @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "No accounts found for this email", content = @Content)
     })
+
+
     @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping
     public ResponseEntity<List<AccountSummaryResponse>> getAccountsByEmail(@NotBlank @Email @RequestParam("customerEmail") String customerEmail) {

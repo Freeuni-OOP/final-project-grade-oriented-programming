@@ -19,4 +19,5 @@ public class AccountSummaryResponse {
     private AccountCategory category;
     private LocalDate dateOpened;
     private boolean isActive;
+
 }
