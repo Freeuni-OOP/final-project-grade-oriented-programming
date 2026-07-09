@@ -3,6 +3,8 @@ import com.oop.web_project.annotations.AccountAccessPermissionRequired;
 import com.oop.web_project.annotations.ActivityCheckRequired;
 import com.oop.web_project.annotations.CardAccessPermissionRequired;
 import com.oop.web_project.annotations.CustomerAccessPermissionRequired;
+import com.oop.web_project.dto.requests.AccountFilterRequest;
+import com.oop.web_project.dto.requests.PageRequest;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.CheckActivityTarget;
 import com.oop.web_project.entities.Customer;
@@ -15,6 +17,9 @@ import com.oop.web_project.persistence.AccountRepository;
 import com.oop.web_project.persistence.CardRepository;
 import com.oop.web_project.persistence.CustomerRepository;
 import com.oop.web_project.persistence.TransactionRepository;
+import com.oop.web_project.utils.PageUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -152,6 +157,34 @@ public class AccountServiceImpl implements AccountService {
         return cardRepository.getBalanceForAccount(accountId, currencyCode).orElseThrow(
                 () -> new CardBalanceNotFoundException("Could not determine balance of the account!")
         );
+    }
+
+    @Override
+    @AccountAccessPermissionRequired
+    public Page<Account> filterAccounts(AccountFilterRequest accountFilterRequest, PageRequest pageRequest) {
+        Specification<Account> specification = Specification.unrestricted();
+
+        if (accountFilterRequest.getName() != null && !accountFilterRequest.getName().isEmpty()) {
+            specification = specification.and((root, query, cb) ->
+                    cb.equal(root.get("name"), accountFilterRequest.getName()));
+        }
+
+        if (accountFilterRequest.getCategory() != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.equal(root.get("category"), accountFilterRequest.getCategory()));
+        }
+
+        if(accountFilterRequest.getDateOpened() != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.greaterThanOrEqualTo(root.get("dateOpened"), accountFilterRequest.getDateOpened()));
+        }
+
+        if(accountFilterRequest.getIsActive() != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.equal(root.get("isActive"), accountFilterRequest.getIsActive()));
+        }
+
+        return accountRepository.findAll(specification, PageUtils.buildPageable(pageRequest));
     }
 
 }

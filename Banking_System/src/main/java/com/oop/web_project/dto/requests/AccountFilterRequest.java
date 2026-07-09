@@ -1,26 +1,22 @@
-package com.oop.web_project.dto.responses;
-
+package com.oop.web_project.dto.requests;
 
 import com.oop.web_project.entities.AccountCategory;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.List;
 
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccountProfileResponse {
-
+@Getter
+@Setter
+public class AccountFilterRequest {
     private String name;
     private AccountCategory category;
     private LocalDate dateOpened;
-    private boolean isActive;
-    private List<TransactionResponse> transactions;
-    private List<CardSummaryResponse> cards;
-    private List<CustomerSummaryResponse> customers;
+    private Boolean isActive;
 }

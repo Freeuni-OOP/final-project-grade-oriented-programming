@@ -39,6 +39,13 @@ async function deleteCustomer(id) {
   return response.data;
 }
 
+async function filter(filterRequest, pageRequest) {
+  const response = await httpClient.get(`${BASE_PATH}/filter`, {
+    params: { ...filterRequest, ...pageRequest },
+  });
+  return response.data;
+}
+
 export const customerApi = {
   getById,
   getByEmail,
@@ -47,4 +54,5 @@ export const customerApi = {
   activate,
   deactivate,
   delete: deleteCustomer,
+  filter,
 };

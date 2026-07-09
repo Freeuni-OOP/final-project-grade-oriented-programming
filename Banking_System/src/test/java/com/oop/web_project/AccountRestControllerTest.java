@@ -27,6 +27,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.data.domain.PageImpl;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -239,5 +240,37 @@ class AccountRestControllerTest {
                 .andExpect(status().isOk());
 
         verify(accountService).getAccountBalanceByCurrency(1L, "USD");
+    }
+
+    @Test
+    void testFilterAccountsReturnsOk() throws Exception {
+        Account account = mock(Account.class);
+        AccountSummaryResponse summaryResponse = mock(AccountSummaryResponse.class);
+
+        when(accountService.filterAccounts(any(), any())).thenReturn(new PageImpl<>(List.of(account)));
+        when(accountSummaryApiMapper.toAccountSummaryResponse(account)).thenReturn(summaryResponse);
+
+        mockMvc.perform(get("/api/account/filter")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sortBy", "name")
+                        .param("sortDirection", "ASC"))
+                .andExpect(status().isOk());
+
+        verify(accountService).filterAccounts(any(), any());
+        verify(accountSummaryApiMapper).toAccountSummaryResponse(account);
+    }
+
+    @Test
+    void testFilterAccountsReturnsEmptyListWhenNoMatch() throws Exception {
+        when(accountService.filterAccounts(any(), any())).thenReturn(new PageImpl<>(List.of()));
+
+        mockMvc.perform(get("/api/account/filter")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sortBy", "name")
+                        .param("sortDirection", "ASC"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 }

@@ -1,10 +1,12 @@
 package com.oop.web_project.services;
 
-import com.oop.web_project.entities.Account;
-import com.oop.web_project.entities.Card;
-import com.oop.web_project.entities.CardBalance;
+import com.oop.web_project.dto.requests.CardFilterRequest;
+import com.oop.web_project.dto.requests.PageRequest;
+import com.oop.web_project.entities.*;
+import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -85,4 +87,9 @@ public interface CardService {
      * @return true if card is expired, false otherwise
      */
     boolean checkCardExpiration(long cardId);
+
+    /**
+     * Retrieves cards based on given parameters, applies paging and sorting
+     */
+    Page<Card> filterCards(CardFilterRequest cardFilterRequest, PageRequest pageRequest);
 }

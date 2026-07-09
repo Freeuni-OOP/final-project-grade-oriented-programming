@@ -45,8 +45,6 @@ public class AccessPermissionAspect {
     public void checkCardAccessPermission(JoinPoint jp,
                                         CardAccessPermissionRequired cardAccessPermissionRequired) {
 
-        Long cardId = extractId(jp, cardAccessPermissionRequired.idArgName());
-
         String email = getEmail();
 
         boolean isManager = customerRepository.existsByEmailAndRole(email, Role.MANAGER);
@@ -54,6 +52,8 @@ public class AccessPermissionAspect {
         if(isManager){
             return;
         }
+
+        Long cardId = extractId(jp, cardAccessPermissionRequired.idArgName());
 
         if (!customerRepository.customerWithEmailOwnsCard(email, cardId)) {
             throw new NotCardOfCustomerException("Current authenticated customer does not own the card!");
@@ -63,16 +63,19 @@ public class AccessPermissionAspect {
     @Before(value = "@annotation(accountAccessPermissionRequired)")
     public void checkAccountAccessPermission(JoinPoint jp,
                                           AccountAccessPermissionRequired accountAccessPermissionRequired) {
-        Long accountId = extractId(jp, accountAccessPermissionRequired.idArgName());
+
         String email = getEmail();
 
         boolean isManager = customerRepository.existsByEmailAndRole(email, Role.MANAGER);
-        boolean accountHasCustomers = customerRepository.existsCustomerByAccounts_Id(accountId);
-        boolean isAccountOwner = customerRepository.existsByEmailAndAccountsId(email, accountId);
 
-        if(isManager) {
+        if(isManager){
             return;
         }
+
+        Long accountId = extractId(jp, accountAccessPermissionRequired.idArgName());
+
+        boolean accountHasCustomers = customerRepository.existsCustomerByAccounts_Id(accountId);
+        boolean isAccountOwner = customerRepository.existsByEmailAndAccountsId(email, accountId);
 
         if (accountHasCustomers && !isAccountOwner) {
             throw new NotAccountOfCustomerException("Current authenticated customer does not own the account!");
@@ -82,15 +85,16 @@ public class AccessPermissionAspect {
     @Before(value = "@annotation(customerAccessPermissionRequired)")
     public void checkCustomerAccessPermission(JoinPoint jp,
                                           CustomerAccessPermissionRequired customerAccessPermissionRequired) {
-        Object obj = jp.getArgs()[0];
 
         String email = getEmail();
 
         boolean isManager = customerRepository.existsByEmailAndRole(email, Role.MANAGER);
 
-        if(isManager) {
+        if(isManager){
             return;
         }
+
+        Object obj = jp.getArgs()[0];
 
         if (obj instanceof String customerEmail) {
             if (!email.equals(customerEmail)) {

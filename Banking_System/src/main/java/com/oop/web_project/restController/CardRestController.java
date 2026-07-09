@@ -4,6 +4,7 @@ import com.oop.web_project.dto.requests.*;
 import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.dto.responses.CardBalanceResponse;
 import com.oop.web_project.dto.responses.CardResponse;
+import com.oop.web_project.dto.responses.CardSummaryResponse;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Card;
 import com.oop.web_project.mapping.AccountSummaryApiMapper;
@@ -22,6 +23,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -64,6 +66,27 @@ public class CardRestController {
 
         Card card = cardService.selectCardById(cardId);
         return ResponseEntity.ok(cardApiMapper.toCardResponse(card));
+    }
+    
+    @Operation(summary = "Filter cards", description = "Returns a paginated list of card summaries matching the given filter criteria")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cards retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = CardSummaryResponse.class)))),
+            @ApiResponse(responseCode = "400", description = "Invalid filter or pagination parameters", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not have the required role", content = @Content)
+    })
+    @PreAuthorize("hasAuthority(\"MANAGER\")")
+    @GetMapping("/filter")
+    public ResponseEntity<List<CardSummaryResponse>> filterCards(CardFilterRequest cardFilterRequest,
+                                                                 @Valid PageRequest pageRequest) {
+
+        Page<Card> cardPages = cardService.filterCards(
+                cardFilterRequest, pageRequest
+        );
+        List<CardSummaryResponse> cardSummaryResponses =
+                cardPages.map(cardApiMapper::toCardSummaryResponse).toList();
+
+        return ResponseEntity.ok(cardSummaryResponses);
     }
 
     @Operation(summary = "Get account linked to card", description = "Retrieves the account associated with the given card")

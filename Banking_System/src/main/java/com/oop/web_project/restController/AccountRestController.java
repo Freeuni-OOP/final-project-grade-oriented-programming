@@ -1,7 +1,9 @@
 package com.oop.web_project.restController;
 
 import com.oop.web_project.dto.requests.AccountCreationRequest;
+import com.oop.web_project.dto.requests.AccountFilterRequest;
 import com.oop.web_project.dto.requests.CardCreationRequest;
+import com.oop.web_project.dto.requests.PageRequest;
 import com.oop.web_project.dto.responses.AccountProfileResponse;
 import com.oop.web_project.dto.responses.AccountSummaryResponse;
 import com.oop.web_project.entities.Account;
@@ -22,6 +24,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -143,6 +146,27 @@ public class AccountRestController {
         Account account = accountService.selectAccountById(accountId);
         AccountProfileResponse response = accountMapper.toProfileResponse(account);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @Operation(summary = "Filter accounts", description = "Returns a paginated list of account summaries matching the given filter criteria")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Accounts retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = AccountSummaryResponse.class)))),
+            @ApiResponse(responseCode = "400", description = "Invalid filter or pagination parameters", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller does not have the required role", content = @Content)
+    })
+    @PreAuthorize("hasAuthority(\"MANAGER\")")
+    @GetMapping("/filter")
+    public ResponseEntity<List<AccountSummaryResponse>> filterAccounts(AccountFilterRequest accountFilterRequest,
+                                                                       @Valid PageRequest pageRequest) {
+
+        Page<Account> accountPages = accountService.filterAccounts(
+               accountFilterRequest, pageRequest
+        );
+        List<AccountSummaryResponse> accountSummaryResponses =
+                accountPages.map(accountSummaryApiMapper::toAccountSummaryResponse).toList();
+
+        return ResponseEntity.ok(accountSummaryResponses);
     }
 
     @Operation(summary = "Delete an account", description = "Permanently removes an account from the system")

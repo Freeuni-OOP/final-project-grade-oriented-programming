@@ -56,7 +56,7 @@ class AccountApiMapperTest {
     void testToProfileResponseSetsName() {
         Account account = createAccount();
         when(transactionApiMapper.toTransactionResponse(any())).thenReturn(new TransactionResponse());
-        when(cardApiMapper.toCardResponse(any())).thenReturn(new CardResponse());
+        when(cardApiMapper.toCardSummaryResponse(any())).thenReturn(new CardSummaryResponse());
         when(customerSummaryApiMapper.toSummaryResponse(any())).thenReturn(new CustomerSummaryResponse());
 
         AccountProfileResponse response = accountApiMapper.toProfileResponse(account);
@@ -68,7 +68,7 @@ class AccountApiMapperTest {
     void testToProfileResponseSetsCategory() {
         Account account = createAccount();
         when(transactionApiMapper.toTransactionResponse(any())).thenReturn(new TransactionResponse());
-        when(cardApiMapper.toCardResponse(any())).thenReturn(new CardResponse());
+        when(cardApiMapper.toCardSummaryResponse(any())).thenReturn(new CardSummaryResponse());
         when(customerSummaryApiMapper.toSummaryResponse(any())).thenReturn(new CustomerSummaryResponse());
 
         AccountProfileResponse response = accountApiMapper.toProfileResponse(account);
@@ -80,7 +80,7 @@ class AccountApiMapperTest {
     void testToProfileResponseSetsDateOpened() {
         Account account = createAccount();
         when(transactionApiMapper.toTransactionResponse(any())).thenReturn(new TransactionResponse());
-        when(cardApiMapper.toCardResponse(any())).thenReturn(new CardResponse());
+        when(cardApiMapper.toCardSummaryResponse(any())).thenReturn(new CardSummaryResponse());
         when(customerSummaryApiMapper.toSummaryResponse(any())).thenReturn(new CustomerSummaryResponse());
 
         AccountProfileResponse response = accountApiMapper.toProfileResponse(account);
@@ -92,7 +92,7 @@ class AccountApiMapperTest {
     void testToProfileResponseSetsActive() {
         Account account = createAccount();
         when(transactionApiMapper.toTransactionResponse(any())).thenReturn(new TransactionResponse());
-        when(cardApiMapper.toCardResponse(any())).thenReturn(new CardResponse());
+        when(cardApiMapper.toCardSummaryResponse(any())).thenReturn(new CardSummaryResponse());
         when(customerSummaryApiMapper.toSummaryResponse(any())).thenReturn(new CustomerSummaryResponse());
 
         AccountProfileResponse response = accountApiMapper.toProfileResponse(account);
@@ -105,7 +105,7 @@ class AccountApiMapperTest {
         Account account = createAccount();
         TransactionResponse transactionResponse = new TransactionResponse();
         when(transactionApiMapper.toTransactionResponse(any())).thenReturn(transactionResponse);
-        when(cardApiMapper.toCardResponse(any())).thenReturn(new CardResponse());
+        when(cardApiMapper.toCardSummaryResponse(any())).thenReturn(new CardSummaryResponse());
         when(customerSummaryApiMapper.toSummaryResponse(any())).thenReturn(new CustomerSummaryResponse());
 
         AccountProfileResponse response = accountApiMapper.toProfileResponse(account);
@@ -117,9 +117,9 @@ class AccountApiMapperTest {
     @Test
     void testToProfileResponseMapsCardsUsingCardApiMapper() {
         Account account = createAccount();
-        CardResponse cardResponse = new CardResponse();
+        CardSummaryResponse cardResponse = new CardSummaryResponse();
         when(transactionApiMapper.toTransactionResponse(any())).thenReturn(new TransactionResponse());
-        when(cardApiMapper.toCardResponse(any())).thenReturn(cardResponse);
+        when(cardApiMapper.toCardSummaryResponse(any())).thenReturn(cardResponse);
         when(customerSummaryApiMapper.toSummaryResponse(any())).thenReturn(new CustomerSummaryResponse());
 
         AccountProfileResponse response = accountApiMapper.toProfileResponse(account);
@@ -133,7 +133,7 @@ class AccountApiMapperTest {
         Account account = createAccount();
         CustomerSummaryResponse customerSummaryResponse = new CustomerSummaryResponse();
         when(transactionApiMapper.toTransactionResponse(any())).thenReturn(new TransactionResponse());
-        when(cardApiMapper.toCardResponse(any())).thenReturn(new CardResponse());
+        when(cardApiMapper.toCardSummaryResponse(any())).thenReturn(new CardSummaryResponse());
         when(customerSummaryApiMapper.toSummaryResponse(any())).thenReturn(customerSummaryResponse);
 
         AccountProfileResponse response = accountApiMapper.toProfileResponse(account);

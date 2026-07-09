@@ -39,11 +39,11 @@ public class AccountApiMapper {
         }
         response.setTransactions(transactionResponses);
         List<Card> cards = account.getCards();
-        List<CardResponse> cardResponses = new ArrayList<>();
+        List<CardSummaryResponse> cardSummaryResponses = new ArrayList<>();
         for(Card card : cards){
-            cardResponses.add(cardApiMapper.toCardResponse(card));
+            cardSummaryResponses.add(cardApiMapper.toCardSummaryResponse(card));
         }
-        response.setCards(cardResponses);
+        response.setCards(cardSummaryResponses);
         List<Customer> customers = account.getCustomers();
         List<CustomerSummaryResponse> customerResponses = new ArrayList<>();
         for(Customer customer : customers){
