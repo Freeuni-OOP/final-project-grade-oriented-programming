@@ -3,7 +3,9 @@ import com.oop.web_project.annotations.AccountAccessPermissionRequired;
 import com.oop.web_project.annotations.ActivityCheckRequired;
 import com.oop.web_project.annotations.CardAccessPermissionRequired;
 import com.oop.web_project.annotations.CustomerAccessPermissionRequired;
+import com.oop.web_project.dto.requests.AccountFilterRequest;
 import com.oop.web_project.entities.Account;
+import com.oop.web_project.entities.AccountCategory;
 import com.oop.web_project.entities.CheckActivityTarget;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyActiveException;
@@ -15,10 +17,17 @@ import com.oop.web_project.persistence.AccountRepository;
 import com.oop.web_project.persistence.CardRepository;
 import com.oop.web_project.persistence.CustomerRepository;
 import com.oop.web_project.persistence.TransactionRepository;
+import org.springframework.beans.factory.BeanRegistry;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -154,4 +163,36 @@ public class AccountServiceImpl implements AccountService {
         );
     }
 
+    @Override
+    public Page<Account> filterAccounts(AccountFilterRequest accountFilterRequest) {
+        Specification<Account> specification = Specification.unrestricted();
+
+        if (accountFilterRequest.getName() != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.equal(root.get("name"), accountFilterRequest.getName()));
+        }
+
+        if (accountFilterRequest.getCategory() != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.equal(root.get("category"), accountFilterRequest.getCategory()));
+        }
+
+        if(accountFilterRequest.getDateOpened() != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.greaterThanOrEqualTo(root.get("dateOpened"), accountFilterRequest.getDateOpened()));
+        }
+
+        if(accountFilterRequest.getIsActive() != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.equal(root.get("isActive"), accountFilterRequest.getIsActive()));
+        }
+
+        Sort sort = accountFilterRequest.getSortDirection().equalsIgnoreCase("desc") ?
+                Sort.by(accountFilterRequest.getSortBy()).descending() :
+                Sort.by(accountFilterRequest.getSortBy()).ascending();
+
+        Pageable pageable = PageRequest.of(accountFilterRequest.getPage(), accountFilterRequest.getSize(), sort);
+
+        return accountRepository.findAll(specification, pageable);
+    }
 }

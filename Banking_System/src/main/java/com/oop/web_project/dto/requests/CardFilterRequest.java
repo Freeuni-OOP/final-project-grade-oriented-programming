@@ -1,4 +1,4 @@
-package com.oop.web_project.dto.responses;
+package com.oop.web_project.dto.requests;
 
 import com.oop.web_project.entities.CardBrand;
 import com.oop.web_project.entities.CardType;
@@ -9,18 +9,18 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CardSummaryResponse {
-
+@Getter
+@Setter
+public class CardFilterRequest {
     private CardType type;
     private CardBrand brand;
     private BigDecimal spendingLimit;
     private LocalDate expirationDate;
-    private BigDecimal totalBalance;
-
+    private Integer page;
+    private Integer size;
+    private String sortBy;
+    private String sortDirection;
 }

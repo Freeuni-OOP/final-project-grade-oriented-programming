@@ -1,10 +1,14 @@
 package com.oop.web_project.services;
 
+import com.oop.web_project.dto.requests.AccountFilterRequest;
 import com.oop.web_project.entities.Account;
+import com.oop.web_project.entities.AccountCategory;
 import com.oop.web_project.entities.Card;
 import com.oop.web_project.entities.Customer;
+import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -81,4 +85,9 @@ public interface AccountService {
      * particular currency
      */
     BigDecimal getAccountBalanceByCurrency(long accountId, String currencyName);
+
+    /**
+     * Retrieves accounts based on given parameters, applies paging and sorting
+     */
+    Page<Account> filterAccounts(AccountFilterRequest accountFilterRequest);
 }

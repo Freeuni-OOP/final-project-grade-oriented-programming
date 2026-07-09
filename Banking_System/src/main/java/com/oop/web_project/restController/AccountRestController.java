@@ -1,6 +1,7 @@
 package com.oop.web_project.restController;
 
 import com.oop.web_project.dto.requests.AccountCreationRequest;
+import com.oop.web_project.dto.requests.AccountFilterRequest;
 import com.oop.web_project.dto.requests.CardCreationRequest;
 import com.oop.web_project.dto.responses.AccountProfileResponse;
 import com.oop.web_project.dto.responses.AccountSummaryResponse;
@@ -22,6 +23,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -145,6 +147,19 @@ public class AccountRestController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @PreAuthorize("hasAuthority(\"MANAGER\")")
+    @GetMapping("/filter")
+    public ResponseEntity<List<AccountSummaryResponse>> filterAccounts(AccountFilterRequest accountFilterRequest) {
+
+        Page<Account> accountPages = accountService.filterAccounts(
+               accountFilterRequest
+        );
+        List<AccountSummaryResponse> accountSummaryResponses =
+                accountPages.map(accountSummaryApiMapper::toAccountSummaryResponse).toList();
+
+        return ResponseEntity.ok(accountSummaryResponses);
+    }
+
     @Operation(summary = "Delete an account", description = "Permanently removes an account from the system")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Account deleted successfully",
@@ -168,8 +183,6 @@ public class AccountRestController {
             @ApiResponse(responseCode = "403", description = "Caller does not own this resource", content = @Content),
             @ApiResponse(responseCode = "404", description = "No accounts found for this email", content = @Content)
     })
-
-
     @PreAuthorize("hasAuthority(\"STANDARD\")")
     @GetMapping
     public ResponseEntity<List<AccountSummaryResponse>> getAccountsByEmail(@NotBlank @Email @RequestParam("customerEmail") String customerEmail) {

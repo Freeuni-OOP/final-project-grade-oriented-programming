@@ -1,7 +1,9 @@
 package com.oop.web_project.services;
 
+import com.oop.web_project.dto.requests.CustomerFilterRequest;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Customer;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -52,4 +54,9 @@ public interface CustomerService {
      * Returns all customers that jointly own the specified account.
      */
     List<Customer> getCustomersByAccount(long accountId);
+
+    /**
+     * Retrieves customers based on given parameters, applies paging and sorting
+     */
+    Page<Customer> filterCustomers(CustomerFilterRequest customerFilterRequest);
 }

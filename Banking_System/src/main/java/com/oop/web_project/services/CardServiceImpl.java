@@ -1,10 +1,16 @@
 package com.oop.web_project.services;
 import com.oop.web_project.annotations.*;
+import com.oop.web_project.dto.requests.CardFilterRequest;
 import com.oop.web_project.entities.*;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
 import com.oop.web_project.exceptions.cardExceptions.*;
 import com.oop.web_project.exceptions.transactionExceptions.CurrencyExchangeException;
 import com.oop.web_project.persistence.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -258,6 +264,40 @@ public class CardServiceImpl implements CardService {
                         () -> new CardNotFoundException("card could not be found!")
                 );
         return LocalDate.now().isAfter(card.getExpirationDate());
+    }
+
+    @Override
+    public Page<Card> filterCards(CardFilterRequest cardFilterRequest) {
+
+        Specification<Card> specification = Specification.unrestricted();
+
+        if (cardFilterRequest.getType() != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.equal(root.get("cardType"), cardFilterRequest.getType()));
+        }
+
+        if (cardFilterRequest.getBrand() != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.equal(root.get("cardBrand"), cardFilterRequest.getBrand()));
+        }
+
+        if(cardFilterRequest.getSpendingLimit() != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(root.get("spendingLimit"), cardFilterRequest.getSpendingLimit()));
+        }
+
+        if(cardFilterRequest.getExpirationDate() != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(root.get("expirationDate"), cardFilterRequest.getExpirationDate()));
+        }
+
+        Sort sort = cardFilterRequest.getSortDirection().equalsIgnoreCase("desc") ?
+                Sort.by(cardFilterRequest.getSortBy()).descending() :
+                Sort.by(cardFilterRequest.getSortBy()).ascending();
+
+        Pageable pageable = PageRequest.of(cardFilterRequest.getPage(), cardFilterRequest.getSize(), sort);
+
+        return cardRepository.findAll(specification, pageable);
     }
 
     /**

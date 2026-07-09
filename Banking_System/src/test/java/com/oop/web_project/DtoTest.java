@@ -564,7 +564,7 @@ class AccountProfileResponseTest {
         return new AccountProfileResponse("Main Account", AccountCategory.CHECKING,
                 LocalDate.of(2022, 1, 1), true,
                 List.of(new TransactionResponse()),
-                List.of(new CardResponse()),
+                List.of(new CardSummaryResponse()),
                 List.of(new CustomerSummaryResponse()));
     }
 
@@ -659,7 +659,7 @@ class AccountProfileResponseTest {
     @Test
     void testSetCardsUpdatesValue() {
         AccountProfileResponse response = createAccountProfileResponse();
-        List<CardResponse> newCards = List.of();
+        List<CardSummaryResponse> newCards = List.of();
 
         response.setCards(newCards);
 

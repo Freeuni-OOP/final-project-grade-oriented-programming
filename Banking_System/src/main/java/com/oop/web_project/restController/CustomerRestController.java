@@ -1,9 +1,12 @@
 package com.oop.web_project.restController;
 
+import com.oop.web_project.dto.requests.CustomerFilterRequest;
 import com.oop.web_project.dto.requests.CustomerUpdateRequest;
 import com.oop.web_project.dto.responses.CustomerProfileResponse;
+import com.oop.web_project.dto.responses.CustomerSummaryResponse;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.mapping.CustomerApiMapper;
+import com.oop.web_project.mapping.CustomerSummaryApiMapper;
 import com.oop.web_project.services.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -16,6 +19,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,10 +36,12 @@ public class CustomerRestController {
 
     private final CustomerService customerService;
     private final CustomerApiMapper customerApiMapper;
+    private final CustomerSummaryApiMapper customerSummaryApiMapper;
 
-    public CustomerRestController(CustomerService customerService, CustomerApiMapper customerApiMapper) {
+    public CustomerRestController(CustomerService customerService, CustomerApiMapper customerApiMapper, CustomerSummaryApiMapper customerSummaryApiMapper) {
         this.customerService = customerService;
         this.customerApiMapper = customerApiMapper;
+        this.customerSummaryApiMapper = customerSummaryApiMapper;
     }
 
     @Operation(summary = "Get customer profile", description = "Retrieves the profile of a customer by their ID")
@@ -53,6 +59,20 @@ public class CustomerRestController {
         CustomerProfileResponse response = customerApiMapper.toProfileResponse(customer);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @PreAuthorize("hasAuthority(\"MANAGER\")")
+    @GetMapping("/filter")
+    public ResponseEntity<List<CustomerSummaryResponse>> filterCustomers(CustomerFilterRequest customerFilterRequest) {
+
+        Page<Customer> customerPages = customerService.filterCustomers(
+                customerFilterRequest
+        );
+        List<CustomerSummaryResponse> customerSummaryResponses =
+                customerPages.map(customerSummaryApiMapper::toSummaryResponse).toList();
+
+        return ResponseEntity.ok(customerSummaryResponses);
+    }
+
 
     @Operation(summary = "Get customer profile by email", description = "Retrieves the profile of a customer by their email address")
     @ApiResponses({

@@ -9,6 +9,7 @@ import com.oop.web_project.entities.CardBalance;
 import com.oop.web_project.utils.CardSecurityUtils;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +59,12 @@ public class CardApiMapper {
         response.setBrand(card.getBrand());
         response.setSpendingLimit(card.getSpendingLimit());
         response.setExpirationDate(card.getExpirationDate());
-        response.setCardBalances(getBalances(card));
+        response.setTotalBalance(
+                BigDecimal.valueOf(getBalances(card).stream()
+                .map(CardBalanceResponse::getAmount).
+                mapToDouble(BigDecimal::doubleValue).
+                sum())
+        );
         return response;
     }
 
