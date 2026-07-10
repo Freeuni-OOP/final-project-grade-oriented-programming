@@ -7,8 +7,20 @@ import { cardApi } from '../api/cardApi';
 import { customerKeys } from '../api/customerQueryKeys';
 import { accountKeys } from '../api/accountQueryKeys';
 import { cardKeys } from '../api/cardQueryKeys';
-import { Button, Card, Modal, Select, Table, TextField, useToast } from '../components/ui';
 import {
+  Button,
+  Card,
+  Modal,
+  Select,
+  Spinner,
+  Table,
+  TextField,
+  Toast,
+  useToast,
+} from '../components/ui';
+import ScrollStrip from '../components/customer/ScrollStrip';
+import {
+  DetailItem,
   StatusBadge,
   formatValue,
   getActiveValue,
@@ -41,8 +53,28 @@ const ACTIVE_STATUS_OPTIONS = [
   { value: 'false', label: 'Inactive' },
 ];
 
-// Blank string means "don't filter on this field" -- convert to undefined so
-// it's dropped from the querystring rather than sent as a literal empty value.
+const balanceColumns = [
+  { key: 'currencyCode', header: 'Currency', render: (b) => formatValue(b.currencyCode) },
+  { key: 'amount', header: 'Amount', align: 'right', render: (b) => formatValue(b.amount) },
+];
+
+const transactionColumns = [
+  { key: 'timeStamp', header: 'Date', render: (t) => formatValue(t.timeStamp) },
+  { key: 'transactionType', header: 'Type', render: (t) => formatValue(t.transactionType) },
+  { key: 'amount', header: 'Amount', align: 'right', render: (t) => formatValue(t.amount) },
+  { key: 'currencyCode', header: 'Currency', render: (t) => formatValue(t.currencyCode) },
+  { key: 'status', header: 'Status', render: (t) => formatValue(t.status) },
+  { key: 'description', header: 'Description', render: (t) => formatValue(t.description) },
+];
+
+function sortTransactionsDesc(transactions) {
+  return [...(transactions ?? [])].sort((a, b) => {
+    const timeA = new Date(a?.timeStamp ?? 0).getTime();
+    const timeB = new Date(b?.timeStamp ?? 0).getTime();
+    return timeB - timeA;
+  });
+}
+
 function cleanValue(value) {
   const trimmed = trimValue(value);
   return trimmed === '' ? undefined : trimmed;
@@ -82,12 +114,100 @@ function PaginationControls({ page, onPrevious, onNext, canGoNext, isFetching })
   );
 }
 
+// Activate/Deactivate/Delete row shared by the customer, account, and card
+// detail panels -- same three actions, same loading/disabled wiring, just
+// pointed at a different kind + id each time.
+function StatusActions({ kind, id, isActive, statusMutation, onDelete }) {
+  return (
+    <div className={styles.actionsRow}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        disabled={isActive === true || statusMutation.isPending}
+        isLoading={statusMutation.isPending && statusMutation.variables?.action === 'activate'}
+        onClick={() => statusMutation.mutate({ kind, id, action: 'activate' })}
+      >
+        Activate
+      </Button>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        disabled={isActive === false || statusMutation.isPending}
+        isLoading={statusMutation.isPending && statusMutation.variables?.action === 'deactivate'}
+        onClick={() => statusMutation.mutate({ kind, id, action: 'deactivate' })}
+      >
+        Deactivate
+      </Button>
+      <Button type="button" variant="danger" size="sm" onClick={onDelete}>
+        Delete
+      </Button>
+    </div>
+  );
+}
+
 export default function ManagerPage() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
-  // Shared delete-confirmation state -- one modal, parameterized by which
-  // kind of record is being deleted.
+  // ---- Drill-down selection state ----
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [showTransactions, setShowTransactions] = useState(false);
+
+  const selectCustomer = (customer) => {
+    const id = getId(customer);
+    setSelectedCustomerId((current) => (String(current) === String(id) ? null : id));
+    setSelectedAccountId(null);
+    setSelectedCardId(null);
+    setShowTransactions(false);
+  };
+
+  const selectAccount = (account) => {
+    const id = getId(account);
+    setSelectedAccountId((current) => (String(current) === String(id) ? null : id));
+    setSelectedCardId(null);
+    setShowTransactions(false);
+  };
+
+  const selectCard = (card) => {
+    const id = getId(card);
+    setSelectedCardId((current) => (String(current) === String(id) ? null : id));
+  };
+
+  // ---- Drill-down data ----
+  const customerDetailQuery = useQuery({
+    queryKey: selectedCustomerId
+      ? customerKeys.byId(selectedCustomerId)
+      : [...customerKeys.all, 'idle'],
+    queryFn: () => customerApi.getById(selectedCustomerId),
+    enabled: Boolean(selectedCustomerId),
+    retry: false,
+  });
+
+  const accountDetailQuery = useQuery({
+    queryKey: selectedAccountId
+      ? accountKeys.byId(selectedAccountId)
+      : [...accountKeys.all, 'idle'],
+    queryFn: () => accountApi.getById(selectedAccountId),
+    enabled: Boolean(selectedAccountId),
+    retry: false,
+  });
+
+  const cardDetailQuery = useQuery({
+    queryKey: selectedCardId ? cardKeys.byId(selectedCardId) : [...cardKeys.all, 'idle'],
+    queryFn: () => cardApi.getById(selectedCardId),
+    enabled: Boolean(selectedCardId),
+    retry: false,
+  });
+
+  const customerDetail = customerDetailQuery.data;
+  const accountDetail = accountDetailQuery.data;
+  const cardDetail = cardDetailQuery.data;
+
+  // ---- Shared delete-confirmation (one modal, parameterized by kind) ----
   const [pendingDelete, setPendingDelete] = useState(null); // { kind, id, label }
 
   const deleteMutation = useMutation({
@@ -100,10 +220,22 @@ export default function ManagerPage() {
     onSuccess: (_, variables) => {
       if (variables.kind === 'customer') {
         queryClient.invalidateQueries({ queryKey: customerKeys.all });
+        if (String(selectedCustomerId) === String(variables.id)) {
+          setSelectedCustomerId(null);
+          setSelectedAccountId(null);
+          setSelectedCardId(null);
+        }
       } else if (variables.kind === 'account') {
         queryClient.invalidateQueries({ queryKey: accountKeys.all });
+        if (String(selectedAccountId) === String(variables.id)) {
+          setSelectedAccountId(null);
+          setSelectedCardId(null);
+        }
       } else {
         queryClient.invalidateQueries({ queryKey: cardKeys.all });
+        if (String(selectedCardId) === String(variables.id)) {
+          setSelectedCardId(null);
+        }
       }
       setPendingDelete(null);
       showToast({ title: 'Deleted successfully.', variant: 'success' });
@@ -120,12 +252,31 @@ export default function ManagerPage() {
     deleteMutation.mutate({ kind: pendingDelete.kind, id: pendingDelete.id });
   };
 
-  // ---- Search customers by name (read-only: CustomerSummaryResponse has no id) ----
+  // ---- Shared activate/deactivate (one mutation, parameterized by kind) ----
+  const statusMutation = useMutation({
+    mutationFn: ({ kind, id, action }) => {
+      const api = kind === 'customer' ? customerApi : kind === 'account' ? accountApi : cardApi;
+      return action === 'activate' ? api.activate(id) : api.deactivate(id);
+    },
+    retry: false,
+    onSuccess: (_, variables) => {
+      if (variables.kind === 'customer') {
+        queryClient.invalidateQueries({ queryKey: customerKeys.all });
+      } else if (variables.kind === 'account') {
+        queryClient.invalidateQueries({ queryKey: accountKeys.all });
+      } else {
+        queryClient.invalidateQueries({ queryKey: cardKeys.all });
+      }
+      showToast({ title: `${variables.kind} ${variables.action}d.`, variant: 'success' });
+    },
+  });
+
+  // ---- Search customers (now actionable: CustomerSummaryResponse has id) ----
   const [customerPage, setCustomerPage] = useState(0);
   const [customerFilters, setCustomerFilters] = useState(null);
 
   const { register: registerCustomerSearch, handleSubmit: handleCustomerSearchSubmit } = useForm({
-    defaultValues: { firstName: '', lastName: '' },
+    defaultValues: { firstName: '', lastName: '', email: '' },
   });
 
   const customerSearchQuery = useQuery({
@@ -146,12 +297,13 @@ export default function ManagerPage() {
     setCustomerFilters({
       firstName: cleanValue(values.firstName),
       lastName: cleanValue(values.lastName),
+      email: cleanValue(values.email),
     });
   };
 
   const customerResults = customerSearchQuery.data ?? [];
 
-  // ---- Filter accounts (actionable: AccountSummaryResponse has id) ----
+  // ---- Filter accounts (independent of any specific customer) ----
   const [accountPage, setAccountPage] = useState(0);
   const [accountFilters, setAccountFilters] = useState(null);
 
@@ -184,7 +336,7 @@ export default function ManagerPage() {
 
   const accountResults = accountFilterQuery.data ?? [];
 
-  // ---- Filter cards (actionable: CardSummaryResponse has id) ----
+  // ---- Filter cards (independent of any specific account) ----
   const [cardPage, setCardPage] = useState(0);
   const [cardFilters, setCardFilters] = useState(null);
 
@@ -267,25 +419,50 @@ export default function ManagerPage() {
     resetForm();
   };
 
+  // ---- Chip renderers for the drill-down strips ----
+  const renderAccountChip = (item) => (
+    <>
+      <span className={styles.chipTitle}>{formatValue(item.name)}</span>
+      <span className={styles.chipMeta}>{formatValue(item.category)}</span>
+      <StatusBadge active={getActiveValue(item)} />
+    </>
+  );
+
+  const renderCardChip = (item) => (
+    <>
+      <span className={styles.chipTitle}>
+        {formatValue(item.brand)} &middot; {formatValue(item.type)}
+      </span>
+      <span className={styles.chipMeta}>{formatValue(item.panMasked)}</span>
+      <StatusBadge active={getActiveValue(item)} />
+    </>
+  );
+
   // ---- Table column definitions ----
   const customerSearchColumns = [
     { key: 'id', header: 'ID', render: (c) => formatValue(getId(c)) },
     { key: 'name', header: 'Name', render: (c) => getCustomerName(c) },
     { key: 'email', header: 'Email', render: (c) => formatValue(c.email) },
+    { key: 'status', header: 'Status', render: (c) => <StatusBadge active={getActiveValue(c)} /> },
     {
       key: 'actions',
       header: 'Actions',
       align: 'right',
       render: (c) => (
-        <Button
-          type="button"
-          variant="danger"
-          size="sm"
-          disabled={deleteMutation.isPending}
-          onClick={() => requestDelete('customer', getId(c), getCustomerName(c))}
-        >
-          Delete
-        </Button>
+        <div className={styles.tableActions}>
+          <Button type="button" size="sm" onClick={() => selectCustomer(c)}>
+            View
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            size="sm"
+            disabled={deleteMutation.isPending}
+            onClick={() => requestDelete('customer', getId(c), getCustomerName(c))}
+          >
+            Delete
+          </Button>
+        </div>
       ),
     },
   ];
@@ -352,15 +529,20 @@ export default function ManagerPage() {
       header: 'Actions',
       align: 'right',
       render: (c) => (
-        <Button
-          type="button"
-          variant="danger"
-          size="sm"
-          disabled={deleteMutation.isPending}
-          onClick={() => requestDelete('customer', getId(c), getCustomerName(c))}
-        >
-          Delete
-        </Button>
+        <div className={styles.tableActions}>
+          <Button type="button" size="sm" onClick={() => selectCustomer(c)}>
+            View
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            size="sm"
+            disabled={deleteMutation.isPending}
+            onClick={() => requestDelete('customer', getId(c), getCustomerName(c))}
+          >
+            Delete
+          </Button>
+        </div>
       ),
     },
   ];
@@ -372,8 +554,11 @@ export default function ManagerPage() {
         <h1 className={styles.title}>Manager</h1>
       </header>
 
-      {/* ---- Search customers by name (read-only) ---- */}
-      <Card title="Search customers" subtitle="Search by first or last name.">
+      {/* ---- Search customers ---- */}
+      <Card
+        title="Search customers"
+        subtitle="Search by first or last name, then View to drill in."
+      >
         <div className={styles.stack}>
           <form
             className={styles.editForm}
@@ -389,6 +574,12 @@ export default function ManagerPage() {
                 id="mgr-customer-lastname"
                 label="Last name"
                 {...registerCustomerSearch('lastName')}
+              />
+              <TextField
+                id="mgr-customer-email"
+                label="Email"
+                type="email"
+                {...registerCustomerSearch('email')}
               />
             </div>
             <div className={styles.actionsRow}>
@@ -420,7 +611,173 @@ export default function ManagerPage() {
         </div>
       </Card>
 
-      {/* ---- Filter accounts ---- */}
+      {/* ---- Customer detail (drilled in) ---- */}
+      {selectedCustomerId && (
+        <Card title="Customer detail">
+          {customerDetailQuery.isLoading && (
+            <div className={styles.centerState}>
+              <Spinner label="Loading customer..." />
+            </div>
+          )}
+          {customerDetailQuery.isError && (
+            <Toast variant="danger" message="We couldn't load that customer." />
+          )}
+          {customerDetail && (
+            <div className={styles.stack}>
+              <dl className={styles.profileGrid}>
+                <DetailItem label="Name">{getCustomerName(customerDetail)}</DetailItem>
+                <DetailItem label="Status">
+                  <StatusBadge active={getActiveValue(customerDetail)} />
+                </DetailItem>
+                <DetailItem label="Email">{formatValue(customerDetail.email)}</DetailItem>
+                <DetailItem label="Phone">{formatValue(customerDetail.phoneNumber)}</DetailItem>
+                <DetailItem label="Date of birth">
+                  {formatValue(customerDetail.dateOfBirth)}
+                </DetailItem>
+                <DetailItem label="Address">{formatValue(customerDetail.address)}</DetailItem>
+              </dl>
+
+              <StatusActions
+                kind="customer"
+                id={selectedCustomerId}
+                isActive={getActiveValue(customerDetail)}
+                statusMutation={statusMutation}
+                onDelete={() =>
+                  requestDelete('customer', selectedCustomerId, getCustomerName(customerDetail))
+                }
+              />
+
+              <ScrollStrip
+                items={customerDetail.accounts ?? []}
+                getKey={(item) => getId(item)}
+                renderItem={renderAccountChip}
+                selectedKey={selectedAccountId}
+                onSelect={selectAccount}
+                emptyMessage="This customer has no accounts."
+                ariaLabel="Customer accounts"
+              />
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* ---- Account detail (drilled in) ---- */}
+      {selectedAccountId && (
+        <Card title="Account detail">
+          {accountDetailQuery.isLoading && (
+            <div className={styles.centerState}>
+              <Spinner label="Loading account..." />
+            </div>
+          )}
+          {accountDetailQuery.isError && (
+            <Toast variant="danger" message="We couldn't load that account." />
+          )}
+          {accountDetail && (
+            <div className={styles.stack}>
+              <dl className={styles.profileGrid}>
+                <DetailItem label="Name">{formatValue(accountDetail.name)}</DetailItem>
+                <DetailItem label="Status">
+                  <StatusBadge active={getActiveValue(accountDetail)} />
+                </DetailItem>
+                <DetailItem label="Category">{formatValue(accountDetail.category)}</DetailItem>
+                <DetailItem label="Opened">{formatValue(accountDetail.dateOpened)}</DetailItem>
+              </dl>
+
+              <StatusActions
+                kind="account"
+                id={selectedAccountId}
+                isActive={getActiveValue(accountDetail)}
+                statusMutation={statusMutation}
+                onDelete={() =>
+                  requestDelete('account', selectedAccountId, `account ${selectedAccountId}`)
+                }
+              />
+
+              <div className={styles.actionsRow}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  aria-expanded={showTransactions}
+                  onClick={() => setShowTransactions((visible) => !visible)}
+                >
+                  {showTransactions ? 'Hide transactions' : 'Show transactions'}
+                </Button>
+              </div>
+
+              {showTransactions && (
+                <div className={styles.scrollTableWrap}>
+                  <Table
+                    columns={transactionColumns}
+                    data={sortTransactionsDesc(accountDetail.transactions)}
+                    getRowKey={(t, index) => `${t.timeStamp ?? 'txn'}-${index}`}
+                    emptyMessage="No transactions yet."
+                    caption="Transactions"
+                  />
+                </div>
+              )}
+
+              <ScrollStrip
+                items={accountDetail.cards ?? []}
+                getKey={(item) => getId(item)}
+                renderItem={renderCardChip}
+                selectedKey={selectedCardId}
+                onSelect={selectCard}
+                emptyMessage="This account has no cards."
+                ariaLabel="Account cards"
+              />
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* ---- Card detail (drilled in) ---- */}
+      {selectedCardId && (
+        <Card title="Card detail">
+          {cardDetailQuery.isLoading && (
+            <div className={styles.centerState}>
+              <Spinner label="Loading card..." />
+            </div>
+          )}
+          {cardDetailQuery.isError && (
+            <Toast variant="danger" message="We couldn't load that card." />
+          )}
+          {cardDetail && (
+            <div className={styles.stack}>
+              <dl className={styles.profileGrid}>
+                <DetailItem label="Brand">{formatValue(cardDetail.brand)}</DetailItem>
+                <DetailItem label="Type">{formatValue(cardDetail.type)}</DetailItem>
+                <DetailItem label="Status">
+                  <StatusBadge active={getActiveValue(cardDetail)} />
+                </DetailItem>
+                <DetailItem label="Spending limit">
+                  {formatValue(cardDetail.spendingLimit)}
+                </DetailItem>
+                <DetailItem label="Expiration">{formatValue(cardDetail.expirationDate)}</DetailItem>
+                <DetailItem label="Card number">{formatValue(cardDetail.panToken)}</DetailItem>
+              </dl>
+
+              <StatusActions
+                kind="card"
+                id={selectedCardId}
+                isActive={getActiveValue(cardDetail)}
+                statusMutation={statusMutation}
+                onDelete={() => requestDelete('card', selectedCardId, `card ${selectedCardId}`)}
+              />
+
+              <Table
+                columns={balanceColumns}
+                data={cardDetail.cardBalances ?? []}
+                getRowKey={(b, index) => b.currencyCode ?? index}
+                emptyMessage="No balances on this card."
+                caption="Card balances"
+              />
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* ---- Filter accounts (independent of any specific customer) ---- */}
       <Card title="Filter accounts">
         <div className={styles.stack}>
           <form
@@ -483,7 +840,7 @@ export default function ManagerPage() {
         </div>
       </Card>
 
-      {/* ---- Filter cards ---- */}
+      {/* ---- Filter cards (independent of any specific account) ---- */}
       <Card title="Filter cards">
         <div className={styles.stack}>
           <form className={styles.editForm} onSubmit={handleCardFilterSubmit(submitCardFilter)}>

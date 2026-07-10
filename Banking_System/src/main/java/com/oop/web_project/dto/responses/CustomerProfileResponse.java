@@ -22,5 +22,6 @@ public class CustomerProfileResponse {
     private String email;
     private String phoneNumber;
     private List<AccountSummaryResponse> accounts;
+    private boolean isActive;
 
 }

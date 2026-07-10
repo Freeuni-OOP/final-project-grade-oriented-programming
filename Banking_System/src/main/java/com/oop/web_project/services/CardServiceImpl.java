@@ -273,12 +273,12 @@ public class CardServiceImpl implements CardService {
 
         if (cardFilterRequest.getType() != null) {
             specification = specification.and((root, query, cb) ->
-                    cb.equal(root.get("cardType"), cardFilterRequest.getType()));
+                    cb.equal(root.get("type"), cardFilterRequest.getType()));
         }
 
         if (cardFilterRequest.getBrand() != null) {
             specification = specification.and((root, query, cb) ->
-                    cb.equal(root.get("cardBrand"), cardFilterRequest.getBrand()));
+                    cb.equal(root.get("brand"), cardFilterRequest.getBrand()));
         }
 
         if(cardFilterRequest.getSpendingLimit() != null) {

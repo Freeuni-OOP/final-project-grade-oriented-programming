@@ -14,4 +14,5 @@ import lombok.Setter;
 public class CustomerFilterRequest {
     private String firstName;
     private String lastName;
+    private String email;
 }
