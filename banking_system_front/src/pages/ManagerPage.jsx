@@ -8,6 +8,7 @@ import { cardApi } from '../api/cardApi';
 import { customerKeys } from '../api/customerQueryKeys';
 import { accountKeys } from '../api/accountQueryKeys';
 import { cardKeys } from '../api/cardQueryKeys';
+import { applyBackendFormErrors } from '../api/formErrors';
 import {
   Button,
   Card,
@@ -132,10 +133,19 @@ export default function ManagerPage() {
 
   const selectCustomer = (customer) => {
     const id = getId(customer);
+    const isReopening = String(selectedCustomerId) !== String(id);
     setSelectedCustomerId((current) => (String(current) === String(id) ? null : id));
     setSelectedAccountId(null);
     setSelectedCardId(null);
     setShowTransactions(false);
+    if (isReopening) {
+      // detail panel renders at the top of the page; bring it into view
+      requestAnimationFrame(() => {
+        document
+          .getElementById('mgr-customer-detail')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
   };
 
   const selectAccount = (account) => {
@@ -148,6 +158,61 @@ export default function ManagerPage() {
   const selectCard = (card) => {
     const id = getId(card);
     setSelectedCardId((current) => (String(current) === String(id) ? null : id));
+  };
+
+  // ---- Add a joint owner to the selected account (resolve customer by email,
+  // ---- then link them -- registerCustomerToAccount ADDS, so this makes the
+  // ---- account jointly owned rather than transferring it). ----
+  const {
+    register: registerJointOwner,
+    handleSubmit: handleJointOwnerSubmit,
+    reset: resetJointOwnerForm,
+    setError: setJointOwnerError,
+    formState: { errors: jointOwnerErrors, isSubmitting: isJointOwnerSubmitting },
+  } = useForm({ defaultValues: { email: '' } });
+
+  const addJointOwnerMutation = useMutation({
+    mutationFn: async ({ accountId, email }) => {
+      const foundCustomer = await customerApi.getByEmail(email);
+      const foundCustomerId = getId(foundCustomer);
+      if (!foundCustomerId) {
+        const error = new Error('Customer id was not returned.');
+        error.missingCustomerId = true;
+        throw error;
+      }
+      await accountApi.registerCustomer(accountId, foundCustomerId);
+      return foundCustomer;
+    },
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accountKeys.byId(selectedAccountId) });
+      queryClient.invalidateQueries({ queryKey: customerKeys.all });
+      showToast({
+        title: t('accounts:joint_owner_added', { defaultValue: 'Joint owner added.' }),
+        variant: 'success',
+      });
+      resetJointOwnerForm();
+    },
+  });
+
+  const submitJointOwner = async (values) => {
+    try {
+      await addJointOwnerMutation.mutateAsync({
+        accountId: selectedAccountId,
+        email: trimValue(values.email),
+      });
+    } catch (error) {
+      if (error.missingCustomerId) {
+        setJointOwnerError('email', {
+          type: 'server',
+          message: t('accounts:no_customer_with_email', {
+            defaultValue: 'No customer found with that email.',
+          }),
+        });
+        return;
+      }
+      applyBackendFormErrors(error, setJointOwnerError, ['email']);
+    }
   };
 
   // ---- Drill-down data ----
@@ -661,10 +726,7 @@ export default function ManagerPage() {
       </header>
 
       {/* ---- Search customers ---- */}
-      <Card
-        title={t('common:search_customers')}
-        subtitle={t('common:search_customers_subtitle')}
-      >
+      <Card title={t('common:search_customers')} subtitle={t('common:search_customers_subtitle')}>
         <div className={styles.stack}>
           <form
             className={styles.editForm}
@@ -721,7 +783,10 @@ export default function ManagerPage() {
 
       {/* ---- Customer detail (drilled in) ---- */}
       {selectedCustomerId && (
-        <Card title={t('common:customer_detail', { defaultValue: 'Customer detail' })}>
+        <Card
+          id="mgr-customer-detail"
+          title={t('common:customer_detail', { defaultValue: 'Customer detail' })}
+        >
           {customerDetailQuery.isLoading && (
             <div className={styles.centerState}>
               <Spinner
@@ -870,6 +935,42 @@ export default function ManagerPage() {
                 })}
                 ariaLabel={t('common:account_cards', { defaultValue: 'Account cards' })}
               />
+
+              <form
+                className={styles.editForm}
+                onSubmit={handleJointOwnerSubmit(submitJointOwner)}
+                noValidate
+              >
+                <p className={styles.mutedText}>
+                  {t('accounts:add_joint_owner_hint', {
+                    defaultValue:
+                      'Link another customer to this account by their email to make it a joint account.',
+                  })}
+                </p>
+                <div className={styles.editFields}>
+                  <TextField
+                    id="mgr-joint-owner-email"
+                    label={t('accounts:joint_owner_email', { defaultValue: 'Joint owner email' })}
+                    type="email"
+                    required
+                    error={jointOwnerErrors.email?.message}
+                    {...registerJointOwner('email', {
+                      required: t('accounts:email_required', {
+                        defaultValue: 'Email is required.',
+                      }),
+                    })}
+                  />
+                </div>
+                <div className={styles.actionsRow}>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    isLoading={addJointOwnerMutation.isPending || isJointOwnerSubmitting}
+                  >
+                    {t('accounts:add_joint_owner', { defaultValue: 'Add joint owner' })}
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
         </Card>
