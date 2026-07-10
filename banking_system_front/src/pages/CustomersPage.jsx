@@ -440,6 +440,7 @@ export default function CustomersPage() {
       ]);
     }
   };
+
   const {
     register: registerAddCurrency,
     handleSubmit: handleAddCurrencySubmit,
@@ -488,6 +489,14 @@ export default function CustomersPage() {
     formState: { errors: withdrawErrors, isSubmitting: isWithdrawSubmitting },
   } = useForm({ defaultValues: { amountToWithdraw: '', currencyCode: '' } });
 
+  const {
+    register: registerExchange,
+    handleSubmit: handleExchangeSubmit,
+    reset: resetExchangeForm,
+    setError: setExchangeError,
+    formState: { errors: exchangeErrors, isSubmitting: isExchangeSubmitting },
+  } = useForm({ defaultValues: { amount: '', fromCurrencyCode: '', toCurrencyCode: '' } });
+
   // Deposit/withdraw only return a plain confirmation string, not the updated
   // balance, so refetch the card rather than trying to patch the cache by hand.
   const depositMutation = useMutation({
@@ -508,6 +517,17 @@ export default function CustomersPage() {
       queryClient.invalidateQueries({ queryKey: cardKeys.byId(selectedCardId) });
       showToast({ title: 'Withdrawal successful.', variant: 'success' });
       resetWithdrawForm();
+      setActiveMoneyAction(null);
+    },
+  });
+
+  const exchangeMutation = useMutation({
+    mutationFn: ({ cardId, payload }) => cardApi.exchangeCurrency(cardId, payload),
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cardKeys.byId(selectedCardId) });
+      showToast({ title: 'Exchange successful.', variant: 'success' });
+      resetExchangeForm();
       setActiveMoneyAction(null);
     },
   });
@@ -537,6 +557,25 @@ export default function CustomersPage() {
       });
     } catch (error) {
       applyBackendFormErrors(error, setWithdrawError, ['amountToWithdraw', 'currencyCode']);
+    }
+  };
+
+  const submitExchange = async (values) => {
+    try {
+      await exchangeMutation.mutateAsync({
+        cardId: selectedCardId,
+        payload: {
+          amount: trimValue(values.amount),
+          fromCurrencyCode: values.fromCurrencyCode,
+          toCurrencyCode: values.toCurrencyCode,
+        },
+      });
+    } catch (error) {
+      applyBackendFormErrors(error, setExchangeError, [
+        'amount',
+        'fromCurrencyCode',
+        'toCurrencyCode',
+      ]);
     }
   };
 
@@ -1103,6 +1142,15 @@ export default function CustomersPage() {
                 >
                   + Transfer
                 </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={cardOwnedCurrencyOptions.length < 2}
+                  onClick={() => setActiveMoneyAction('exchange')}
+                >
+                  + Exchange
+                </Button>
               </div>
 
               {activeMoneyAction === 'deposit' && (
@@ -1212,6 +1260,77 @@ export default function CustomersPage() {
                       disabled={withdrawMutation.isPending}
                       onClick={() => {
                         resetWithdrawForm();
+                        setActiveMoneyAction(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {activeMoneyAction === 'exchange' && (
+                <form
+                  className={styles.editForm}
+                  onSubmit={handleExchangeSubmit(submitExchange)}
+                  noValidate
+                >
+                  <div className={styles.editFields}>
+                    <TextField
+                      id="exchange-amount"
+                      label="Amount"
+                      type="number"
+                      step="0.01"
+                      required
+                      error={exchangeErrors.amount?.message}
+                      {...registerExchange('amount', {
+                        required: 'Amount is required.',
+                        min: { value: 0.01, message: 'Amount must be greater than 0.' },
+                      })}
+                    />
+                    <Select
+                      id="exchange-from-currency"
+                      label="From currency"
+                      placeholder="Choose currency"
+                      options={cardOwnedCurrencyOptions}
+                      error={exchangeErrors.fromCurrencyCode?.message}
+                      required
+                      {...registerExchange('fromCurrencyCode', {
+                        required: 'From currency is required.',
+                      })}
+                    />
+                    <Select
+                      id="exchange-to-currency"
+                      label="To currency"
+                      placeholder="Choose currency"
+                      options={cardOwnedCurrencyOptions}
+                      error={exchangeErrors.toCurrencyCode?.message}
+                      required
+                      {...registerExchange('toCurrencyCode', {
+                        required: 'To currency is required.',
+                      })}
+                    />
+                  </div>
+
+                  {exchangeErrors.root && (
+                    <Toast variant="danger" message={exchangeErrors.root.message} />
+                  )}
+
+                  <div className={styles.actionsRow}>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      isLoading={exchangeMutation.isPending || isExchangeSubmitting}
+                    >
+                      Confirm exchange
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      disabled={exchangeMutation.isPending}
+                      onClick={() => {
+                        resetExchangeForm();
                         setActiveMoneyAction(null);
                       }}
                     >
