@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { customerApi } from '../api/customerApi';
 import { accountApi } from '../api/accountApi';
 import { cardApi } from '../api/cardApi';
@@ -32,41 +33,6 @@ import styles from './CustomerPage.module.css';
 
 const DEFAULT_PAGE_SIZE = 20;
 
-const ACCOUNT_CATEGORIES = [
-  { value: 'CHECKING', label: 'Checking' },
-  { value: 'SAVINGS', label: 'Savings' },
-  { value: 'CREDIT', label: 'Credit' },
-];
-
-const CARD_TYPES = [
-  { value: 'DEBIT', label: 'Debit' },
-  { value: 'CREDIT', label: 'Credit' },
-];
-
-const CARD_BRANDS = [
-  { value: 'VISA', label: 'Visa' },
-  { value: 'MASTERCARD', label: 'Mastercard' },
-];
-
-const ACTIVE_STATUS_OPTIONS = [
-  { value: 'true', label: 'Active' },
-  { value: 'false', label: 'Inactive' },
-];
-
-const balanceColumns = [
-  { key: 'currencyCode', header: 'Currency', render: (b) => formatValue(b.currencyCode) },
-  { key: 'amount', header: 'Amount', align: 'right', render: (b) => formatValue(b.amount) },
-];
-
-const transactionColumns = [
-  { key: 'timeStamp', header: 'Date', render: (t) => formatValue(t.timeStamp) },
-  { key: 'transactionType', header: 'Type', render: (t) => formatValue(t.transactionType) },
-  { key: 'amount', header: 'Amount', align: 'right', render: (t) => formatValue(t.amount) },
-  { key: 'currencyCode', header: 'Currency', render: (t) => formatValue(t.currencyCode) },
-  { key: 'status', header: 'Status', render: (t) => formatValue(t.status) },
-  { key: 'description', header: 'Description', render: (t) => formatValue(t.description) },
-];
-
 function sortTransactionsDesc(transactions) {
   return [...(transactions ?? [])].sort((a, b) => {
     const timeA = new Date(a?.timeStamp ?? 0).getTime();
@@ -89,6 +55,8 @@ function cleanBoolean(value) {
 // no total-count metadata, so "is there a next page" is inferred: if this
 // page came back full (== page size), there might be more.
 function PaginationControls({ page, onPrevious, onNext, canGoNext, isFetching }) {
+  const { t } = useTranslation('common');
+
   return (
     <div className={styles.actionsRow}>
       <Button
@@ -98,9 +66,11 @@ function PaginationControls({ page, onPrevious, onNext, canGoNext, isFetching })
         disabled={page === 0 || isFetching}
         onClick={onPrevious}
       >
-        Previous
+        {t('previous')}
       </Button>
-      <span className={styles.mutedText}>Page {page + 1}</span>
+      <span className={styles.mutedText}>
+        {t('page')} {page + 1}
+      </span>
       <Button
         type="button"
         variant="secondary"
@@ -108,7 +78,7 @@ function PaginationControls({ page, onPrevious, onNext, canGoNext, isFetching })
         disabled={!canGoNext || isFetching}
         onClick={onNext}
       >
-        Next
+        {t('next')}
       </Button>
     </div>
   );
@@ -118,6 +88,8 @@ function PaginationControls({ page, onPrevious, onNext, canGoNext, isFetching })
 // detail panels -- same three actions, same loading/disabled wiring, just
 // pointed at a different kind + id each time.
 function StatusActions({ kind, id, isActive, statusMutation, onDelete }) {
+  const { t } = useTranslation('common');
+
   return (
     <div className={styles.actionsRow}>
       <Button
@@ -128,7 +100,7 @@ function StatusActions({ kind, id, isActive, statusMutation, onDelete }) {
         isLoading={statusMutation.isPending && statusMutation.variables?.action === 'activate'}
         onClick={() => statusMutation.mutate({ kind, id, action: 'activate' })}
       >
-        Activate
+        {t('activate')}
       </Button>
       <Button
         type="button"
@@ -138,10 +110,10 @@ function StatusActions({ kind, id, isActive, statusMutation, onDelete }) {
         isLoading={statusMutation.isPending && statusMutation.variables?.action === 'deactivate'}
         onClick={() => statusMutation.mutate({ kind, id, action: 'deactivate' })}
       >
-        Deactivate
+        {t('deactivate')}
       </Button>
       <Button type="button" variant="danger" size="sm" onClick={onDelete}>
-        Delete
+        {t('delete')}
       </Button>
     </div>
   );
@@ -150,6 +122,7 @@ function StatusActions({ kind, id, isActive, statusMutation, onDelete }) {
 export default function ManagerPage() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const { t } = useTranslation(['common', 'accounts']);
 
   // ---- Drill-down selection state ----
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
@@ -238,7 +211,7 @@ export default function ManagerPage() {
         }
       }
       setPendingDelete(null);
-      showToast({ title: 'Deleted successfully.', variant: 'success' });
+      showToast({ title: t('deleted_successfully'), variant: 'success' });
     },
   });
 
@@ -267,7 +240,10 @@ export default function ManagerPage() {
       } else {
         queryClient.invalidateQueries({ queryKey: cardKeys.all });
       }
-      showToast({ title: `${variables.kind} ${variables.action}d.`, variant: 'success' });
+      showToast({
+        title: t(`${variables.kind}_${variables.action}d`),
+        variant: 'success',
+      });
     },
   });
 
@@ -440,18 +416,34 @@ export default function ManagerPage() {
 
   // ---- Table column definitions ----
   const customerSearchColumns = [
-    { key: 'id', header: 'ID', render: (c) => formatValue(getId(c)) },
-    { key: 'name', header: 'Name', render: (c) => getCustomerName(c) },
-    { key: 'email', header: 'Email', render: (c) => formatValue(c.email) },
-    { key: 'status', header: 'Status', render: (c) => <StatusBadge active={getActiveValue(c)} /> },
+    {
+      key: 'id',
+      header: t('common:col_id', { defaultValue: 'ID' }),
+      render: (c) => formatValue(getId(c)),
+    },
+    {
+      key: 'name',
+      header: t('common:label_name', { defaultValue: 'Name' }),
+      render: (c) => getCustomerName(c),
+    },
+    {
+      key: 'email',
+      header: t('customer:label_email', { defaultValue: 'Email' }),
+      render: (c) => formatValue(c.email),
+    },
+    {
+      key: 'status',
+      header: t('customer:col_status', { defaultValue: 'Status' }),
+      render: (c) => <StatusBadge active={getActiveValue(c)} />,
+    },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common:col_actions', { defaultValue: 'Actions' }),
       align: 'right',
       render: (c) => (
         <div className={styles.tableActions}>
           <Button type="button" size="sm" onClick={() => selectCustomer(c)}>
-            View
+            {t('common:view', { defaultValue: 'View' })}
           </Button>
           <Button
             type="button"
@@ -460,7 +452,7 @@ export default function ManagerPage() {
             disabled={deleteMutation.isPending}
             onClick={() => requestDelete('customer', getId(c), getCustomerName(c))}
           >
-            Delete
+            {t('delete')}
           </Button>
         </div>
       ),
@@ -468,13 +460,21 @@ export default function ManagerPage() {
   ];
 
   const accountColumns = [
-    { key: 'id', header: 'ID', render: (a) => formatValue(getId(a)) },
-    { key: 'name', header: 'Name', render: (a) => formatValue(a.name) },
-    { key: 'category', header: 'Category', render: (a) => formatValue(a.category) },
-    { key: 'status', header: 'Status', render: (a) => <StatusBadge active={getActiveValue(a)} /> },
+    {
+      key: 'id',
+      header: t('common:col_id', { defaultValue: 'ID' }),
+      render: (a) => formatValue(getId(a)),
+    },
+    { key: 'name', header: t('accounts:col_name'), render: (a) => formatValue(a.name) },
+    { key: 'category', header: t('accounts:col_category'), render: (a) => formatValue(a.category) },
+    {
+      key: 'status',
+      header: t('customer:col_status', { defaultValue: 'Status' }),
+      render: (a) => <StatusBadge active={getActiveValue(a)} />,
+    },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common:col_actions', { defaultValue: 'Actions' }),
       align: 'right',
       render: (a) => (
         <Button
@@ -484,25 +484,41 @@ export default function ManagerPage() {
           disabled={deleteMutation.isPending}
           onClick={() => requestDelete('account', getId(a), `account ${getId(a)}`)}
         >
-          Delete
+          {t('delete')}
         </Button>
       ),
     },
   ];
 
   const cardColumns = [
-    { key: 'id', header: 'ID', render: (c) => formatValue(getId(c)) },
+    {
+      key: 'id',
+      header: t('common:col_id', { defaultValue: 'ID' }),
+      render: (c) => formatValue(getId(c)),
+    },
     {
       key: 'brand',
-      header: 'Brand / Type',
+      header: t('common:col_brand_type', { defaultValue: 'Brand / Type' }),
       render: (c) => `${formatValue(c.brand)} · ${formatValue(c.type)}`,
     },
-    { key: 'panMasked', header: 'Card number', render: (c) => formatValue(c.panMasked) },
-    { key: 'spendingLimit', header: 'Limit', render: (c) => formatValue(c.spendingLimit) },
-    { key: 'status', header: 'Status', render: (c) => <StatusBadge active={getActiveValue(c)} /> },
+    {
+      key: 'panMasked',
+      header: t('common:col_card_number', { defaultValue: 'Card number' }),
+      render: (c) => formatValue(c.panMasked),
+    },
+    {
+      key: 'spendingLimit',
+      header: t('common:col_limit'),
+      render: (c) => formatValue(c.spendingLimit),
+    },
+    {
+      key: 'status',
+      header: t('customer:col_status', { defaultValue: 'Status' }),
+      render: (c) => <StatusBadge active={getActiveValue(c)} />,
+    },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common:col_actions', { defaultValue: 'Actions' }),
       align: 'right',
       render: (c) => (
         <Button
@@ -512,26 +528,46 @@ export default function ManagerPage() {
           disabled={deleteMutation.isPending}
           onClick={() => requestDelete('card', getId(c), `card ${getId(c)}`)}
         >
-          Delete
+          {t('delete')}
         </Button>
       ),
     },
   ];
 
   const accountCustomerColumns = [
-    { key: 'id', header: 'ID', render: (c) => formatValue(getId(c)) },
-    { key: 'name', header: 'Name', render: (c) => getCustomerName(c) },
-    { key: 'email', header: 'Email', render: (c) => formatValue(c.email) },
-    { key: 'phoneNumber', header: 'Phone', render: (c) => formatValue(c.phoneNumber) },
-    { key: 'status', header: 'Status', render: (c) => <StatusBadge active={getActiveValue(c)} /> },
+    {
+      key: 'id',
+      header: t('common:col_id', { defaultValue: 'ID' }),
+      render: (c) => formatValue(getId(c)),
+    },
+    {
+      key: 'name',
+      header: t('common:label_name', { defaultValue: 'Name' }),
+      render: (c) => getCustomerName(c),
+    },
+    {
+      key: 'email',
+      header: t('customer:label_email', { defaultValue: 'Email' }),
+      render: (c) => formatValue(c.email),
+    },
+    {
+      key: 'phoneNumber',
+      header: t('common:col_phone', { defaultValue: 'Phone' }),
+      render: (c) => formatValue(c.phoneNumber),
+    },
+    {
+      key: 'status',
+      header: t('customer:col_status', { defaultValue: 'Status' }),
+      render: (c) => <StatusBadge active={getActiveValue(c)} />,
+    },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common:col_actions', { defaultValue: 'Actions' }),
       align: 'right',
       render: (c) => (
         <div className={styles.tableActions}>
           <Button type="button" size="sm" onClick={() => selectCustomer(c)}>
-            View
+            {t('common:view', { defaultValue: 'View' })}
           </Button>
           <Button
             type="button"
@@ -540,24 +576,94 @@ export default function ManagerPage() {
             disabled={deleteMutation.isPending}
             onClick={() => requestDelete('customer', getId(c), getCustomerName(c))}
           >
-            Delete
+            {t('delete')}
           </Button>
         </div>
       ),
     },
   ];
 
+  const balanceColumns = [
+    {
+      key: 'currencyCode',
+      header: t('common:col_currency'),
+      render: (b) => formatValue(b.currencyCode),
+    },
+    {
+      key: 'amount',
+      header: t('common:col_amount'),
+      align: 'right',
+      render: (b) => formatValue(b.amount),
+    },
+  ];
+
+  const transactionColumns = [
+    {
+      key: 'timeStamp',
+      header: t('common:col_date', { defaultValue: 'Date' }),
+      render: (t) => formatValue(t.timeStamp),
+    },
+    {
+      key: 'transactionType',
+      header: t('common:col_type', { defaultValue: 'Type' }),
+      render: (t) => formatValue(t.transactionType),
+    },
+    {
+      key: 'amount',
+      header: t('common:col_amount'),
+      align: 'right',
+      render: (t) => formatValue(t.amount),
+    },
+    {
+      key: 'currencyCode',
+      header: t('common:col_currency'),
+      render: (t) => formatValue(t.currencyCode),
+    },
+    {
+      key: 'status',
+      header: t('customer:col_status', { defaultValue: 'Status' }),
+      render: (t) => formatValue(t.status),
+    },
+    {
+      key: 'description',
+      header: t('common:col_description', { defaultValue: 'Description' }),
+      render: (t) => formatValue(t.description),
+    },
+  ];
+
+  // Constants for select options
+  const ACCOUNT_CATEGORIES = [
+    { value: 'CHECKING', label: t('customer:category_checking') },
+    { value: 'SAVINGS', label: t('customer:category_savings') },
+    { value: 'CREDIT', label: t('customer:category_credit') },
+  ];
+
+  const CARD_TYPES = [
+    { value: 'DEBIT', label: t('customer:type_debit') },
+    { value: 'CREDIT', label: t('customer:type_credit') },
+  ];
+
+  const CARD_BRANDS = [
+    { value: 'VISA', label: t('customer:brand_visa') },
+    { value: 'MASTERCARD', label: t('customer:brand_mastercard') },
+  ];
+
+  const ACTIVE_STATUS_OPTIONS = [
+    { value: 'true', label: t('common:status_active') },
+    { value: 'false', label: t('common:status_inactive') },
+  ];
+
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
-        <p className={styles.kicker}>Manager</p>
-        <h1 className={styles.title}>Manager</h1>
+        <p className={styles.kicker}>{t('customer:manager')}</p>
+        <h1 className={styles.title}>{t('customer:manager')}</h1>
       </header>
 
       {/* ---- Search customers ---- */}
       <Card
-        title="Search customers"
-        subtitle="Search by first or last name, then View to drill in."
+        title={t('common:search_customers')}
+        subtitle={t('common:search_customers_subtitle')}
       >
         <div className={styles.stack}>
           <form
@@ -567,24 +673,24 @@ export default function ManagerPage() {
             <div className={styles.editFields}>
               <TextField
                 id="mgr-customer-firstname"
-                label="First name"
+                label={t('customer:first_name')}
                 {...registerCustomerSearch('firstName')}
               />
               <TextField
                 id="mgr-customer-lastname"
-                label="Last name"
+                label={t('customer:last_name')}
                 {...registerCustomerSearch('lastName')}
               />
               <TextField
                 id="mgr-customer-email"
-                label="Email"
+                label={t('customer:label_email', { defaultValue: 'Email' })}
                 type="email"
                 {...registerCustomerSearch('email')}
               />
             </div>
             <div className={styles.actionsRow}>
               <Button type="submit" size="sm" isLoading={customerSearchQuery.isFetching}>
-                Search
+                {t('common:search')}
               </Button>
             </div>
           </form>
@@ -594,7 +700,9 @@ export default function ManagerPage() {
             data={customerResults}
             getRowKey={(c, index) => getId(c) ?? c.email ?? index}
             emptyMessage={
-              customerFilters ? 'No customers matched.' : 'Enter a search and press Search.'
+              customerFilters
+                ? t('common:no_customers_matched')
+                : t('common:enter_search_and_press_search')
             }
             isLoading={customerSearchQuery.isLoading}
           />
@@ -613,28 +721,43 @@ export default function ManagerPage() {
 
       {/* ---- Customer detail (drilled in) ---- */}
       {selectedCustomerId && (
-        <Card title="Customer detail">
+        <Card title={t('common:customer_detail', { defaultValue: 'Customer detail' })}>
           {customerDetailQuery.isLoading && (
             <div className={styles.centerState}>
-              <Spinner label="Loading customer..." />
+              <Spinner
+                label={t('common:loading_customer', { defaultValue: 'Loading customer...' })}
+              />
             </div>
           )}
           {customerDetailQuery.isError && (
-            <Toast variant="danger" message="We couldn't load that customer." />
+            <Toast
+              variant="danger"
+              message={t('common:could_not_load_customer', {
+                defaultValue: "We couldn't load that customer.",
+              })}
+            />
           )}
           {customerDetail && (
             <div className={styles.stack}>
               <dl className={styles.profileGrid}>
-                <DetailItem label="Name">{getCustomerName(customerDetail)}</DetailItem>
-                <DetailItem label="Status">
+                <DetailItem label={t('customer:label_name')}>
+                  {getCustomerName(customerDetail)}
+                </DetailItem>
+                <DetailItem label={t('customer:col_status', { defaultValue: 'Status' })}>
                   <StatusBadge active={getActiveValue(customerDetail)} />
                 </DetailItem>
-                <DetailItem label="Email">{formatValue(customerDetail.email)}</DetailItem>
-                <DetailItem label="Phone">{formatValue(customerDetail.phoneNumber)}</DetailItem>
-                <DetailItem label="Date of birth">
+                <DetailItem label={t('customer:label_email')}>
+                  {formatValue(customerDetail.email)}
+                </DetailItem>
+                <DetailItem label={t('customer:label_phone')}>
+                  {formatValue(customerDetail.phoneNumber)}
+                </DetailItem>
+                <DetailItem label={t('customer:label_dob')}>
                   {formatValue(customerDetail.dateOfBirth)}
                 </DetailItem>
-                <DetailItem label="Address">{formatValue(customerDetail.address)}</DetailItem>
+                <DetailItem label={t('customer:label_address')}>
+                  {formatValue(customerDetail.address)}
+                </DetailItem>
               </dl>
 
               <StatusActions
@@ -653,8 +776,10 @@ export default function ManagerPage() {
                 renderItem={renderAccountChip}
                 selectedKey={selectedAccountId}
                 onSelect={selectAccount}
-                emptyMessage="This customer has no accounts."
-                ariaLabel="Customer accounts"
+                emptyMessage={t('accounts:no_accounts', {
+                  defaultValue: 'This customer has no accounts.',
+                })}
+                ariaLabel={t('common:customer_accounts', { defaultValue: 'Customer accounts' })}
               />
             </div>
           )}
@@ -663,24 +788,37 @@ export default function ManagerPage() {
 
       {/* ---- Account detail (drilled in) ---- */}
       {selectedAccountId && (
-        <Card title="Account detail">
+        <Card title={t('accounts:account_detail')}>
           {accountDetailQuery.isLoading && (
             <div className={styles.centerState}>
-              <Spinner label="Loading account..." />
+              <Spinner
+                label={t('common:loading_account', { defaultValue: 'Loading account...' })}
+              />
             </div>
           )}
           {accountDetailQuery.isError && (
-            <Toast variant="danger" message="We couldn't load that account." />
+            <Toast
+              variant="danger"
+              message={t('common:could_not_load_account', {
+                defaultValue: "We couldn't load that account.",
+              })}
+            />
           )}
           {accountDetail && (
             <div className={styles.stack}>
               <dl className={styles.profileGrid}>
-                <DetailItem label="Name">{formatValue(accountDetail.name)}</DetailItem>
-                <DetailItem label="Status">
+                <DetailItem label={t('accounts:label_name')}>
+                  {formatValue(accountDetail.name)}
+                </DetailItem>
+                <DetailItem label={t('customer:col_status', { defaultValue: 'Status' })}>
                   <StatusBadge active={getActiveValue(accountDetail)} />
                 </DetailItem>
-                <DetailItem label="Category">{formatValue(accountDetail.category)}</DetailItem>
-                <DetailItem label="Opened">{formatValue(accountDetail.dateOpened)}</DetailItem>
+                <DetailItem label={t('accounts:label_category')}>
+                  {formatValue(accountDetail.category)}
+                </DetailItem>
+                <DetailItem label={t('accounts:label_opened')}>
+                  {formatValue(accountDetail.dateOpened)}
+                </DetailItem>
               </dl>
 
               <StatusActions
@@ -701,7 +839,9 @@ export default function ManagerPage() {
                   aria-expanded={showTransactions}
                   onClick={() => setShowTransactions((visible) => !visible)}
                 >
-                  {showTransactions ? 'Hide transactions' : 'Show transactions'}
+                  {showTransactions
+                    ? t('customer:hide_transactions')
+                    : t('customer:show_transactions')}
                 </Button>
               </div>
 
@@ -711,8 +851,10 @@ export default function ManagerPage() {
                     columns={transactionColumns}
                     data={sortTransactionsDesc(accountDetail.transactions)}
                     getRowKey={(t, index) => `${t.timeStamp ?? 'txn'}-${index}`}
-                    emptyMessage="No transactions yet."
-                    caption="Transactions"
+                    emptyMessage={t('accounts:no_transactions', {
+                      defaultValue: 'No transactions yet.',
+                    })}
+                    caption={t('common:transactions', { defaultValue: 'Transactions' })}
                   />
                 </div>
               )}
@@ -723,8 +865,10 @@ export default function ManagerPage() {
                 renderItem={renderCardChip}
                 selectedKey={selectedCardId}
                 onSelect={selectCard}
-                emptyMessage="This account has no cards."
-                ariaLabel="Account cards"
+                emptyMessage={t('accounts:no_cards', {
+                  defaultValue: 'This account has no cards.',
+                })}
+                ariaLabel={t('common:account_cards', { defaultValue: 'Account cards' })}
               />
             </div>
           )}
@@ -733,28 +877,41 @@ export default function ManagerPage() {
 
       {/* ---- Card detail (drilled in) ---- */}
       {selectedCardId && (
-        <Card title="Card detail">
+        <Card title={t('common:card_detail', { defaultValue: 'Card detail' })}>
           {cardDetailQuery.isLoading && (
             <div className={styles.centerState}>
-              <Spinner label="Loading card..." />
+              <Spinner label={t('common:loading_card', { defaultValue: 'Loading card...' })} />
             </div>
           )}
           {cardDetailQuery.isError && (
-            <Toast variant="danger" message="We couldn't load that card." />
+            <Toast
+              variant="danger"
+              message={t('common:could_not_load_card', {
+                defaultValue: "We couldn't load that card.",
+              })}
+            />
           )}
           {cardDetail && (
             <div className={styles.stack}>
               <dl className={styles.profileGrid}>
-                <DetailItem label="Brand">{formatValue(cardDetail.brand)}</DetailItem>
-                <DetailItem label="Type">{formatValue(cardDetail.type)}</DetailItem>
-                <DetailItem label="Status">
+                <DetailItem label={t('common:col_brand', { defaultValue: 'Brand' })}>
+                  {formatValue(cardDetail.brand)}
+                </DetailItem>
+                <DetailItem label={t('common:col_type', { defaultValue: 'Type' })}>
+                  {formatValue(cardDetail.type)}
+                </DetailItem>
+                <DetailItem label={t('customer:col_status', { defaultValue: 'Status' })}>
                   <StatusBadge active={getActiveValue(cardDetail)} />
                 </DetailItem>
-                <DetailItem label="Spending limit">
+                <DetailItem label={t('customer:label_spending_limit')}>
                   {formatValue(cardDetail.spendingLimit)}
                 </DetailItem>
-                <DetailItem label="Expiration">{formatValue(cardDetail.expirationDate)}</DetailItem>
-                <DetailItem label="Card number">{formatValue(cardDetail.panToken)}</DetailItem>
+                <DetailItem label={t('customer:label_expiration')}>
+                  {formatValue(cardDetail.expirationDate)}
+                </DetailItem>
+                <DetailItem label={t('customer:label_card_number')}>
+                  {formatValue(cardDetail.panToken)}
+                </DetailItem>
               </dl>
 
               <StatusActions
@@ -769,8 +926,10 @@ export default function ManagerPage() {
                 columns={balanceColumns}
                 data={cardDetail.cardBalances ?? []}
                 getRowKey={(b, index) => b.currencyCode ?? index}
-                emptyMessage="No balances on this card."
-                caption="Card balances"
+                emptyMessage={t('accounts:no_balances', {
+                  defaultValue: 'No balances on this card.',
+                })}
+                caption={t('common:card_balances', { defaultValue: 'Card balances' })}
               />
             </div>
           )}
@@ -778,7 +937,7 @@ export default function ManagerPage() {
       )}
 
       {/* ---- Filter accounts (independent of any specific customer) ---- */}
-      <Card title="Filter accounts">
+      <Card title={t('common:filter_accounts', { defaultValue: 'Filter accounts' })}>
         <div className={styles.stack}>
           <form
             className={styles.editForm}
@@ -787,33 +946,33 @@ export default function ManagerPage() {
             <div className={styles.editFields}>
               <TextField
                 id="mgr-account-name"
-                label="Account name"
+                label={t('accounts:account_name')}
                 {...registerAccountFilter('name')}
               />
               <Select
                 id="mgr-account-category"
-                label="Category"
-                placeholder="Any category"
+                label={t('accounts:category')}
+                placeholder={t('common:any_category', { defaultValue: 'Any category' })}
                 options={ACCOUNT_CATEGORIES}
                 {...registerAccountFilter('category')}
               />
               <TextField
                 id="mgr-account-date-opened"
-                label="Date opened"
+                label={t('accounts:label_opened')}
                 type="date"
                 {...registerAccountFilter('dateOpened')}
               />
               <Select
                 id="mgr-account-status"
-                label="Status"
-                placeholder="Any status"
+                label={t('customer:col_status', { defaultValue: 'Status' })}
+                placeholder={t('common:any_status', { defaultValue: 'Any status' })}
                 options={ACTIVE_STATUS_OPTIONS}
                 {...registerAccountFilter('isActive')}
               />
             </div>
             <div className={styles.actionsRow}>
               <Button type="submit" size="sm" isLoading={accountFilterQuery.isFetching}>
-                Search
+                {t('common:search')}
               </Button>
             </div>
           </form>
@@ -823,7 +982,11 @@ export default function ManagerPage() {
             data={accountResults}
             getRowKey={(a, index) => getId(a) ?? index}
             emptyMessage={
-              accountFilters ? 'No accounts matched.' : 'Enter a search and press Search.'
+              accountFilters
+                ? t('common:no_accounts_matched', { defaultValue: 'No accounts matched.' })
+                : t('common:enter_search_and_press_search', {
+                    defaultValue: 'Enter a search and press Search.',
+                  })
             }
             isLoading={accountFilterQuery.isLoading}
           />
@@ -841,41 +1004,41 @@ export default function ManagerPage() {
       </Card>
 
       {/* ---- Filter cards (independent of any specific account) ---- */}
-      <Card title="Filter cards">
+      <Card title={t('common:filter_cards', { defaultValue: 'Filter cards' })}>
         <div className={styles.stack}>
           <form className={styles.editForm} onSubmit={handleCardFilterSubmit(submitCardFilter)}>
             <div className={styles.editFields}>
               <Select
                 id="mgr-card-type"
-                label="Card type"
-                placeholder="Any type"
+                label={t('accounts:card_type')}
+                placeholder={t('common:any_type', { defaultValue: 'Any type' })}
                 options={CARD_TYPES}
                 {...registerCardFilter('type')}
               />
               <Select
                 id="mgr-card-brand"
-                label="Card brand"
-                placeholder="Any brand"
+                label={t('accounts:card_brand')}
+                placeholder={t('common:any_brand', { defaultValue: 'Any brand' })}
                 options={CARD_BRANDS}
                 {...registerCardFilter('brand')}
               />
               <TextField
                 id="mgr-card-spending-limit"
-                label="Spending limit"
+                label={t('customer:label_spending_limit')}
                 type="number"
                 step="0.01"
                 {...registerCardFilter('spendingLimit')}
               />
               <TextField
                 id="mgr-card-expiration"
-                label="Expiration date"
+                label={t('accounts:label_opened', { defaultValue: 'Expiration date' })}
                 type="date"
                 {...registerCardFilter('expirationDate')}
               />
             </div>
             <div className={styles.actionsRow}>
               <Button type="submit" size="sm" isLoading={cardFilterQuery.isFetching}>
-                Search
+                {t('common:search')}
               </Button>
             </div>
           </form>
@@ -884,7 +1047,13 @@ export default function ManagerPage() {
             columns={cardColumns}
             data={cardResults}
             getRowKey={(c, index) => getId(c) ?? index}
-            emptyMessage={cardFilters ? 'No cards matched.' : 'Enter a search and press Search.'}
+            emptyMessage={
+              cardFilters
+                ? t('common:no_cards_matched', { defaultValue: 'No cards matched.' })
+                : t('common:enter_search_and_press_search', {
+                    defaultValue: 'Enter a search and press Search.',
+                  })
+            }
             isLoading={cardFilterQuery.isLoading}
           />
 
@@ -901,7 +1070,7 @@ export default function ManagerPage() {
       </Card>
 
       {/* ---- Existing: customers on a specific account ---- */}
-      <Card title="Account customers">
+      <Card title={t('accounts:linked_customers', { defaultValue: 'Account customers' })}>
         <div className={styles.stack}>
           <form
             className={styles.inlineForm}
@@ -909,19 +1078,19 @@ export default function ManagerPage() {
           >
             <TextField
               id="mgr-account-lookup-id"
-              label="Account ID"
+              label={t('common:account_id')}
               type="number"
               min="1"
               error={accountLookupErrors.accountId?.message}
               required
               {...registerAccountLookup('accountId', {
-                required: 'Account ID is required.',
+                required: t('common:account_id_required'),
                 validate: (value) =>
-                  /^\d+$/.test(trimValue(value)) || 'Account ID must be a positive number.',
+                  /^\d+$/.test(trimValue(value)) || t('common:account_id_positive'),
               })}
             />
             <Button type="submit" isLoading={accountCustomersQuery.isFetching}>
-              Load customers
+              {t('customer:load_customers', { defaultValue: 'Load customers' })}
             </Button>
           </form>
 
@@ -930,7 +1099,13 @@ export default function ManagerPage() {
             data={accountCustomers}
             getRowKey={(c, index) => getId(c) ?? c.email ?? index}
             emptyMessage={
-              lookupAccountId ? 'No customers found for this account.' : 'No account loaded.'
+              lookupAccountId
+                ? t('common:no_customers_for_account', {
+                    defaultValue: 'No customers found for this account.',
+                  })
+                : t('accounts:no_account_selected', {
+                    defaultValue: 'No account loaded.',
+                  })
             }
             isLoading={accountCustomersQuery.isLoading}
           />
@@ -938,7 +1113,7 @@ export default function ManagerPage() {
       </Card>
 
       {/* ---- Manual delete-by-id ---- */}
-      <Card title="Delete by ID">
+      <Card title={t('common:delete_by_id', { defaultValue: 'Delete by ID' })}>
         <div className={styles.stack}>
           <form
             className={styles.inlineForm}
@@ -948,13 +1123,13 @@ export default function ManagerPage() {
           >
             <TextField
               id="mgr-delete-customer-id"
-              label="Customer ID"
+              label={t('common:customer_id')}
               type="number"
               min="1"
               {...registerDeleteCustomer('customerId', { required: true })}
             />
             <Button type="submit" variant="danger" disabled={deleteMutation.isPending}>
-              Delete customer
+              {t('customer:delete_customer')}
             </Button>
           </form>
 
@@ -966,13 +1141,13 @@ export default function ManagerPage() {
           >
             <TextField
               id="mgr-delete-account-id"
-              label="Account ID"
+              label={t('common:account_id')}
               type="number"
               min="1"
               {...registerDeleteAccount('accountId', { required: true })}
             />
             <Button type="submit" variant="danger" disabled={deleteMutation.isPending}>
-              Delete account
+              {t('accounts:delete_account')}
             </Button>
           </form>
 
@@ -984,13 +1159,13 @@ export default function ManagerPage() {
           >
             <TextField
               id="mgr-delete-card-id"
-              label="Card ID"
+              label={t('cards:card_id')}
               type="number"
               min="1"
               {...registerDeleteCard('cardId', { required: true })}
             />
             <Button type="submit" variant="danger" disabled={deleteMutation.isPending}>
-              Delete card
+              {t('cards:op_delete_card')}
             </Button>
           </form>
         </div>
@@ -998,7 +1173,7 @@ export default function ManagerPage() {
 
       <Modal
         open={Boolean(pendingDelete)}
-        title="Confirm delete"
+        title={t('common:confirm_delete')}
         onClose={() => setPendingDelete(null)}
         footer={
           <>
@@ -1008,7 +1183,7 @@ export default function ManagerPage() {
               disabled={deleteMutation.isPending}
               onClick={() => setPendingDelete(null)}
             >
-              Cancel
+              {t('common:cancel')}
             </Button>
             <Button
               type="button"
@@ -1016,13 +1191,16 @@ export default function ManagerPage() {
               isLoading={deleteMutation.isPending}
               onClick={confirmDelete}
             >
-              Delete
+              {t('delete')}
             </Button>
           </>
         }
       >
         <p className={styles.modalText}>
-          Delete {pendingDelete?.label ?? 'this record'}? This action cannot be undone.
+          {t('common:delete_confirm', {
+            defaultValue: 'Delete {{label}}? This action cannot be undone.',
+            label: pendingDelete?.label ?? t('common:this_record', { defaultValue: 'this record' }),
+          })}
         </p>
       </Modal>
     </div>

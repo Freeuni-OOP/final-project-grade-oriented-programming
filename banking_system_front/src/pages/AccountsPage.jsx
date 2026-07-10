@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { accountApi } from '../api/accountApi';
 import { accountKeys } from '../api/accountQueryKeys';
 import { applyBackendFormErrors } from '../api/formErrors';
@@ -9,19 +10,19 @@ import { Button, Card, Modal, Select, Table, TextField, Toast, useToast } from '
 import styles from './AccountsPage.module.css';
 
 const ACCOUNT_CATEGORIES = [
-  { value: 'CHECKING', label: 'Checking' },
-  { value: 'SAVINGS', label: 'Savings' },
-  { value: 'CREDIT', label: 'Credit' },
+  { value: 'CHECKING', label: 'category_checking' },
+  { value: 'SAVINGS', label: 'category_savings' },
+  { value: 'CREDIT', label: 'category_credit' },
 ];
 
 const CARD_TYPES = [
-  { value: 'DEBIT', label: 'Debit' },
-  { value: 'CREDIT', label: 'Credit' },
+  { value: 'DEBIT', label: 'type_debit' },
+  { value: 'CREDIT', label: 'type_credit' },
 ];
 
 const CARD_BRANDS = [
-  { value: 'VISA', label: 'Visa' },
-  { value: 'MASTERCARD', label: 'Mastercard' },
+  { value: 'VISA', label: 'brand_visa' },
+  { value: 'MASTERCARD', label: 'brand_mastercard' },
 ];
 
 const UPDATE_NAME_FIELDS = ['accountId', 'accountName'];
@@ -35,11 +36,11 @@ function trimValue(value) {
 }
 
 function formatValue(value) {
-  return value === null || value === undefined || value === '' ? 'Not provided' : String(value);
+  return value === null || value === undefined || value === '' ? 'not_provided' : String(value);
 }
 
-function validatePositiveId(value, label) {
-  return /^\d+$/.test(trimValue(value)) || `${label} must be a positive number.`;
+function validatePositiveId(value, label, t) {
+  return /^\d+$/.test(trimValue(value)) || t(`error_positive_id`, { label });
 }
 
 function buildCreatePayload(values) {
@@ -49,7 +50,6 @@ function buildCreatePayload(values) {
   };
 }
 
-// Backend now sends createdAccountId, but this keeps it safe if the name changes.
 function getCreatedAccountId(response) {
   return response?.createdAccountId ?? response?.accountId ?? response?.id ?? null;
 }
@@ -86,10 +86,15 @@ function formatAmount(transaction) {
   return currency ? `${amount} ${currency}` : amount;
 }
 
-function StatusBadge({ active }) {
+function StatusBadge({ active, t }) {
   const className =
     active === true ? styles.active : active === false ? styles.inactive : styles.unknown;
-  const label = active === true ? 'Active' : active === false ? 'Inactive' : 'Unknown';
+  const label =
+    active === true
+      ? t('status_active')
+      : active === false
+        ? t('status_inactive')
+        : t('status_unknown');
 
   return <span className={`${styles.badge} ${className}`}>{label}</span>;
 }
@@ -104,6 +109,7 @@ function DetailItem({ label, children }) {
 }
 
 export default function AccountsPage() {
+  const { t } = useTranslation('accounts');
   const queryClient = useQueryClient();
   const { authority } = useAuth();
   const { showToast } = useToast();
@@ -211,12 +217,11 @@ export default function AccountsPage() {
       const createdAccountId = getCreatedAccountId(createdAccount);
 
       if (!createdAccountId) {
-        const error = new Error('Account id was not returned.');
+        const error = new Error(t('account_id_not_returned'));
         error.missingCreatedAccountId = true;
         throw error;
       }
 
-      // Backend gives us the new account id, so the user does not have to copy it.
       await accountApi.registerCustomer(createdAccountId, customerId);
 
       return { createdAccountId, customerId };
@@ -227,8 +232,8 @@ export default function AccountsPage() {
       resetCreateAccount();
       setCreatedAccountLink({ createdAccountId, customerId });
       showToast({
-        title: 'Account created and linked.',
-        message: `New account ID: ${createdAccountId}`,
+        title: t('account_created'),
+        message: t('created_account_id') + `: ${createdAccountId}`,
         variant: 'success',
       });
     },
@@ -240,7 +245,7 @@ export default function AccountsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountKeys.all });
       resetUpdateName();
-      showToast({ title: 'Account name updated.', variant: 'success' });
+      showToast({ title: t('account_name_updated'), variant: 'success' });
     },
   });
 
@@ -251,7 +256,7 @@ export default function AccountsPage() {
     onSuccess: (_result, variables) => {
       queryClient.invalidateQueries({ queryKey: accountKeys.all });
       showToast({
-        title: variables.action === 'activate' ? 'Account activated.' : 'Account deactivated.',
+        title: variables.action === 'activate' ? t('account_activated') : t('account_deactivated'),
         variant: 'success',
       });
     },
@@ -263,7 +268,7 @@ export default function AccountsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountKeys.all });
       resetCreateCard();
-      showToast({ title: 'Card created for account.', variant: 'success' });
+      showToast({ title: t('card_created'), variant: 'success' });
     },
   });
 
@@ -274,7 +279,7 @@ export default function AccountsPage() {
       queryClient.invalidateQueries({ queryKey: accountKeys.all });
       resetDeleteAccount();
       setPendingDelete(null);
-      showToast({ title: 'Account deleted.', variant: 'success' });
+      showToast({ title: t('account_deleted'), variant: 'success' });
     },
     onError: (error) => {
       applyBackendFormErrors(error, setDeleteAccountError, DELETE_ACCOUNT_FIELDS);
@@ -301,108 +306,124 @@ export default function AccountsPage() {
 
   const summaryColumns = useMemo(
     () => [
-      { key: 'name', header: 'Name', render: (account) => formatValue(account.name) },
-      { key: 'category', header: 'Category', render: (account) => formatValue(account.category) },
+      { key: 'name', header: t('col_name'), render: (account) => formatValue(account.name) },
+      {
+        key: 'category',
+        header: t('col_category'),
+        render: (account) => formatValue(account.category),
+      },
       {
         key: 'dateOpened',
-        header: 'Opened',
+        header: t('col_opened'),
         render: (account) => formatValue(account.dateOpened),
       },
       {
         key: 'status',
-        header: 'Status',
-        render: (account) => <StatusBadge active={getActiveValue(account)} />,
+        header: t('col_status'),
+        render: (account) => <StatusBadge active={getActiveValue(account)} t={t} />,
       },
     ],
-    []
+    [t]
   );
 
   const profileColumns = useMemo(
     () => [
-      { key: 'name', header: 'Name', render: (account) => formatValue(account.name) },
-      { key: 'category', header: 'Category', render: (account) => formatValue(account.category) },
+      { key: 'name', header: t('col_name'), render: (account) => formatValue(account.name) },
+      {
+        key: 'category',
+        header: t('col_category'),
+        render: (account) => formatValue(account.category),
+      },
       {
         key: 'dateOpened',
-        header: 'Opened',
+        header: t('col_opened'),
         render: (account) => formatValue(account.dateOpened),
       },
       {
         key: 'customers',
-        header: 'Customers',
+        header: t('col_customers'),
         render: (account) => account.customers?.length ?? 0,
       },
-      { key: 'cards', header: 'Cards', render: (account) => account.cards?.length ?? 0 },
+      {
+        key: 'cards',
+        header: t('col_transactions'),
+        render: (account) => account.cards?.length ?? 0,
+      },
       {
         key: 'transactions',
-        header: 'Transactions',
+        header: t('col_transactions'),
         render: (account) => account.transactions?.length ?? 0,
       },
       {
         key: 'status',
-        header: 'Status',
-        render: (account) => <StatusBadge active={getActiveValue(account)} />,
+        header: t('col_status'),
+        render: (account) => <StatusBadge active={getActiveValue(account)} t={t} />,
       },
     ],
-    []
+    [t]
   );
 
   const customerColumns = useMemo(
     () => [
-      { key: 'name', header: 'Name', render: (customer) => getCustomerName(customer) },
-      { key: 'email', header: 'Email', render: (customer) => formatValue(customer.email) },
+      { key: 'name', header: t('col_name'), render: (customer) => getCustomerName(customer) },
+      { key: 'email', header: t('col_email'), render: (customer) => formatValue(customer.email) },
     ],
-    []
+    [t]
   );
 
   const cardColumns = useMemo(
     () => [
-      { key: 'panMasked', header: 'Card', render: (card) => formatValue(card.panMasked) },
-      { key: 'type', header: 'Type', render: (card) => formatValue(card.type) },
-      { key: 'brand', header: 'Brand', render: (card) => formatValue(card.brand) },
+      { key: 'panMasked', header: t('col_card'), render: (card) => formatValue(card.panMasked) },
+      { key: 'type', header: t('col_type'), render: (card) => formatValue(card.type) },
+      { key: 'brand', header: t('col_brand'), render: (card) => formatValue(card.brand) },
       {
         key: 'spendingLimit',
-        header: 'Limit',
+        header: t('col_limit'),
         render: (card) => formatValue(card.spendingLimit),
       },
       {
         key: 'expirationDate',
-        header: 'Expires',
+        header: t('col_expires'),
         render: (card) => formatValue(card.expirationDate),
       },
       {
         key: 'status',
-        header: 'Status',
-        render: (card) => <StatusBadge active={getActiveValue(card)} />,
+        header: t('col_status'),
+        render: (card) => <StatusBadge active={getActiveValue(card)} t={t} />,
       },
     ],
-    []
+    [t]
   );
 
   const transactionColumns = useMemo(
     () => [
       {
         key: 'transactionType',
-        header: 'Type',
+        header: t('col_type'),
         render: (transaction) => formatValue(transaction.transactionType),
       },
       {
         key: 'amount',
-        header: 'Amount',
+        header: t('col_amount'),
         render: (transaction) => formatAmount(transaction),
       },
-      { key: 'status', header: 'Status', render: (transaction) => formatValue(transaction.status) },
+      {
+        key: 'status',
+        header: t('col_status'),
+        render: (transaction) => formatValue(transaction.status),
+      },
       {
         key: 'timeStamp',
-        header: 'Time',
+        header: t('col_time'),
         render: (transaction) => formatValue(transaction.timeStamp),
       },
       {
         key: 'description',
-        header: 'Description',
+        header: t('col_description'),
         render: (transaction) => formatValue(transaction.description),
       },
     ],
-    []
+    [t]
   );
 
   const submitEmailLookup = ({ email }) => {
@@ -427,7 +448,7 @@ export default function AccountsPage() {
       if (error.missingCreatedAccountId) {
         setCreateAccountError('root', {
           type: 'server',
-          message: 'Account was created, but the backend did not return its ID.',
+          message: t('account_id_not_returned'),
         });
         return;
       }
@@ -493,26 +514,26 @@ export default function AccountsPage() {
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
-        <p className={styles.kicker}>Account area</p>
-        <h1 className={styles.title}>Accounts</h1>
+        <p className={styles.kicker}>{t('page_kicker')}</p>
+        <h1 className={styles.title}>{t('page_title')}</h1>
       </header>
 
-      <Card title="Find accounts">
+      <Card title={t('find_accounts')}>
         <div className={styles.lookupGrid}>
           <form className={styles.lookupForm} onSubmit={handleEmailLookupSubmit(submitEmailLookup)}>
             <TextField
               id="account-email-lookup"
-              label="Customer email"
+              label={t('customer_email')}
               type="email"
               error={emailLookupErrors.email?.message}
               required
               {...registerEmailLookup('email', {
-                required: 'Customer email is required.',
-                pattern: { value: /\S+@\S+\.\S+/, message: 'Enter a valid email.' },
+                required: t('customer_email_required'),
+                pattern: { value: /\S+@\S+\.\S+/, message: t('customer_email_invalid') },
               })}
             />
             <Button type="submit" isLoading={emailAccountsQuery.isFetching}>
-              Load summaries
+              {t('load_summaries')}
             </Button>
           </form>
 
@@ -522,19 +543,18 @@ export default function AccountsPage() {
           >
             <TextField
               id="account-customer-id-lookup"
-              label="Customer ID"
+              label={t('customer_id')}
               type="number"
               min="1"
               error={customerIdLookupErrors.customerId?.message}
               required
               {...registerCustomerIdLookup('customerId', {
-                required: 'Customer ID is required.',
-                validate: (value) =>
-                  /^\d+$/.test(trimValue(value)) || 'Customer ID must be a positive number.',
+                required: t('customer_id_required'),
+                validate: (value) => /^\d+$/.test(trimValue(value)) || t('customer_id_positive'),
               })}
             />
             <Button type="submit" isLoading={customerAccountsQuery.isFetching}>
-              Load profiles
+              {t('load_profiles')}
             </Button>
           </form>
 
@@ -544,26 +564,25 @@ export default function AccountsPage() {
           >
             <TextField
               id="account-id-lookup"
-              label="Account ID"
+              label={t('account_id')}
               type="number"
               min="1"
               error={accountIdLookupErrors.accountId?.message}
               required
               {...registerAccountIdLookup('accountId', {
-                required: 'Account ID is required.',
-                validate: (value) =>
-                  /^\d+$/.test(trimValue(value)) || 'Account ID must be a positive number.',
+                required: t('account_id_required'),
+                validate: (value) => /^\d+$/.test(trimValue(value)) || t('account_id_positive'),
               })}
             />
             <Button type="submit" isLoading={accountDetailQuery.isFetching}>
-              Load detail
+              {t('load_detail')}
             </Button>
           </form>
         </div>
       </Card>
 
       <div className={styles.managementGrid}>
-        <Card title="Create account">
+        <Card title={t('create_account')}>
           <form
             className={styles.formStack}
             onSubmit={handleCreateAccountSubmit(submitCreateAccount)}
@@ -571,36 +590,36 @@ export default function AccountsPage() {
           >
             <TextField
               id="create-account-name"
-              label="Account name"
+              label={t('account_name')}
               error={createAccountErrors.accountName?.message}
               required
               {...registerCreateAccount('accountName', {
-                required: 'Account name is required.',
-                minLength: { value: 3, message: 'At least 3 characters.' },
-                maxLength: { value: 20, message: 'At most 20 characters.' },
+                required: t('account_name_required'),
+                minLength: { value: 3, message: t('account_name_min') },
+                maxLength: { value: 20, message: t('account_name_max') },
               })}
             />
             <Select
               id="create-account-category"
-              label="Category"
-              placeholder="Choose category"
-              options={ACCOUNT_CATEGORIES}
+              label={t('category')}
+              placeholder={t('choose_category')}
+              options={ACCOUNT_CATEGORIES.map((cat) => ({ ...cat, label: t(cat.label) }))}
               error={createAccountErrors.category?.message}
               required
               {...registerCreateAccount('category', {
-                required: 'Category is required.',
+                required: t('category_required'),
               })}
             />
             <TextField
               id="create-account-customer-id"
-              label="Customer ID"
+              label={t('customer_id')}
               type="number"
               min="1"
               error={createAccountErrors.customerId?.message}
               required
               {...registerCreateAccount('customerId', {
-                required: 'Customer ID is required.',
-                validate: (value) => validatePositiveId(value, 'Customer ID'),
+                required: t('customer_id_required'),
+                validate: (value) => validatePositiveId(value, t('customer_id'), t),
               })}
             />
 
@@ -610,12 +629,12 @@ export default function AccountsPage() {
 
             {createdAccountLink && (
               <div className={styles.createdResult}>
-                <span className={styles.detailLabel}>Created account ID</span>
+                <span className={styles.detailLabel}>{t('created_account_id')}</span>
                 <strong className={styles.createdValue}>
                   {createdAccountLink.createdAccountId}
                 </strong>
                 <p className={styles.mutedText}>
-                  Linked to customer {createdAccountLink.customerId}.
+                  {t('linked_to_customer', { customerId: createdAccountLink.customerId })}
                 </p>
               </div>
             )}
@@ -624,12 +643,12 @@ export default function AccountsPage() {
               type="submit"
               isLoading={createAccountMutation.isPending || isCreateAccountSubmitting}
             >
-              Create account
+              {t('create_account')}
             </Button>
           </form>
         </Card>
 
-        <Card title="Update account name">
+        <Card title={t('update_account_name')}>
           <form
             className={styles.formStack}
             onSubmit={handleUpdateNameSubmit(submitUpdateName)}
@@ -638,25 +657,25 @@ export default function AccountsPage() {
             <div className={styles.twoColumnForm}>
               <TextField
                 id="update-name-account-id"
-                label="Account ID"
+                label={t('account_id')}
                 type="number"
                 min="1"
                 error={updateNameErrors.accountId?.message}
                 required
                 {...registerUpdateName('accountId', {
-                  required: 'Account ID is required.',
-                  validate: (value) => validatePositiveId(value, 'Account ID'),
+                  required: t('account_id_required'),
+                  validate: (value) => validatePositiveId(value, t('account_id'), t),
                 })}
               />
               <TextField
                 id="update-account-name"
-                label="New account name"
+                label={t('new_account_name')}
                 error={updateNameErrors.accountName?.message}
                 required
                 {...registerUpdateName('accountName', {
-                  required: 'Account name is required.',
-                  minLength: { value: 3, message: 'At least 3 characters.' },
-                  maxLength: { value: 20, message: 'At most 20 characters.' },
+                  required: t('account_name_required'),
+                  minLength: { value: 3, message: t('account_name_min') },
+                  maxLength: { value: 20, message: t('account_name_max') },
                 })}
               />
             </div>
@@ -669,23 +688,23 @@ export default function AccountsPage() {
               type="submit"
               isLoading={updateNameMutation.isPending || isUpdateNameSubmitting}
             >
-              Save name
+              {t('save_name')}
             </Button>
           </form>
         </Card>
 
-        <Card title="Account status">
+        <Card title={t('account_status')}>
           <form className={styles.formStack} noValidate>
             <TextField
               id="status-account-id"
-              label="Account ID"
+              label={t('account_id')}
               type="number"
               min="1"
               error={statusErrors.accountId?.message}
               required
               {...registerStatus('accountId', {
-                required: 'Account ID is required.',
-                validate: (value) => validatePositiveId(value, 'Account ID'),
+                required: t('account_id_required'),
+                validate: (value) => validatePositiveId(value, t('account_id'), t),
               })}
             />
 
@@ -699,7 +718,7 @@ export default function AccountsPage() {
                 isLoading={statusAction === 'activate'}
                 onClick={handleStatusSubmit((values) => submitStatus(values, 'activate'))}
               >
-                Activate
+                {t('activate')}
               </Button>
               <Button
                 type="button"
@@ -708,13 +727,13 @@ export default function AccountsPage() {
                 isLoading={statusAction === 'deactivate'}
                 onClick={handleStatusSubmit((values) => submitStatus(values, 'deactivate'))}
               >
-                Deactivate
+                {t('deactivate')}
               </Button>
             </div>
           </form>
         </Card>
 
-        <Card title="Create card">
+        <Card title={t('create_card')}>
           <form
             className={styles.formStack}
             onSubmit={handleCreateCardSubmit(submitCreateCard)}
@@ -723,19 +742,19 @@ export default function AccountsPage() {
             <div className={styles.twoColumnForm}>
               <TextField
                 id="create-card-account-id"
-                label="Account ID"
+                label={t('account_id')}
                 type="number"
                 min="1"
                 error={createCardErrors.accountId?.message}
                 required
                 {...registerCreateCard('accountId', {
-                  required: 'Account ID is required.',
-                  validate: (value) => validatePositiveId(value, 'Account ID'),
+                  required: t('account_id_required'),
+                  validate: (value) => validatePositiveId(value, t('account_id'), t),
                 })}
               />
               <TextField
                 id="create-card-spending-limit"
-                label="Spending limit"
+                label={t('spending_limit')}
                 type="number"
                 min="100"
                 max="100000"
@@ -743,42 +762,42 @@ export default function AccountsPage() {
                 error={createCardErrors.spendingLimit?.message}
                 required
                 {...registerCreateCard('spendingLimit', {
-                  required: 'Spending limit is required.',
-                  min: { value: 100, message: 'Spending limit must be at least 100.' },
-                  max: { value: 100000, message: 'Spending limit must be at most 100000.' },
+                  required: t('spending_limit_required'),
+                  min: { value: 100, message: t('spending_limit_min') },
+                  max: { value: 100000, message: t('spending_limit_max') },
                 })}
               />
               <Select
                 id="create-card-type"
-                label="Card type"
-                placeholder="Choose type"
-                options={CARD_TYPES}
+                label={t('card_type')}
+                placeholder={t('choose_type')}
+                options={CARD_TYPES.map((type) => ({ ...type, label: t(type.label) }))}
                 error={createCardErrors.cardType?.message}
                 required
-                {...registerCreateCard('cardType', { required: 'Card type is required.' })}
+                {...registerCreateCard('cardType', { required: t('card_type_required') })}
               />
               <Select
                 id="create-card-brand"
-                label="Card brand"
-                placeholder="Choose brand"
-                options={CARD_BRANDS}
+                label={t('card_brand')}
+                placeholder={t('choose_brand')}
+                options={CARD_BRANDS.map((brand) => ({ ...brand, label: t(brand.label) }))}
                 error={createCardErrors.cardBrand?.message}
                 required
-                {...registerCreateCard('cardBrand', { required: 'Card brand is required.' })}
+                {...registerCreateCard('cardBrand', { required: t('card_brand_required') })}
               />
             </div>
 
             <TextField
               id="create-card-pan"
-              label="PAN"
+              label={t('pan')}
               inputMode="numeric"
               error={createCardErrors.pan?.message}
               required
               {...registerCreateCard('pan', {
-                required: 'PAN is required.',
-                minLength: { value: 12, message: 'PAN must be at least 12 digits.' },
-                maxLength: { value: 19, message: 'PAN must be at most 19 digits.' },
-                pattern: { value: /^\d+$/, message: 'PAN must contain only digits.' },
+                required: t('pan_required'),
+                minLength: { value: 12, message: t('pan_min') },
+                maxLength: { value: 19, message: t('pan_max') },
+                pattern: { value: /^\d+$/, message: t('pan_digits_only') },
               })}
             />
 
@@ -790,13 +809,13 @@ export default function AccountsPage() {
               type="submit"
               isLoading={createCardMutation.isPending || isCreateCardSubmitting}
             >
-              Create card
+              {t('create_card')}
             </Button>
           </form>
         </Card>
       </div>
 
-      <Card title="Balance by currency">
+      <Card title={t('balance_by_currency')}>
         <div className={styles.formStack}>
           <form
             className={styles.balanceForm}
@@ -805,41 +824,39 @@ export default function AccountsPage() {
           >
             <TextField
               id="balance-account-id"
-              label="Account ID"
+              label={t('account_id')}
               type="number"
               min="1"
               error={balanceErrors.accountId?.message}
               required
               {...registerBalance('accountId', {
-                required: 'Account ID is required.',
-                validate: (value) => validatePositiveId(value, 'Account ID'),
+                required: t('account_id_required'),
+                validate: (value) => validatePositiveId(value, t('account_id'), t),
               })}
             />
             <TextField
               id="balance-currency-code"
-              label="Currency code"
+              label={t('currency_code')}
               error={balanceErrors.currencyCode?.message}
               required
               {...registerBalance('currencyCode', {
-                required: 'Currency code is required.',
+                required: t('currency_code_required'),
                 pattern: {
                   value: /^[A-Za-z]{3}$/,
-                  message: 'Use a three-letter currency code.',
+                  message: t('currency_code_invalid'),
                 },
               })}
             />
             <Button type="submit" isLoading={balanceQuery.isFetching}>
-              View balance
+              {t('view_balance')}
             </Button>
           </form>
 
-          {balanceQuery.isError && (
-            <Toast variant="danger" message="Account balance could not be loaded." />
-          )}
+          {balanceQuery.isError && <Toast variant="danger" message={t('balance_error')} />}
 
           {balanceLookup && balanceQuery.isSuccess && (
             <div className={styles.balanceResult}>
-              <span className={styles.detailLabel}>Converted balance</span>
+              <span className={styles.detailLabel}>{t('converted_balance')}</span>
               <strong className={styles.balanceValue}>
                 {formatValue(balanceQuery.data)} {balanceLookup.currencyCode}
               </strong>
@@ -849,7 +866,7 @@ export default function AccountsPage() {
       </Card>
 
       {isManager && (
-        <Card title="Delete account" subtitle="Manager-only action. Confirmation is required.">
+        <Card title={t('delete_account')} subtitle={t('delete_account_subtitle')}>
           <form
             className={styles.formStack}
             onSubmit={handleDeleteAccountSubmit(requestDeleteAccount)}
@@ -857,14 +874,14 @@ export default function AccountsPage() {
           >
             <TextField
               id="delete-account-id"
-              label="Account ID"
+              label={t('account_id')}
               type="number"
               min="1"
               error={deleteAccountErrors.accountId?.message}
               required
               {...registerDeleteAccount('accountId', {
-                required: 'Account ID is required.',
-                validate: (value) => validatePositiveId(value, 'Account ID'),
+                required: t('account_id_required'),
+                validate: (value) => validatePositiveId(value, t('account_id'), t),
               })}
             />
 
@@ -874,7 +891,7 @@ export default function AccountsPage() {
 
             <div className={styles.actionsRow}>
               <Button type="submit" variant="danger" disabled={deleteAccountMutation.isPending}>
-                Delete account
+                {t('delete_account')}
               </Button>
             </div>
           </form>
@@ -883,32 +900,30 @@ export default function AccountsPage() {
 
       <div className={styles.sectionGrid}>
         <Card
-          title="Summaries by email"
-          subtitle="This endpoint returns summary fields only."
+          title={t('summaries_by_email')}
+          subtitle={t('summaries_subtitle')}
           bodyClassName={styles.stack}
         >
-          {emailAccountsQuery.isError && (
-            <Toast variant="danger" message="Account summaries could not be loaded." />
-          )}
+          {emailAccountsQuery.isError && <Toast variant="danger" message={t('summaries_error')} />}
           <Table
             columns={summaryColumns}
             data={emailAccounts}
             getRowKey={(account, index) =>
               `${account.name ?? 'account'}-${account.dateOpened ?? index}`
             }
-            emptyMessage={emailLookup ? 'No account summaries found.' : 'No email loaded.'}
-            loadingMessage="Loading account summaries..."
+            emptyMessage={emailLookup ? t('no_summaries') : t('no_email_loaded')}
+            loadingMessage={t('loading_summaries')}
             isLoading={emailAccountsQuery.isLoading}
           />
         </Card>
 
         <Card
-          title="Profiles by customer ID"
-          subtitle="This endpoint returns full account profiles."
+          title={t('profiles_by_customer')}
+          subtitle={t('profiles_subtitle')}
           bodyClassName={styles.stack}
         >
           {customerAccountsQuery.isError && (
-            <Toast variant="danger" message="Account profiles could not be loaded." />
+            <Toast variant="danger" message={t('profiles_error')} />
           )}
           <Table
             columns={profileColumns}
@@ -916,33 +931,39 @@ export default function AccountsPage() {
             getRowKey={(account, index) =>
               `${account.name ?? 'account'}-${account.dateOpened ?? index}`
             }
-            emptyMessage={customerIdLookup ? 'No account profiles found.' : 'No customer loaded.'}
-            loadingMessage="Loading account profiles..."
+            emptyMessage={customerIdLookup ? t('no_profiles') : t('no_customer_loaded')}
+            loadingMessage={t('loading_profiles')}
             isLoading={customerAccountsQuery.isLoading}
           />
         </Card>
       </div>
 
-      <Card title="Account detail" bodyClassName={styles.stack}>
-        {!accountIdLookup && <p className={styles.mutedText}>No account selected.</p>}
+      <Card title={t('account_detail')} bodyClassName={styles.stack}>
+        {!accountIdLookup && <p className={styles.mutedText}>{t('no_account_selected')}</p>}
 
         {accountDetailQuery.isError && (
-          <Toast variant="danger" message="Account detail could not be loaded." />
+          <Toast variant="danger" message={t('account_detail_error')} />
         )}
 
         {accountDetail && (
           <>
             <dl className={styles.profileGrid}>
-              <DetailItem label="Account ID">{formatValue(accountIdLookup)}</DetailItem>
-              <DetailItem label="Name">{getAccountName(accountDetail)}</DetailItem>
-              <DetailItem label="Category">{formatValue(accountDetail.category)}</DetailItem>
-              <DetailItem label="Opened">{formatValue(accountDetail.dateOpened)}</DetailItem>
-              <DetailItem label="Status">
-                <StatusBadge active={getActiveValue(accountDetail)} />
+              <DetailItem label={t('label_account_id')}>{formatValue(accountIdLookup)}</DetailItem>
+              <DetailItem label={t('label_name')}>{getAccountName(accountDetail)}</DetailItem>
+              <DetailItem label={t('label_category')}>
+                {formatValue(accountDetail.category)}
               </DetailItem>
-              <DetailItem label="Customers">{accountDetail.customers?.length ?? 0}</DetailItem>
-              <DetailItem label="Cards">{accountDetail.cards?.length ?? 0}</DetailItem>
-              <DetailItem label="Transactions">
+              <DetailItem label={t('label_opened')}>
+                {formatValue(accountDetail.dateOpened)}
+              </DetailItem>
+              <DetailItem label={t('label_status')}>
+                <StatusBadge active={getActiveValue(accountDetail)} t={t} />
+              </DetailItem>
+              <DetailItem label={t('label_customers')}>
+                {accountDetail.customers?.length ?? 0}
+              </DetailItem>
+              <DetailItem label={t('label_cards')}>{accountDetail.cards?.length ?? 0}</DetailItem>
+              <DetailItem label={t('label_transactions')}>
                 {accountDetail.transactions?.length ?? 0}
               </DetailItem>
             </dl>
@@ -951,16 +972,16 @@ export default function AccountsPage() {
               columns={customerColumns}
               data={accountDetail.customers ?? []}
               getRowKey={(customer, index) => customer.email ?? index}
-              emptyMessage="No customers linked to this account."
-              caption="Linked customers"
+              emptyMessage={t('no_customers')}
+              caption={t('linked_customers')}
             />
 
             <Table
               columns={cardColumns}
               data={accountDetail.cards ?? []}
               getRowKey={(card, index) => card.panToken ?? card.panMasked ?? index}
-              emptyMessage="No cards linked to this account."
-              caption="Cards"
+              emptyMessage={t('no_cards')}
+              caption={t('label_cards')}
             />
 
             <Table
@@ -969,8 +990,8 @@ export default function AccountsPage() {
               getRowKey={(transaction, index) =>
                 `${transaction.timeStamp ?? 'transaction'}-${transaction.description ?? index}`
               }
-              emptyMessage="No transactions found for this account."
-              caption="Transactions"
+              emptyMessage={t('no_transactions')}
+              caption={t('label_transactions')}
             />
           </>
         )}
@@ -978,7 +999,7 @@ export default function AccountsPage() {
 
       <Modal
         open={Boolean(pendingDelete)}
-        title="Delete account"
+        title={t('delete_account')}
         onClose={() => setPendingDelete(null)}
         footer={
           <>
@@ -988,7 +1009,7 @@ export default function AccountsPage() {
               disabled={deleteAccountMutation.isPending}
               onClick={() => setPendingDelete(null)}
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               type="button"
@@ -996,13 +1017,13 @@ export default function AccountsPage() {
               isLoading={deleteAccountMutation.isPending}
               onClick={confirmDeleteAccount}
             >
-              Delete account
+              {t('delete_account')}
             </Button>
           </>
         }
       >
         <p className={styles.modalText}>
-          Delete account {pendingDelete?.accountId}? This action cannot be undone.
+          {t('delete_confirm_text', { accountId: pendingDelete?.accountId })}
         </p>
       </Modal>
     </div>

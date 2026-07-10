@@ -3,36 +3,18 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../api/authApi';
 import { applyBackendFormErrors } from '../api/formErrors';
 import { Button, Card, TextField, Toast } from '../components/ui';
+import { useTranslation } from 'react-i18next';
 import styles from './AuthPage.module.css';
 
 const FIELDS = [
-  { name: 'firstName', label: 'First name', type: 'text' },
-  { name: 'lastName', label: 'Last name', type: 'text' },
-  { name: 'email', label: 'Email', type: 'email' },
-  { name: 'password', label: 'Password', type: 'password' },
-  { name: 'phoneNumber', label: 'Phone number', type: 'tel' },
-  { name: 'address', label: 'Address', type: 'text' },
-  { name: 'dateOfBirth', label: 'Date of birth', type: 'date' },
+  { name: 'firstName', labelKey: 'first_name', type: 'text' },
+  { name: 'lastName', labelKey: 'last_name', type: 'text' },
+  { name: 'email', labelKey: 'label_email', type: 'email' },
+  { name: 'password', labelKey: 'label_password', type: 'password' },
+  { name: 'phoneNumber', labelKey: 'phone_number', type: 'tel' },
+  { name: 'address', labelKey: 'label_address', type: 'text' },
+  { name: 'dateOfBirth', labelKey: 'label_dob', type: 'date' },
 ];
-
-const RULES = {
-  firstName: { required: 'First name is required.' },
-  lastName: { required: 'Last name is required.' },
-  email: {
-    required: 'Email is required.',
-    pattern: { value: /\S+@\S+.\S+/, message: 'Enter a valid email.' },
-  },
-  password: {
-    required: 'Password is required.',
-    minLength: { value: 6, message: 'At least 6 characters.' },
-    maxLength: { value: 20, message: 'At most 20 characters.' },
-  },
-  phoneNumber: {
-    pattern: { value: /^\d+$/, message: 'Phone number must contain only digits.' },
-  },
-  address: {},
-  dateOfBirth: { required: 'Date of birth is required.' },
-};
 
 const REGISTER_FIELDS = FIELDS.map(({ name }) => name);
 
@@ -51,12 +33,32 @@ function buildRegistrationPayload(values) {
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation('customer');
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     setError,
   } = useForm();
+
+  const RULES = {
+    firstName: { required: t('first_name_required') },
+    lastName: { required: t('last_name_required') },
+    email: {
+      required: t('email_required'),
+      pattern: { value: /\S+@\S+\.\S+/, message: t('email_invalid') },
+    },
+    password: {
+      required: t('password_required'),
+      minLength: { value: 6, message: t('password_min') },
+      maxLength: { value: 20, message: t('password_max') },
+    },
+    phoneNumber: {
+      pattern: { value: /^\d+$/, message: t('phone_digits_only') },
+    },
+    address: {},
+    dateOfBirth: { required: t('dob_required') },
+  };
 
   const onSubmit = async (values) => {
     try {
@@ -70,15 +72,15 @@ export default function RegisterPage() {
   return (
     <div className={styles.page}>
       <Card className={styles.card}>
-        <h1 className={styles.heading}>Create account</h1>
+        <h1 className={styles.heading}>{t('create_account')}</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className={styles.form}>
-          {FIELDS.map(({ name, label, type }) => (
+          {FIELDS.map(({ name, labelKey, type }) => (
             <TextField
               key={name}
               id={name}
               type={type}
-              label={label}
+              label={t(labelKey)}
               error={errors[name]?.message}
               required={Boolean(RULES[name]?.required)}
               {...register(name, RULES[name])}
@@ -88,12 +90,12 @@ export default function RegisterPage() {
           {errors.root && <Toast variant="danger" message={errors.root.message} />}
 
           <Button type="submit" fullWidth isLoading={isSubmitting}>
-            {isSubmitting ? 'Creating account…' : 'Create account'}
+            {isSubmitting ? t('creating_account') : t('create_account')}
           </Button>
         </form>
 
         <p className={styles.footer}>
-          Already have an account? <Link to="/login">Sign in</Link>
+          {t('already_have_account')} <Link to="/login">{t('sign_in')}</Link>
         </p>
       </Card>
     </div>

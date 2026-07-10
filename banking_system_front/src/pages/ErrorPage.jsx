@@ -1,19 +1,22 @@
+import { useTranslation } from 'react-i18next';
 import { isRouteErrorResponse, useRouteError } from 'react-router-dom';
 import { Button, Card } from '../components/ui';
 import styles from './StatusPage.module.css';
 
-export function ErrorFallback({
-  title = 'Something went wrong',
-  message = 'The page could not be loaded.',
-}) {
+export function ErrorFallback({ title, message }) {
+  const { t } = useTranslation('common');
+
+  const fallbackTitle = title || t('something_went_wrong');
+  const fallbackMessage = message || t('page_could_not_be_loaded');
+
   return (
     <div className={styles.fullPage}>
       <Card className={styles.statusCard}>
-        <p className={styles.kickerDanger}>Error</p>
-        <h1 className={styles.title}>{title}</h1>
-        <p className={styles.message}>{message}</p>
+        <p className={styles.kickerDanger}>{t('error')}</p>
+        <h1 className={styles.title}>{fallbackTitle}</h1>
+        <p className={styles.message}>{fallbackMessage}</p>
         <Button as="a" href="/customers">
-          Go to your profile
+          {t('go_to_profile')}
         </Button>
       </Card>
     </div>
@@ -21,9 +24,10 @@ export function ErrorFallback({
 }
 
 export default function ErrorPage() {
+  const { t } = useTranslation('common');
   const error = useRouteError();
-  let title = 'Something went wrong';
-  let message = 'The page could not be loaded.';
+  let title = t('something_went_wrong');
+  let message = t('page_could_not_be_loaded');
 
   if (isRouteErrorResponse(error)) {
     title = `${error.status} ${error.statusText}`;
