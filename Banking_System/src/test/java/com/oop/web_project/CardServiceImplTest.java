@@ -1,5 +1,7 @@
 package com.oop.web_project;
 
+import com.oop.web_project.dto.requests.CardFilterRequest;
+import com.oop.web_project.dto.requests.PageRequest;
 import com.oop.web_project.entities.*;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
 import com.oop.web_project.exceptions.cardExceptions.*;
@@ -13,6 +15,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -199,9 +206,14 @@ class CardServiceImplTest {
     }
 
     @Test
+    void testDeleteCardNotFoundThrowsException() {
+        when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(CardNotFoundException.class, () -> cardService.deleteCard(1L));
+    }
+
+    @Test
     void testDeleteCardDeletesById() {
         when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
-
         cardService.deleteCard(1L);
         verify(cardRepository, times(1)).delete(card);
     }
@@ -347,6 +359,11 @@ class CardServiceImplTest {
     }
 
     @Test
+    void testChangeCurrencySameCurrencyThrowsException() {
+        assertThrows(DuplicateCurrencyException.class, () -> cardService.changeCurrency(1L, BigDecimal.TEN, "USD", "USD"));
+    }
+
+    @Test
     void testChangeCurrencyFromCurrencyLessThanToCurrencySourceBalanceNotFoundThrowsException() {
         when(cardBalanceRepository.findByCardIdAndCurrencyCode(1L, "EUR")).thenReturn(Optional.empty());
         assertThrows(CardBalanceNotFoundException.class, () -> cardService.changeCurrency(1L, BigDecimal.TEN, "EUR", "USD"));
@@ -423,5 +440,15 @@ class CardServiceImplTest {
         card.setExpirationDate(LocalDate.now().plusDays(1));
         when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
         assertFalse(cardService.checkCardExpiration(1L));
+    }
+
+    @Test
+    void testFilterCardsReturnsPage() {
+        Page<Card> page = new PageImpl<>(List.of(card));
+        when(cardRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+        CardFilterRequest filterRequest = new CardFilterRequest();
+        PageRequest pageRequest = new PageRequest(1, 1, "asa", "asa");
+        Page<Card> result = cardService.filterCards(filterRequest, pageRequest);
+        assertEquals(page, result);
     }
 }

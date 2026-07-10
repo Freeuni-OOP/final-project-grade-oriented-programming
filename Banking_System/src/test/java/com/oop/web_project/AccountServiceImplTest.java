@@ -1,5 +1,7 @@
 package com.oop.web_project;
 
+import com.oop.web_project.dto.requests.AccountFilterRequest;
+import com.oop.web_project.dto.requests.PageRequest;
 import com.oop.web_project.entities.Account;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.exceptions.accountExceptions.AccountAlreadyActiveException;
@@ -18,13 +20,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -141,11 +149,23 @@ class AccountServiceImplTest {
     }
 
     @Test
+    void testSelectAccountsByCustomerEmailEmptyListThrowsException() {
+        when(accountRepository.findAllByCustomersEmail("john@example.com")).thenReturn(Collections.emptyList());
+        assertThrows(AccountNotFoundException.class, () -> accountService.selectAccountsByCustomerEmail("john@example.com"));
+    }
+
+    @Test
     void testSelectAccountsByCustomerIdReturnsAccounts() {
         List<Account> accounts = List.of(account);
         when(accountRepository.findAllByCustomersId(1L)).thenReturn(accounts);
         List<Account> result = accountService.selectAccountsByCustomerId(1L);
         assertEquals(accounts, result);
+    }
+
+    @Test
+    void testSelectAccountsByCustomerIdEmptyListThrowsException() {
+        when(accountRepository.findAllByCustomersId(1L)).thenReturn(Collections.emptyList());
+        assertThrows(AccountNotFoundException.class, () -> accountService.selectAccountsByCustomerId(1L));
     }
 
     @Test
@@ -214,5 +234,15 @@ class AccountServiceImplTest {
     void testSelectAccountByCardIdNotFoundThrowsException() {
         when(accountRepository.findByCardsId(1L)).thenReturn(Optional.empty());
         assertThrows(AccountNotFoundException.class, () -> accountService.selectAccountByCardId(1L));
+    }
+
+    @Test
+    void testFilterAccountsReturnsPage() {
+        Page<Account> page = new PageImpl<>(List.of(account));
+        when(accountRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+        AccountFilterRequest filterRequest = new AccountFilterRequest();
+        PageRequest pageRequest = new PageRequest(1, 1, "apa", "apa");
+        Page<Account> result = accountService.filterAccounts(filterRequest, pageRequest);
+        assertEquals(page, result);
     }
 }
