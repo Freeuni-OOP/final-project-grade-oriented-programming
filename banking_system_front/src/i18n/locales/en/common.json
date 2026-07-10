@@ -43,7 +43,6 @@
   "any_category": "Any category",
   "any_status": "Any status",
   "filter_cards": "Filter cards",
-
   "previous": "Previous",
   "next": "Next",
   "page": "Page",
@@ -100,5 +99,9 @@
   "language_georgian": "ქართული",
   "language_chinese": "中文",
   "logout": "Logout",
-  "role_user": "User"
+  "role_user": "User",
+  "login": "Login",
+  "register": "Register",
+  "profile": "Profile",
+  "manager": "Manager"
 }

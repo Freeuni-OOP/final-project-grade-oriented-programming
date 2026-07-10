@@ -1,3 +1,4 @@
+// src/components/Layout.jsx
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext';
@@ -26,6 +27,7 @@ export default function Layout() {
         <NavLink to={isAuthenticated ? '/customers' : '/login'} className={styles.brand}>
           {t('common:brand')}
         </NavLink>
+
         <nav aria-label={t('common:main_navigation')} className={styles.nav}>
           {navItems.map((item) => (
             <NavLink
@@ -35,10 +37,11 @@ export default function Layout() {
                 isActive ? `${styles.link} ${styles.activeLink}` : styles.link
               }
             >
-              {item.label}
+              {t(item.labelKey ?? item.label)}
             </NavLink>
           ))}
         </nav>
+
         <div className={styles.actions}>
           <select
             value={i18n.language}
@@ -50,6 +53,7 @@ export default function Layout() {
             <option value="ka">{t('common:language_georgian')}</option>
             <option value="zh">{t('common:language_chinese')}</option>
           </select>
+
           {isAuthenticated && (
             <>
               <span className={styles.role}>
@@ -64,6 +68,7 @@ export default function Layout() {
           )}
         </div>
       </header>
+
       <main className={styles.content}>
         <Outlet />
       </main>

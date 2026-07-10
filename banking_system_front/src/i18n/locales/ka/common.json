@@ -99,5 +99,9 @@
   "language_georgian": "ქართული",
   "language_chinese": "中文",
   "logout": "გასვლა",
-  "role_user": "მომხმარებელი"
+  "role_user": "მომხმარებელი",
+  "login": "შესვლა",
+  "register": "რეგისტრაცია",
+  "profile": "პროფილი",
+  "manager": "მენეჯერი"
 }

@@ -99,5 +99,9 @@
   "language_georgian": "ქართული",
   "language_chinese": "中文",
   "logout": "退出登录",
-  "role_user": "用户"
+  "role_user": "用户",
+  "login": "登录",
+  "register": "注册",
+  "profile": "个人資料",
+  "manager": "管理员"
 }
