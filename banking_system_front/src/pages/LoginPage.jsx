@@ -4,6 +4,7 @@ import { authApi } from '../api/authApi';
 import { applyBackendFormErrors } from '../api/formErrors';
 import { useAuth } from '../components/AuthContext';
 import { Button, Card, TextField, Toast } from '../components/ui';
+import { useTranslation } from 'react-i18next';
 import styles from './AuthPage.module.css';
 
 const LOGIN_FIELDS = ['email', 'password'];
@@ -11,6 +12,7 @@ const LOGIN_FIELDS = ['email', 'password'];
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation('customer');
 
   const {
     register,
@@ -25,7 +27,7 @@ export default function LoginPage() {
       const token = data['Generated JWT token'];
 
       if (!token) {
-        setError('root', { message: 'Login succeeded but no token was returned.' });
+        setError('root', { message: t('login_no_token') });
         return;
       }
 
@@ -39,41 +41,41 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       <Card className={styles.card}>
-        <h1 className={styles.heading}>Sign in</h1>
+        <h1 className={styles.heading}>{t('sign_in')}</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className={styles.form}>
           <TextField
             id="email"
             type="email"
-            label="Email"
+            label={t('label_email')}
             autoComplete="email"
             error={errors.email?.message}
             required
             {...register('email', {
-              required: 'Email is required.',
-              pattern: { value: /\S+@\S+\.\S+/, message: 'Enter a valid email.' },
+              required: t('email_required'),
+              pattern: { value: /\S+@\S+\.\S+/, message: t('email_invalid') },
             })}
           />
 
           <TextField
             id="password"
             type="password"
-            label="Password"
+            label={t('label_password')}
             autoComplete="current-password"
             error={errors.password?.message}
             required
-            {...register('password', { required: 'Password is required.' })}
+            {...register('password', { required: t('password_required') })}
           />
 
           {errors.root && <Toast variant="danger" message={errors.root.message} />}
 
           <Button type="submit" fullWidth isLoading={isSubmitting}>
-            {isSubmitting ? 'Signing in…' : 'Sign in'}
+            {isSubmitting ? t('signing_in') : t('sign_in')}
           </Button>
         </form>
 
         <p className={styles.footer}>
-          No account? <Link to="/register">Create one</Link>
+          {t('no_account')} <Link to="/register">{t('create_one')}</Link>
         </p>
       </Card>
     </div>

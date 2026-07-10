@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { customerApi } from '../api/customerApi';
 import { customerKeys } from '../api/customerQueryKeys';
 import { Button, Card, Modal, Table, TextField, useToast } from '../components/ui';
@@ -34,14 +35,17 @@ function getCustomerName(customer) {
 }
 
 function StatusBadge({ active }) {
+  const { t } = useTranslation('common');
+  const statusKey =
+    active === true ? 'status_active' : active === false ? 'status_inactive' : 'status_unknown';
   const className =
     active === true ? styles.active : active === false ? styles.inactive : styles.unknown;
-  const label = active === true ? 'Active' : active === false ? 'Inactive' : 'Unknown';
 
-  return <span className={`${styles.badge} ${className}`}>{label}</span>;
+  return <span className={`${styles.badge} ${className}`}>{t(statusKey)}</span>;
 }
 
 export default function ManagerCustomersPage({ title = 'Admin' }) {
+  const { t } = useTranslation('common');
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [accountId, setAccountId] = useState(null);
@@ -76,7 +80,7 @@ export default function ManagerCustomersPage({ title = 'Admin' }) {
       queryClient.invalidateQueries({ queryKey: customerKeys.all });
       resetDeleteForm();
       setPendingDelete(null);
-      showToast({ title: 'Customer deleted.', variant: 'success' });
+      showToast({ title: t('customer_deleted'), variant: 'success' });
     },
   });
 
@@ -86,7 +90,7 @@ export default function ManagerCustomersPage({ title = 'Admin' }) {
 
   const requestManualDelete = ({ customerId }) => {
     const id = trimValue(customerId);
-    setPendingDelete({ id, label: `customer ${id}` });
+    setPendingDelete({ id, label: `${t('customer_id_label')} ${id}` });
   };
 
   const requestRowDelete = (customer) => {
@@ -110,32 +114,32 @@ export default function ManagerCustomersPage({ title = 'Admin' }) {
     () => [
       {
         key: 'id',
-        header: 'ID',
+        header: t('account_id'),
         render: (customer) => formatValue(getCustomerId(customer)),
       },
       {
         key: 'name',
-        header: 'Name',
+        header: t('label_name'),
         render: (customer) => getCustomerName(customer),
       },
       {
         key: 'email',
-        header: 'Email',
+        header: t('email_required'),
         render: (customer) => formatValue(customer.email),
       },
       {
         key: 'phoneNumber',
-        header: 'Phone',
+        header: t('phone_required'),
         render: (customer) => formatValue(customer.phoneNumber),
       },
       {
         key: 'status',
-        header: 'Status',
+        header: t('status_active'),
         render: (customer) => <StatusBadge active={getActiveValue(customer)} />,
       },
       {
         key: 'actions',
-        header: 'Actions',
+        header: t('edit'),
         align: 'right',
         render: (customer) => {
           const customerId = getCustomerId(customer);
@@ -149,14 +153,14 @@ export default function ManagerCustomersPage({ title = 'Admin' }) {
                 disabled={!customerId || deleteMutation.isPending}
                 onClick={() => requestRowDelete(customer)}
               >
-                Delete
+                {t('delete')}
               </Button>
             </div>
           );
         },
       },
     ],
-    [deleteMutation.isPending]
+    [deleteMutation.isPending, t]
   );
 
   const customers = accountCustomersQuery.data ?? [];
@@ -164,11 +168,11 @@ export default function ManagerCustomersPage({ title = 'Admin' }) {
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
-        <p className={styles.kicker}>Manager</p>
+        <p className={styles.kicker}>{t('manager')}</p>
         <h1 className={styles.title}>{title}</h1>
       </header>
 
-      <Card title="Account customers">
+      <Card title={t('Account customers')}>
         <div className={styles.stack}>
           <form
             className={styles.inlineForm}
@@ -176,19 +180,18 @@ export default function ManagerCustomersPage({ title = 'Admin' }) {
           >
             <TextField
               id="manager-account-id"
-              label="Account ID"
+              label={t('account_id')}
               type="number"
               min="1"
               error={accountLookupErrors.accountId?.message}
               required
               {...registerAccountLookup('accountId', {
-                required: 'Account ID is required.',
-                validate: (value) =>
-                  /^\d+$/.test(trimValue(value)) || 'Account ID must be a positive number.',
+                required: t('account_id_required'),
+                validate: (value) => /^\d+$/.test(trimValue(value)) || t('account_id_positive'),
               })}
             />
             <Button type="submit" isLoading={accountCustomersQuery.isFetching}>
-              Load customers
+              {t('Load customers')}
             </Button>
           </form>
 
@@ -196,37 +199,36 @@ export default function ManagerCustomersPage({ title = 'Admin' }) {
             columns={customerColumns}
             data={customers}
             getRowKey={(customer, index) => getCustomerId(customer) ?? customer.email ?? index}
-            emptyMessage={accountId ? 'No customers found for this account.' : 'No account loaded.'}
-            loadingMessage="Loading customers..."
+            emptyMessage={accountId ? t('no_customers_for_account') : t('No account loaded.')}
+            loadingMessage={t('Loading customers...')}
             isLoading={accountCustomersQuery.isLoading}
           />
         </div>
       </Card>
 
-      <Card title="Delete customer">
+      <Card title={t('Delete customer')}>
         <form className={styles.inlineForm} onSubmit={handleDeleteSubmit(requestManualDelete)}>
           <TextField
             id="manager-delete-customer-id"
-            label="Customer ID"
+            label={t('customer_id')}
             type="number"
             min="1"
             error={deleteErrors.customerId?.message}
             required
             {...registerDelete('customerId', {
-              required: 'Customer ID is required.',
-              validate: (value) =>
-                /^\d+$/.test(trimValue(value)) || 'Customer ID must be a positive number.',
+              required: t('customer_id_required'),
+              validate: (value) => /^\d+$/.test(trimValue(value)) || t('customer_id_positive'),
             })}
           />
           <Button type="submit" variant="danger" disabled={deleteMutation.isPending}>
-            Delete
+            {t('delete')}
           </Button>
         </form>
       </Card>
 
       <Modal
         open={Boolean(pendingDelete)}
-        title="Delete customer"
+        title={t('Delete customer')}
         onClose={() => setPendingDelete(null)}
         footer={
           <>
@@ -236,7 +238,7 @@ export default function ManagerCustomersPage({ title = 'Admin' }) {
               disabled={deleteMutation.isPending}
               onClick={() => setPendingDelete(null)}
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               type="button"
@@ -244,13 +246,15 @@ export default function ManagerCustomersPage({ title = 'Admin' }) {
               isLoading={deleteMutation.isPending}
               onClick={confirmDelete}
             >
-              Delete customer
+              {t('Delete customer')}
             </Button>
           </>
         }
       >
         <p className={styles.modalText}>
-          Delete {pendingDelete?.label ?? 'this customer'}? This action cannot be undone.
+          {t('Delete {{label}}? This action cannot be undone.', {
+            label: pendingDelete?.label ?? 'customer',
+          })}
         </p>
       </Modal>
     </div>

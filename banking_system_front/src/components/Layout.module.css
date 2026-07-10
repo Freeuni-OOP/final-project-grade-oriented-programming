@@ -15,6 +15,15 @@
   box-shadow: var(--shadow-sm);
 }
 
+.languageSwitcher {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border, #ccc);
+  background: transparent;
+  cursor: pointer;
+}
+
 .brand {
   flex: 0 0 auto;
   color: var(--color-text);

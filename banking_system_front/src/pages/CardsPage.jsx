@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { cardApi } from '../api/cardApi';
 import { cardKeys } from '../api/cardQueryKeys';
 import { applyBackendFormErrors } from '../api/formErrors';
@@ -29,19 +30,8 @@ function normalizeCurrency(value) {
   return trimValue(value).toUpperCase();
 }
 
-function formatValue(value) {
-  return value === null || value === undefined || value === '' ? 'Not provided' : String(value);
-}
-
-function validatePositiveAmount(value) {
-  return Number(value) > 0 || 'Amount must be positive.';
-}
-
-function validatePositiveId(value, label) {
-  const valueText = trimValue(value);
-  return (
-    (/^\d+$/.test(valueText) && Number(valueText) > 0) || `${label} must be a positive number.`
-  );
+function formatValue(value, fallbackText) {
+  return value === null || value === undefined || value === '' ? fallbackText : String(value);
 }
 
 function getActiveValue(record) {
@@ -91,22 +81,35 @@ function DetailItem({ label, children }) {
 }
 
 function StatusBadge({ active }) {
+  const { t } = useTranslation('cards');
   const className =
     active === true ? styles.active : active === false ? styles.inactive : styles.unknown;
-  const label = active === true ? 'Active' : active === false ? 'Inactive' : 'Unknown';
+  const label =
+    active === true
+      ? t('status_active')
+      : active === false
+        ? t('status_inactive')
+        : t('status_unknown');
 
   return <span className={`${styles.badge} ${className}`}>{label}</span>;
 }
 
 function ExpirationBadge({ expired }) {
+  const { t } = useTranslation('cards');
   const className =
     expired === true ? styles.expired : expired === false ? styles.valid : styles.unknown;
-  const label = expired === true ? 'Expired' : expired === false ? 'Valid' : 'Unknown';
+  const label =
+    expired === true
+      ? t('status_expired')
+      : expired === false
+        ? t('status_valid')
+        : t('status_unknown');
 
   return <span className={`${styles.badge} ${className}`}>{label}</span>;
 }
 
 export default function CardsPage() {
+  const { t } = useTranslation('cards');
   const queryClient = useQueryClient();
   const { authority } = useAuth();
   const { showToast } = useToast();
@@ -161,6 +164,13 @@ export default function CardsPage() {
     formState: { errors: addCurrencyErrors, isSubmitting: isAddCurrencySubmitting },
   } = useForm({ defaultValues: { currencyCode: '' } });
 
+  // Validation Helpers utilizing translations
+  const validatePositiveAmount = (value) => Number(value) > 0 || t('error_positive_amount');
+  const validatePositiveId = (value, label) => {
+    const valueText = trimValue(value);
+    return (/^\d+$/.test(valueText) && Number(valueText) > 0) || t('error_positive_id', { label });
+  };
+
   const cardQuery = useQuery({
     queryKey: selectedCardId ? cardKeys.byId(selectedCardId) : [...cardKeys.all, 'id', 'idle'],
     queryFn: () => cardApi.getById(selectedCardId),
@@ -207,7 +217,7 @@ export default function CardsPage() {
     onSuccess: (_result, variables) => {
       refreshCard(variables.cardId);
       resetDeposit();
-      showToast({ title: 'Deposit completed.', variant: 'success' });
+      showToast({ title: t('toast_deposit_success'), variant: 'success' });
     },
   });
 
@@ -217,7 +227,7 @@ export default function CardsPage() {
     onSuccess: (_result, variables) => {
       refreshCard(variables.cardId);
       resetWithdraw();
-      showToast({ title: 'Withdrawal completed.', variant: 'success' });
+      showToast({ title: t('toast_withdraw_success'), variant: 'success' });
     },
   });
 
@@ -227,7 +237,7 @@ export default function CardsPage() {
     onSuccess: () => {
       refreshCard(selectedCardId);
       resetTransfer();
-      showToast({ title: 'Transfer completed.', variant: 'success' });
+      showToast({ title: t('toast_transfer_success'), variant: 'success' });
     },
   });
 
@@ -237,7 +247,7 @@ export default function CardsPage() {
     onSuccess: (_result, variables) => {
       refreshCard(variables.cardId);
       resetExchange();
-      showToast({ title: 'Currency exchanged.', variant: 'success' });
+      showToast({ title: t('toast_exchange_success'), variant: 'success' });
     },
   });
 
@@ -247,7 +257,7 @@ export default function CardsPage() {
     onSuccess: (_result, variables) => {
       refreshCard(variables.cardId);
       resetAddCurrency();
-      showToast({ title: 'Currency added to card.', variant: 'success' });
+      showToast({ title: t('toast_add_currency_success'), variant: 'success' });
     },
   });
 
@@ -258,7 +268,7 @@ export default function CardsPage() {
     onSuccess: (_result, variables) => {
       refreshCard(variables.cardId);
       showToast({
-        title: variables.action === 'activate' ? 'Card activated.' : 'Card deactivated.',
+        title: variables.action === 'activate' ? t('toast_activated') : t('toast_deactivated'),
         variant: 'success',
       });
     },
@@ -271,7 +281,7 @@ export default function CardsPage() {
       queryClient.invalidateQueries({ queryKey: cardKeys.all });
       setPendingDelete(false);
       setSelectedCardId(null);
-      showToast({ title: 'Card deleted.', variant: 'success' });
+      showToast({ title: t('toast_deleted'), variant: 'success' });
     },
   });
 
@@ -279,12 +289,16 @@ export default function CardsPage() {
     () => [
       {
         key: 'currencyCode',
-        header: 'Currency',
-        render: (balance) => formatValue(balance.currencyCode),
+        header: t('col_currency'),
+        render: (balance) => formatValue(balance.currencyCode, t('not_provided')),
       },
-      { key: 'amount', header: 'Amount', render: (balance) => formatValue(balance.amount) },
+      {
+        key: 'amount',
+        header: t('col_amount'),
+        render: (balance) => formatValue(balance.amount, t('not_provided')),
+      },
     ],
-    []
+    [t]
   );
 
   const submitLookup = ({ cardId }) => {
@@ -346,16 +360,11 @@ export default function CardsPage() {
   const submitStatus = async (action) => {
     try {
       await statusMutation.mutateAsync({ cardId: selectedCardId, action });
-    } catch {
-      // The shared Axios error bridge shows the backend message for this button action.
-    }
+    } catch {}
   };
 
   const confirmDelete = () => {
-    if (!selectedCardId) {
-      return;
-    }
-
+    if (!selectedCardId) return;
     deleteMutation.mutate(selectedCardId);
   };
 
@@ -368,33 +377,33 @@ export default function CardsPage() {
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
-        <p className={styles.kicker}>Card area</p>
-        <h1 className={styles.title}>Cards</h1>
+        <p className={styles.kicker}>{t('page_kicker')}</p>
+        <h1 className={styles.title}>{t('page_title')}</h1>
       </header>
 
-      <Card title="Find card">
+      <Card title={t('find_card')}>
         <form className={styles.lookupForm} onSubmit={handleLookupSubmit(submitLookup)} noValidate>
           <TextField
             id="card-id-lookup"
-            label="Card ID"
+            label={t('card_id')}
             type="number"
             min="1"
             error={lookupErrors.cardId?.message}
             required
             {...registerLookup('cardId', {
-              required: 'Card ID is required.',
-              validate: (value) => validatePositiveId(value, 'Card ID'),
+              required: t('error_card_id_required'),
+              validate: (value) => validatePositiveId(value, t('card_id')),
             })}
           />
           <Button type="submit" isLoading={cardQuery.isFetching}>
-            Load card
+            {t('load_card')}
           </Button>
         </form>
       </Card>
 
       <div className={styles.grid}>
         <Card
-          title="Card detail"
+          title={t('card_detail')}
           actions={
             hasSelectedCard && (
               <div className={styles.actionsRow}>
@@ -405,7 +414,7 @@ export default function CardsPage() {
                   isLoading={statusAction === 'activate'}
                   onClick={() => submitStatus('activate')}
                 >
-                  Activate
+                  {t('action_activate')}
                 </Button>
                 <Button
                   type="button"
@@ -414,45 +423,57 @@ export default function CardsPage() {
                   isLoading={statusAction === 'deactivate'}
                   onClick={() => submitStatus('deactivate')}
                 >
-                  Deactivate
+                  {t('action_deactivate')}
                 </Button>
               </div>
             )
           }
         >
-          {!hasSelectedCard && <p className={styles.mutedText}>No card selected.</p>}
-          {cardQuery.isError && (
-            <Toast variant="danger" message="Card detail could not be loaded." />
-          )}
+          {!hasSelectedCard && <p className={styles.mutedText}>{t('no_card_selected')}</p>}
+          {cardQuery.isError && <Toast variant="danger" message={t('error_card_load')} />}
           {card && (
             <dl className={styles.profileGrid}>
-              <DetailItem label="Card ID">{selectedCardId}</DetailItem>
-              <DetailItem label="Card">{formatValue(card.panMasked)}</DetailItem>
-              <DetailItem label="Type">{formatValue(card.type)}</DetailItem>
-              <DetailItem label="Brand">{formatValue(card.brand)}</DetailItem>
-              <DetailItem label="Limit">{formatValue(card.spendingLimit)}</DetailItem>
-              <DetailItem label="Expires">{formatValue(card.expirationDate)}</DetailItem>
-              <DetailItem label="Status">
+              <DetailItem label={t('card_id')}>{selectedCardId}</DetailItem>
+              <DetailItem label={t('lbl_card')}>
+                {formatValue(card.panMasked, t('not_provided'))}
+              </DetailItem>
+              <DetailItem label={t('lbl_type')}>
+                {formatValue(card.type, t('not_provided'))}
+              </DetailItem>
+              <DetailItem label={t('lbl_brand')}>
+                {formatValue(card.brand, t('not_provided'))}
+              </DetailItem>
+              <DetailItem label={t('lbl_limit')}>
+                {formatValue(card.spendingLimit, t('not_provided'))}
+              </DetailItem>
+              <DetailItem label={t('lbl_expires')}>
+                {formatValue(card.expirationDate, t('not_provided'))}
+              </DetailItem>
+              <DetailItem label={t('lbl_status')}>
                 <StatusBadge active={cardActive} />
               </DetailItem>
-              <DetailItem label="Expiration check">
+              <DetailItem label={t('lbl_expiration_check')}>
                 <ExpirationBadge expired={expirationQuery.data} />
               </DetailItem>
             </dl>
           )}
         </Card>
 
-        <Card title="Linked account">
-          {!hasSelectedCard && <p className={styles.mutedText}>No card selected.</p>}
-          {accountQuery.isError && (
-            <Toast variant="danger" message="Linked account could not be loaded." />
-          )}
+        <Card title={t('linked_account')}>
+          {!hasSelectedCard && <p className={styles.mutedText}>{t('no_card_selected')}</p>}
+          {accountQuery.isError && <Toast variant="danger" message={t('error_account_load')} />}
           {account && (
             <dl className={styles.profileGrid}>
-              <DetailItem label="Name">{formatValue(account.name)}</DetailItem>
-              <DetailItem label="Category">{formatValue(account.category)}</DetailItem>
-              <DetailItem label="Opened">{formatValue(account.dateOpened)}</DetailItem>
-              <DetailItem label="Status">
+              <DetailItem label={t('lbl_name')}>
+                {formatValue(account.name, t('not_provided'))}
+              </DetailItem>
+              <DetailItem label={t('lbl_category')}>
+                {formatValue(account.category, t('not_provided'))}
+              </DetailItem>
+              <DetailItem label={t('lbl_opened')}>
+                {formatValue(account.dateOpened, t('not_provided'))}
+              </DetailItem>
+              <DetailItem label={t('lbl_status')}>
                 <StatusBadge active={getActiveValue(account)} />
               </DetailItem>
             </dl>
@@ -460,22 +481,20 @@ export default function CardsPage() {
         </Card>
       </div>
 
-      <Card title="Currency balances">
-        {balancesQuery.isError && (
-          <Toast variant="danger" message="Balances could not be loaded." />
-        )}
+      <Card title={t('currency_balances')}>
+        {balancesQuery.isError && <Toast variant="danger" message={t('error_balances_load')} />}
         <Table
           columns={balanceColumns}
           data={balances}
           getRowKey={(balance, index) => balance.currencyCode ?? index}
-          emptyMessage={hasSelectedCard ? 'No balances found for this card.' : 'No card selected.'}
-          loadingMessage="Loading balances..."
+          emptyMessage={hasSelectedCard ? t('no_balances') : t('no_card_selected')}
+          loadingMessage={t('loading_balances')}
           isLoading={balancesQuery.isLoading}
         />
       </Card>
 
       <div className={styles.operationsGrid}>
-        <Card title="Deposit">
+        <Card title={t('op_deposit')}>
           <form
             className={styles.formStack}
             onSubmit={handleDepositSubmit(submitDeposit)}
@@ -484,25 +503,25 @@ export default function CardsPage() {
             <div className={styles.twoColumnForm}>
               <TextField
                 id="deposit-amount"
-                label="Amount"
+                label={t('lbl_amount')}
                 type="number"
                 min="0.01"
                 step="0.01"
                 error={depositErrors.amountToDeposit?.message}
                 required
                 {...registerDeposit('amountToDeposit', {
-                  required: 'Amount is required.',
+                  required: t('error_amount_required'),
                   validate: validatePositiveAmount,
                 })}
               />
               <Select
                 id="deposit-currency"
-                label="Currency"
-                placeholder="Choose currency"
+                label={t('lbl_currency')}
+                placeholder={t('choose_currency')}
                 options={CURRENCY_OPTIONS}
                 error={depositErrors.currencyCode?.message}
                 required
-                {...registerDeposit('currencyCode', { required: 'Currency is required.' })}
+                {...registerDeposit('currencyCode', { required: t('error_currency_required') })}
               />
             </div>
             {depositErrors.root && <Toast variant="danger" message={depositErrors.root.message} />}
@@ -511,12 +530,12 @@ export default function CardsPage() {
               disabled={!hasSelectedCard}
               isLoading={depositMutation.isPending || isDepositSubmitting}
             >
-              Deposit
+              {t('op_deposit')}
             </Button>
           </form>
         </Card>
 
-        <Card title="Withdraw">
+        <Card title={t('op_withdraw')}>
           <form
             className={styles.formStack}
             onSubmit={handleWithdrawSubmit(submitWithdraw)}
@@ -525,25 +544,25 @@ export default function CardsPage() {
             <div className={styles.twoColumnForm}>
               <TextField
                 id="withdraw-amount"
-                label="Amount"
+                label={t('lbl_amount')}
                 type="number"
                 min="0.01"
                 step="0.01"
                 error={withdrawErrors.amountToWithdraw?.message}
                 required
                 {...registerWithdraw('amountToWithdraw', {
-                  required: 'Amount is required.',
+                  required: t('error_amount_required'),
                   validate: validatePositiveAmount,
                 })}
               />
               <Select
                 id="withdraw-currency"
-                label="Currency"
-                placeholder="Choose currency"
+                label={t('lbl_currency')}
+                placeholder={t('choose_currency')}
                 options={CURRENCY_OPTIONS}
                 error={withdrawErrors.currencyCode?.message}
                 required
-                {...registerWithdraw('currencyCode', { required: 'Currency is required.' })}
+                {...registerWithdraw('currencyCode', { required: t('error_currency_required') })}
               />
             </div>
             {withdrawErrors.root && (
@@ -554,12 +573,12 @@ export default function CardsPage() {
               disabled={!hasSelectedCard}
               isLoading={withdrawMutation.isPending || isWithdrawSubmitting}
             >
-              Withdraw
+              {t('op_withdraw')}
             </Button>
           </form>
         </Card>
 
-        <Card title="Transfer">
+        <Card title={t('op_transfer')}>
           <form
             className={styles.formStack}
             onSubmit={handleTransferSubmit(submitTransfer)}
@@ -568,37 +587,37 @@ export default function CardsPage() {
             <div className={styles.threeColumnForm}>
               <TextField
                 id="transfer-receiver-card-id"
-                label="Receiver card ID"
+                label={t('lbl_receiver_id')}
                 type="number"
                 min="1"
                 error={transferErrors.receiverCardId?.message}
                 required
                 {...registerTransfer('receiverCardId', {
-                  required: 'Receiver card ID is required.',
-                  validate: (value) => validatePositiveId(value, 'Receiver card ID'),
+                  required: t('error_receiver_required'),
+                  validate: (value) => validatePositiveId(value, t('lbl_receiver_id')),
                 })}
               />
               <TextField
                 id="transfer-amount"
-                label="Amount"
+                label={t('lbl_amount')}
                 type="number"
                 min="0.01"
                 step="0.01"
                 error={transferErrors.amount?.message}
                 required
                 {...registerTransfer('amount', {
-                  required: 'Amount is required.',
+                  required: t('error_amount_required'),
                   validate: validatePositiveAmount,
                 })}
               />
               <Select
                 id="transfer-currency"
-                label="Currency"
-                placeholder="Choose currency"
+                label={t('lbl_currency')}
+                placeholder={t('choose_currency')}
                 options={CURRENCY_OPTIONS}
                 error={transferErrors.currencyCode?.message}
                 required
-                {...registerTransfer('currencyCode', { required: 'Currency is required.' })}
+                {...registerTransfer('currencyCode', { required: t('error_currency_required') })}
               />
             </div>
             {transferErrors.root && (
@@ -609,12 +628,12 @@ export default function CardsPage() {
               disabled={!hasSelectedCard}
               isLoading={transferMutation.isPending || isTransferSubmitting}
             >
-              Transfer
+              {t('op_transfer')}
             </Button>
           </form>
         </Card>
 
-        <Card title="Exchange currency">
+        <Card title={t('op_exchange')}>
           <form
             className={styles.formStack}
             onSubmit={handleExchangeSubmit(submitExchange)}
@@ -623,36 +642,38 @@ export default function CardsPage() {
             <div className={styles.threeColumnForm}>
               <TextField
                 id="exchange-amount"
-                label="Amount"
+                label={t('lbl_amount')}
                 type="number"
                 min="0.01"
                 step="0.01"
                 error={exchangeErrors.amount?.message}
                 required
                 {...registerExchange('amount', {
-                  required: 'Amount is required.',
+                  required: t('error_amount_required'),
                   validate: validatePositiveAmount,
                 })}
               />
               <Select
                 id="exchange-from-currency"
-                label="From currency"
-                placeholder="Choose currency"
+                label={t('lbl_from_currency')}
+                placeholder={t('choose_currency')}
                 options={CURRENCY_OPTIONS}
                 error={exchangeErrors.fromCurrencyCode?.message}
                 required
                 {...registerExchange('fromCurrencyCode', {
-                  required: 'From currency is required.',
+                  required: t('error_from_currency_required'),
                 })}
               />
               <Select
                 id="exchange-to-currency"
-                label="To currency"
-                placeholder="Choose currency"
+                label={t('lbl_to_currency')}
+                placeholder={t('choose_currency')}
                 options={CURRENCY_OPTIONS}
                 error={exchangeErrors.toCurrencyCode?.message}
                 required
-                {...registerExchange('toCurrencyCode', { required: 'To currency is required.' })}
+                {...registerExchange('toCurrencyCode', {
+                  required: t('error_to_currency_required'),
+                })}
               />
             </div>
             {exchangeErrors.root && (
@@ -663,12 +684,12 @@ export default function CardsPage() {
               disabled={!hasSelectedCard}
               isLoading={exchangeMutation.isPending || isExchangeSubmitting}
             >
-              Exchange
+              {t('btn_exchange')}
             </Button>
           </form>
         </Card>
 
-        <Card title="Add currency">
+        <Card title={t('op_add_currency')}>
           <form
             className={styles.formStack}
             onSubmit={handleAddCurrencySubmit(submitAddCurrency)}
@@ -676,12 +697,12 @@ export default function CardsPage() {
           >
             <Select
               id="add-card-currency"
-              label="Currency"
-              placeholder="Choose currency"
+              label={t('lbl_currency')}
+              placeholder={t('choose_currency')}
               options={CURRENCY_OPTIONS}
               error={addCurrencyErrors.currencyCode?.message}
               required
-              {...registerAddCurrency('currencyCode', { required: 'Currency is required.' })}
+              {...registerAddCurrency('currencyCode', { required: t('error_currency_required') })}
             />
             {addCurrencyErrors.root && (
               <Toast variant="danger" message={addCurrencyErrors.root.message} />
@@ -691,24 +712,22 @@ export default function CardsPage() {
               disabled={!hasSelectedCard}
               isLoading={addCurrencyMutation.isPending || isAddCurrencySubmitting}
             >
-              Add currency
+              {t('op_add_currency')}
             </Button>
           </form>
         </Card>
 
         {isManager && (
-          <Card title="Delete card" subtitle="Manager-only action. Confirmation is required.">
+          <Card title={t('op_delete_card')} subtitle={t('delete_card_subtitle')}>
             <div className={styles.formStack}>
-              {!hasSelectedCard && (
-                <p className={styles.mutedText}>Load a card before deleting it.</p>
-              )}
+              {!hasSelectedCard && <p className={styles.mutedText}>{t('delete_card_prompt')}</p>}
               <Button
                 type="button"
                 variant="danger"
                 disabled={!hasSelectedCard || deleteMutation.isPending}
                 onClick={() => setPendingDelete(true)}
               >
-                Delete card
+                {t('op_delete_card')}
               </Button>
             </div>
           </Card>
@@ -717,7 +736,7 @@ export default function CardsPage() {
 
       <Modal
         open={pendingDelete}
-        title="Delete card"
+        title={t('op_delete_card')}
         onClose={() => setPendingDelete(false)}
         footer={
           <>
@@ -727,7 +746,7 @@ export default function CardsPage() {
               disabled={deleteMutation.isPending}
               onClick={() => setPendingDelete(false)}
             >
-              Cancel
+              {t('btn_cancel')}
             </Button>
             <Button
               type="button"
@@ -735,14 +754,12 @@ export default function CardsPage() {
               isLoading={deleteMutation.isPending}
               onClick={confirmDelete}
             >
-              Delete card
+              {t('op_delete_card')}
             </Button>
           </>
         }
       >
-        <p className={styles.modalText}>
-          Delete card {selectedCardId}? This action cannot be undone.
-        </p>
+        <p className={styles.modalText}>{t('delete_confirm_text', { id: selectedCardId })}</p>
       </Modal>
     </div>
   );

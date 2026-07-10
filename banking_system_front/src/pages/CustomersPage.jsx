@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../components/AuthContext';
 import { customerApi } from '../api/customerApi';
 import { accountApi } from '../api/accountApi';
@@ -47,54 +48,6 @@ const CURRENCY_OPTIONS = [
   { value: 'GBP', label: 'GBP — British Pound' },
 ];
 
-const balanceColumns = [
-  {
-    key: 'currencyCode',
-    header: 'Currency',
-    render: (balance) => formatValue(balance.currencyCode),
-  },
-  {
-    key: 'amount',
-    header: 'Amount',
-    align: 'right',
-    render: (balance) => formatValue(balance.amount),
-  },
-];
-
-const transactionColumns = [
-  {
-    key: 'timeStamp',
-    header: 'Date',
-    render: (transaction) => formatValue(transaction.timeStamp),
-  },
-  {
-    key: 'transactionType',
-    header: 'Type',
-    render: (transaction) => formatValue(transaction.transactionType),
-  },
-  {
-    key: 'amount',
-    header: 'Amount',
-    align: 'right',
-    render: (transaction) => formatValue(transaction.amount),
-  },
-  {
-    key: 'currencyCode',
-    header: 'Currency',
-    render: (transaction) => formatValue(transaction.currencyCode),
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    render: (transaction) => formatValue(transaction.status),
-  },
-  {
-    key: 'description',
-    header: 'Description',
-    render: (transaction) => formatValue(transaction.description),
-  },
-];
-
 // Account.transactions has no @OrderBy on the backend, so the order isn't
 // guaranteed -- sort newest first on the client.
 function sortTransactionsDesc(transactions) {
@@ -139,6 +92,7 @@ function EditableDetail({
   viewValue,
   children,
 }) {
+  const { t } = useTranslation(['common']);
   return (
     <DetailItem label={label}>
       {isEditing ? (
@@ -146,7 +100,7 @@ function EditableDetail({
           {children}
           <div className={styles.actionsRow}>
             <Button type="submit" size="sm" isLoading={isSaving}>
-              Save
+              {t('common:save')}
             </Button>
             <Button
               type="button"
@@ -155,7 +109,7 @@ function EditableDetail({
               disabled={isSaving}
               onClick={onCancel}
             >
-              Cancel
+              {t('common:cancel')}
             </Button>
           </div>
         </form>
@@ -163,7 +117,7 @@ function EditableDetail({
         <div className={styles.viewRow}>
           <span>{viewValue}</span>
           <Button type="button" variant="ghost" size="sm" disabled={editDisabled} onClick={onEdit}>
-            Edit
+            {t('common:edit')}
           </Button>
         </div>
       )}
@@ -172,6 +126,7 @@ function EditableDetail({
 }
 
 export default function CustomersPage() {
+  const { t } = useTranslation(['common', 'customer', 'cards', 'accounts']);
   const { email } = useAuth();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -223,12 +178,63 @@ export default function CustomersPage() {
   const cardCurrencyCodes = new Set(
     (card?.cardBalances ?? []).map((balance) => balance.currencyCode)
   );
+
   const availableCurrencyOptions = CURRENCY_OPTIONS.filter(
     (option) => !cardCurrencyCodes.has(option.value)
-  );
+  ).map((o) => ({ value: o.value, label: t(`customer:currency_${o.value.toLowerCase()}`) }));
+
   const cardOwnedCurrencyOptions = CURRENCY_OPTIONS.filter((option) =>
     cardCurrencyCodes.has(option.value)
-  );
+  ).map((o) => ({ value: o.value, label: t(`customer:currency_${o.value.toLowerCase()}`) }));
+
+  // table columns need t so define them here
+  const balanceColumns = [
+    {
+      key: 'currencyCode',
+      header: t('common:currency'),
+      render: (balance) => formatValue(balance.currencyCode),
+    },
+    {
+      key: 'amount',
+      header: t('common:amount'),
+      align: 'right',
+      render: (balance) => formatValue(balance.amount),
+    },
+  ];
+
+  const transactionColumns = [
+    {
+      key: 'timeStamp',
+      header: t('customer:col_date'),
+      render: (transaction) => formatValue(transaction.timeStamp),
+    },
+    {
+      key: 'transactionType',
+      header: t('customer:col_type'),
+      render: (transaction) => formatValue(transaction.transactionType),
+    },
+    {
+      key: 'amount',
+      header: t('customer:col_amount'),
+      align: 'right',
+      render: (transaction) => formatValue(transaction.amount),
+    },
+    {
+      key: 'currencyCode',
+      header: t('customer:col_currency'),
+      render: (transaction) => formatValue(transaction.currencyCode),
+    },
+    {
+      key: 'status',
+      header: t('customer:label_status'),
+      render: (transaction) => formatValue(transaction.status),
+    },
+    {
+      key: 'description',
+      header: t('customer:col_description'),
+      render: (transaction) => formatValue(transaction.description),
+    },
+  ];
 
   // ---- profile edit forms (one per section, so each can be edited independently) ----
   const {
@@ -271,7 +277,7 @@ export default function CustomersPage() {
     retry: false,
     onSuccess: (updatedProfile) => {
       queryClient.setQueryData(profileQueryKey, updatedProfile);
-      showToast({ title: 'Profile updated.', variant: 'success' });
+      showToast({ title: t('customer:profile_updated'), variant: 'success' });
       setEditingSection(null);
     },
   });
@@ -389,7 +395,7 @@ export default function CustomersPage() {
     retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileQueryKey });
-      showToast({ title: 'Account created and added to your profile.', variant: 'success' });
+      showToast({ title: t('customer:account_created'), variant: 'success' });
       resetCreateAccountForm();
       setShowCreateAccount(false);
     },
@@ -401,7 +407,7 @@ export default function CustomersPage() {
     retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountKeys.byId(selectedAccountId) });
-      showToast({ title: 'Card created for this account.', variant: 'success' });
+      showToast({ title: t('customer:card_created'), variant: 'success' });
       resetCreateCardForm();
       setShowCreateCard(false);
     },
@@ -417,7 +423,7 @@ export default function CustomersPage() {
       if (error.missingCreatedAccountId) {
         setCreateAccountError('root', {
           type: 'server',
-          message: 'The account was created, but its ID was not returned.',
+          message: t('customer:account_id_not_returned'),
         });
         return;
       }
@@ -456,7 +462,7 @@ export default function CustomersPage() {
     retry: false,
     onSuccess: (updatedCard) => {
       queryClient.setQueryData(cardKeys.byId(selectedCardId), updatedCard);
-      showToast({ title: 'Currency balance added.', variant: 'success' });
+      showToast({ title: t('customer:currency_added'), variant: 'success' });
       resetAddCurrencyForm();
       setShowAddCurrency(false);
     },
@@ -504,7 +510,7 @@ export default function CustomersPage() {
     retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cardKeys.byId(selectedCardId) });
-      showToast({ title: 'Deposit successful.', variant: 'success' });
+      showToast({ title: t('customer:deposit_success'), variant: 'success' });
       resetDepositForm();
       setActiveMoneyAction(null);
     },
@@ -515,7 +521,7 @@ export default function CustomersPage() {
     retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cardKeys.byId(selectedCardId) });
-      showToast({ title: 'Withdrawal successful.', variant: 'success' });
+      showToast({ title: t('customer:withdrawal_success'), variant: 'success' });
       resetWithdrawForm();
       setActiveMoneyAction(null);
     },
@@ -526,7 +532,7 @@ export default function CustomersPage() {
     retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cardKeys.byId(selectedCardId) });
-      showToast({ title: 'Exchange successful.', variant: 'success' });
+      showToast({ title: t('customer:exchange_successful'), variant: 'success' });
       resetExchangeForm();
       setActiveMoneyAction(null);
     },
@@ -642,8 +648,8 @@ export default function CustomersPage() {
       setTransferError('receiverEmail', {
         type: 'server',
         message: error?.noActiveCard
-          ? 'Recipient has no active card to receive funds.'
-          : 'No customer found with that email.',
+          ? t('customer:no_active_card_recipient')
+          : t('customer:no_customer_found'),
       });
     },
   });
@@ -654,7 +660,7 @@ export default function CustomersPage() {
     retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cardKeys.byId(selectedCardId) });
-      showToast({ title: 'Transfer successful.', variant: 'success' });
+      showToast({ title: t('customer:transfer_successful'), variant: 'success' });
       resetTransferForm();
       setTransferRecipient(null);
       setRecipientCards([]);
@@ -667,7 +673,10 @@ export default function CustomersPage() {
   const searchRecipient = () => {
     const searchEmail = getTransferValues('receiverEmail');
     if (!searchEmail) {
-      setTransferError('receiverEmail', { type: 'manual', message: 'Enter an email to search.' });
+      setTransferError('receiverEmail', {
+        type: 'manual',
+        message: t('customer:recipient_email_required'),
+      });
       return;
     }
     setTransferRecipient(null);
@@ -712,7 +721,10 @@ export default function CustomersPage() {
   const renderAccountChip = (item) => (
     <>
       <span className={styles.chipTitle}>{formatValue(item.name)}</span>
-      <span className={styles.chipMeta}>{formatValue(item.category)}</span>
+      <span className={styles.chipMeta}>
+        {t(`customer:category_${String(item.category ?? '').toLowerCase()}`) ||
+          formatValue(item.category)}
+      </span>
       <StatusBadge active={getActiveValue(item)} />
     </>
   );
@@ -720,17 +732,23 @@ export default function CustomersPage() {
   const renderCardChip = (item) => (
     <>
       <span className={styles.chipTitle}>
-        {formatValue(item.brand)} &middot; {formatValue(item.type)}
+        {t(`customer:brand_${String(item.brand ?? '').toLowerCase()}`) || formatValue(item.brand)}{' '}
+        &middot;{' '}
+        {t(`customer:type_${String(item.type ?? '').toLowerCase()}`) || formatValue(item.type)}
       </span>
       <span className={styles.chipMeta}>{formatValue(item.panMasked)}</span>
-      <span className={styles.chipMeta}>Limit {formatValue(item.spendingLimit)}</span>
+      <span className={styles.chipMeta}>
+        {t('customer:label_spending_limit')} {formatValue(item.spendingLimit)}
+      </span>
     </>
   );
 
   const renderRecipientCardChip = (item) => (
     <>
       <span className={styles.chipTitle}>
-        {formatValue(item.brand)} &middot; {formatValue(item.type)}
+        {t(`customer:brand_${String(item.brand ?? '').toLowerCase()}`) || formatValue(item.brand)}{' '}
+        &middot;{' '}
+        {t(`customer:type_${String(item.type ?? '').toLowerCase()}`) || formatValue(item.type)}
       </span>
       <span className={styles.chipMeta}>{formatValue(item.accountName)}</span>
       <span className={styles.chipMeta}>{formatValue(item.panMasked)}</span>
@@ -740,26 +758,24 @@ export default function CustomersPage() {
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
-        <p className={styles.kicker}>Profile</p>
-        <h1 className={styles.title}>Your banking</h1>
+        <p className={styles.kicker}>{t('customer:page_kicker')}</p>
+        <h1 className={styles.title}>{t('customer:page_title')}</h1>
       </header>
 
       {/* ---- Profile ---- */}
-      <Card title="Your profile">
+      <Card title={t('customer:your_profile')}>
         {profileQuery.isLoading && (
           <div className={styles.centerState}>
-            <Spinner label="Loading your profile..." />
+            <Spinner label={t('customer:loading_profile')} />
           </div>
         )}
 
-        {profileQuery.isError && (
-          <Toast variant="danger" message="We couldn't load your profile. Try again in a moment." />
-        )}
+        {profileQuery.isError && <Toast variant="danger" message={t('customer:profile_error')} />}
 
         {profile && (
           <dl className={styles.profileGrid}>
             <EditableDetail
-              label="Name"
+              label={t('customer:label_name')}
               isEditing={editingSection === 'name'}
               onEdit={() => openEdit('name')}
               onCancel={cancelEdit}
@@ -771,26 +787,26 @@ export default function CustomersPage() {
               <div className={styles.editFields}>
                 <TextField
                   id="profile-first-name"
-                  label="First name"
+                  label={t('customer:first_name')}
                   required
                   error={nameErrors.firstName?.message}
-                  {...registerName('firstName', { required: 'First name is required.' })}
+                  {...registerName('firstName', { required: t('customer:first_name_required') })}
                 />
                 <TextField
                   id="profile-last-name"
-                  label="Last name"
+                  label={t('customer:last_name')}
                   required
                   error={nameErrors.lastName?.message}
-                  {...registerName('lastName', { required: 'Last name is required.' })}
+                  {...registerName('lastName', { required: t('customer:last_name_required') })}
                 />
               </div>
               {nameErrors.root && <Toast variant="danger" message={nameErrors.root.message} />}
             </EditableDetail>
 
-            <DetailItem label="Email">{formatValue(profile.email)}</DetailItem>
+            <DetailItem label={t('customer:label_email')}>{formatValue(profile.email)}</DetailItem>
 
             <EditableDetail
-              label="Phone"
+              label={t('customer:label_phone')}
               isEditing={editingSection === 'phone'}
               onEdit={() => openEdit('phone')}
               onCancel={cancelEdit}
@@ -801,22 +817,24 @@ export default function CustomersPage() {
             >
               <TextField
                 id="profile-phone-number"
-                label="Phone number"
+                label={t('customer:phone_number')}
                 type="tel"
                 required
                 error={phoneErrors.phoneNumber?.message}
                 {...registerPhone('phoneNumber', {
-                  required: 'Phone number is required.',
-                  pattern: { value: /^\d+$/, message: 'Phone number must contain only digits.' },
+                  required: t('customer:phone_required'),
+                  pattern: { value: /^\d+$/, message: t('customer:phone_digits_only') },
                 })}
               />
               {phoneErrors.root && <Toast variant="danger" message={phoneErrors.root.message} />}
             </EditableDetail>
 
-            <DetailItem label="Date of birth">{formatValue(profile.dateOfBirth)}</DetailItem>
+            <DetailItem label={t('customer:label_dob')}>
+              {formatValue(profile.dateOfBirth)}
+            </DetailItem>
 
             <EditableDetail
-              label="Address"
+              label={t('customer:label_address')}
               isEditing={editingSection === 'address'}
               onEdit={() => openEdit('address')}
               onCancel={cancelEdit}
@@ -827,10 +845,10 @@ export default function CustomersPage() {
             >
               <TextField
                 id="profile-address"
-                label="Address"
+                label={t('customer:address')}
                 required
                 error={addressErrors.address?.message}
-                {...registerAddress('address', { required: 'Address is required.' })}
+                {...registerAddress('address', { required: t('customer:address_required') })}
               />
               {addressErrors.root && (
                 <Toast variant="danger" message={addressErrors.root.message} />
@@ -842,7 +860,7 @@ export default function CustomersPage() {
 
       {/* ---- Accounts strip ---- */}
       {profile && (
-        <Card title="Accounts" subtitle="Select an account to see its details.">
+        <Card title={t('customer:accounts')} subtitle={t('customer:accounts_subtitle')}>
           <div className={styles.stack}>
             <ScrollStrip
               items={profile.accounts ?? []}
@@ -850,8 +868,8 @@ export default function CustomersPage() {
               renderItem={renderAccountChip}
               selectedKey={selectedAccountId}
               onSelect={selectAccount}
-              emptyMessage="You don't have any accounts yet."
-              ariaLabel="Your accounts"
+              emptyMessage={t('customer:no_accounts')}
+              ariaLabel={t('customer:accounts')}
             />
 
             {showCreateAccount ? (
@@ -863,23 +881,28 @@ export default function CustomersPage() {
                 <div className={styles.editFields}>
                   <TextField
                     id="create-account-name"
-                    label="Account name"
+                    label={t('customer:account_name')}
                     error={createAccountErrors.accountName?.message}
                     required
                     {...registerCreateAccount('accountName', {
-                      required: 'Account name is required.',
-                      minLength: { value: 3, message: 'At least 3 characters.' },
-                      maxLength: { value: 20, message: 'At most 20 characters.' },
+                      required: t('customer:account_name_required'),
+                      minLength: { value: 3, message: t('customer:account_name_min') },
+                      maxLength: { value: 20, message: t('customer:account_name_max') },
                     })}
                   />
                   <Select
                     id="create-account-category"
-                    label="Category"
-                    placeholder="Choose category"
-                    options={ACCOUNT_CATEGORIES}
+                    label={t('customer:category')}
+                    placeholder={t('customer:choose_category')}
+                    options={ACCOUNT_CATEGORIES.map((c) => ({
+                      value: c.value,
+                      label: t(`customer:category_${c.value.toLowerCase()}`),
+                    }))}
                     error={createAccountErrors.category?.message}
                     required
-                    {...registerCreateAccount('category', { required: 'Category is required.' })}
+                    {...registerCreateAccount('category', {
+                      required: t('customer:category_required'),
+                    })}
                   />
                 </div>
 
@@ -893,7 +916,7 @@ export default function CustomersPage() {
                     size="sm"
                     isLoading={createAccountMutation.isPending || isCreateAccountSubmitting}
                   >
-                    Save
+                    {t('common:save')}
                   </Button>
                   <Button
                     type="button"
@@ -905,7 +928,7 @@ export default function CustomersPage() {
                       setShowCreateAccount(false);
                     }}
                   >
-                    Cancel
+                    {t('common:cancel')}
                   </Button>
                 </div>
               </form>
@@ -918,7 +941,7 @@ export default function CustomersPage() {
                   disabled={!customerId}
                   onClick={() => setShowCreateAccount(true)}
                 >
-                  + New account
+                  {t('customer:new_account')}
                 </Button>
               </div>
             )}
@@ -928,24 +951,28 @@ export default function CustomersPage() {
 
       {/* ---- Account detail ---- */}
       {selectedAccountId && (
-        <Card title="Account detail">
+        <Card title={t('customer:account_detail')}>
           {accountQuery.isLoading && (
             <div className={styles.centerState}>
-              <Spinner label="Loading account..." />
+              <Spinner label={t('customer:loading_account')} />
             </div>
           )}
-          {accountQuery.isError && (
-            <Toast variant="danger" message="We couldn't load that account." />
-          )}
+          {accountQuery.isError && <Toast variant="danger" message={t('customer:account_error')} />}
           {account && (
             <div className={styles.stack}>
               <dl className={styles.profileGrid}>
-                <DetailItem label="Name">{formatValue(account.name)}</DetailItem>
-                <DetailItem label="Status">
+                <DetailItem label={t('customer:label_name')}>
+                  {formatValue(account.name)}
+                </DetailItem>
+                <DetailItem label={t('customer:col_status')}>
                   <StatusBadge active={getActiveValue(account)} />
                 </DetailItem>
-                <DetailItem label="Category">{formatValue(account.category)}</DetailItem>
-                <DetailItem label="Opened">{formatValue(account.dateOpened)}</DetailItem>
+                <DetailItem label={t('customer:label_category')}>
+                  {formatValue(account.category)}
+                </DetailItem>
+                <DetailItem label={t('customer:label_opened')}>
+                  {formatValue(account.dateOpened)}
+                </DetailItem>
               </dl>
 
               <div className={styles.actionsRow}>
@@ -956,7 +983,9 @@ export default function CustomersPage() {
                   aria-expanded={showTransactions}
                   onClick={() => setShowTransactions((visible) => !visible)}
                 >
-                  {showTransactions ? 'Hide transactions' : 'Show transactions'}
+                  {showTransactions
+                    ? t('customer:hide_transactions')
+                    : t('customer:show_transactions')}
                 </Button>
               </div>
 
@@ -966,8 +995,8 @@ export default function CustomersPage() {
                     columns={transactionColumns}
                     data={sortTransactionsDesc(account.transactions)}
                     getRowKey={(transaction, index) => `${transaction.timeStamp ?? 'txn'}-${index}`}
-                    emptyMessage="No transactions yet."
-                    caption="Transactions"
+                    emptyMessage={t('customer:no_transactions')}
+                    caption={t('accounts:label_transactions')}
                   />
                 </div>
               )}
@@ -978,7 +1007,7 @@ export default function CustomersPage() {
 
       {/* ---- Cards strip (belongs to the selected account) ---- */}
       {account && (
-        <Card title="Cards" subtitle="Select a card to see its details.">
+        <Card title={t('customer:cards')} subtitle={t('customer:cards_subtitle')}>
           <div className={styles.stack}>
             <ScrollStrip
               items={account.cards ?? []}
@@ -986,8 +1015,8 @@ export default function CustomersPage() {
               renderItem={renderCardChip}
               selectedKey={selectedCardId}
               onSelect={selectCard}
-              emptyMessage="This account has no cards."
-              ariaLabel="Cards in this account"
+              emptyMessage={t('customer:no_cards')}
+              ariaLabel={t('customer:cards')}
             />
 
             {showCreateCard ? (
@@ -999,25 +1028,35 @@ export default function CustomersPage() {
                 <div className={styles.editFields}>
                   <Select
                     id="create-card-type"
-                    label="Card type"
-                    placeholder="Choose type"
-                    options={CARD_TYPES}
+                    label={t('customer:card_type')}
+                    placeholder={t('customer:choose_type')}
+                    options={CARD_TYPES.map((c) => ({
+                      value: c.value,
+                      label: t(`customer:type_${c.value.toLowerCase()}`),
+                    }))}
                     error={createCardErrors.cardType?.message}
                     required
-                    {...registerCreateCard('cardType', { required: 'Card type is required.' })}
+                    {...registerCreateCard('cardType', {
+                      required: t('customer:card_type_required'),
+                    })}
                   />
                   <Select
                     id="create-card-brand"
-                    label="Card brand"
-                    placeholder="Choose brand"
-                    options={CARD_BRANDS}
+                    label={t('customer:card_brand')}
+                    placeholder={t('customer:choose_brand')}
+                    options={CARD_BRANDS.map((c) => ({
+                      value: c.value,
+                      label: t(`customer:brand_${c.value.toLowerCase()}`),
+                    }))}
                     error={createCardErrors.cardBrand?.message}
                     required
-                    {...registerCreateCard('cardBrand', { required: 'Card brand is required.' })}
+                    {...registerCreateCard('cardBrand', {
+                      required: t('customer:card_brand_required'),
+                    })}
                   />
                   <TextField
                     id="create-card-spending-limit"
-                    label="Spending limit"
+                    label={t('customer:label_spending_limit')}
                     type="number"
                     min="100"
                     max="100000"
@@ -1025,22 +1064,22 @@ export default function CustomersPage() {
                     error={createCardErrors.spendingLimit?.message}
                     required
                     {...registerCreateCard('spendingLimit', {
-                      required: 'Spending limit is required.',
-                      min: { value: 100, message: 'Spending limit must be at least 100.' },
-                      max: { value: 100000, message: 'Spending limit must be at most 100000.' },
+                      required: t('customer:spending_limit_required'),
+                      min: { value: 100, message: t('customer:spending_limit_min') },
+                      max: { value: 100000, message: t('customer:spending_limit_max') },
                     })}
                   />
                   <TextField
                     id="create-card-pan"
-                    label="PAN"
+                    label={t('customer:pan')}
                     inputMode="numeric"
                     error={createCardErrors.pan?.message}
                     required
                     {...registerCreateCard('pan', {
-                      required: 'PAN is required.',
-                      minLength: { value: 16, message: 'PAN must be exactly 16 digits.' },
-                      maxLength: { value: 16, message: 'PAN must be exactly 16 digits.' },
-                      pattern: { value: /^\d+$/, message: 'PAN must contain only digits.' },
+                      required: t('customer:pan_required'),
+                      minLength: { value: 16, message: t('customer:pan_length') },
+                      maxLength: { value: 16, message: t('customer:pan_length') },
+                      pattern: { value: /^\d+$/, message: t('customer:pan_digits_only') },
                     })}
                   />
                 </div>
@@ -1055,7 +1094,7 @@ export default function CustomersPage() {
                     size="sm"
                     isLoading={createCardMutation.isPending || isCreateCardSubmitting}
                   >
-                    Save
+                    {t('common:save')}
                   </Button>
                   <Button
                     type="button"
@@ -1067,7 +1106,7 @@ export default function CustomersPage() {
                       setShowCreateCard(false);
                     }}
                   >
-                    Cancel
+                    {t('common:cancel')}
                   </Button>
                 </div>
               </form>
@@ -1079,7 +1118,7 @@ export default function CustomersPage() {
                   size="sm"
                   onClick={() => setShowCreateCard(true)}
                 >
-                  + New card
+                  {t('customer:new_card')}
                 </Button>
               </div>
             )}
@@ -1089,32 +1128,38 @@ export default function CustomersPage() {
 
       {/* ---- Card detail ---- */}
       {selectedCardId && (
-        <Card title="Card detail">
+        <Card title={t('customer:card_detail')}>
           {cardQuery.isLoading && (
             <div className={styles.centerState}>
-              <Spinner label="Loading card..." />
+              <Spinner label={t('customer:loading_card')} />
             </div>
           )}
-          {cardQuery.isError && <Toast variant="danger" message="We couldn't load that card." />}
+          {cardQuery.isError && <Toast variant="danger" message={t('customer:card_error')} />}
           {card && (
             <div className={styles.stack}>
               <dl className={styles.profileGrid}>
-                <DetailItem label="Brand">{formatValue(card.brand)}</DetailItem>
-                <DetailItem label="Type">{formatValue(card.type)}</DetailItem>
-                <DetailItem label="Status">
+                <DetailItem label={t('customer:label_brand')}>{formatValue(card.brand)}</DetailItem>
+                <DetailItem label={t('customer:label_type')}>{formatValue(card.type)}</DetailItem>
+                <DetailItem label={t('customer:col_status')}>
                   <StatusBadge active={getActiveValue(card)} />
                 </DetailItem>
-                <DetailItem label="Spending limit">{formatValue(card.spendingLimit)}</DetailItem>
-                <DetailItem label="Expiration">{formatValue(card.expirationDate)}</DetailItem>
-                <DetailItem label="Card number">{formatValue(card.panToken)}</DetailItem>
+                <DetailItem label={t('customer:label_spending_limit')}>
+                  {formatValue(card.spendingLimit)}
+                </DetailItem>
+                <DetailItem label={t('customer:label_expiration')}>
+                  {formatValue(card.expirationDate)}
+                </DetailItem>
+                <DetailItem label={t('customer:label_card_number')}>
+                  {formatValue(card.panToken)}
+                </DetailItem>
               </dl>
 
               <Table
                 columns={balanceColumns}
                 data={card.cardBalances ?? []}
                 getRowKey={(balance, index) => balance.currencyCode ?? index}
-                emptyMessage="No balances on this card."
-                caption="Card balances"
+                emptyMessage={t('customer:no_balances') ?? t('cards:no_balances')}
+                caption={t('cards:currency_balances')}
               />
 
               <div className={styles.actionsRow}>
@@ -1124,7 +1169,7 @@ export default function CustomersPage() {
                   size="sm"
                   onClick={() => setActiveMoneyAction('deposit')}
                 >
-                  + Deposit
+                  {t('customer:deposit')}
                 </Button>
                 <Button
                   type="button"
@@ -1132,7 +1177,7 @@ export default function CustomersPage() {
                   size="sm"
                   onClick={() => setActiveMoneyAction('withdraw')}
                 >
-                  + Withdraw
+                  {t('customer:withdraw')}
                 </Button>
                 <Button
                   type="button"
@@ -1140,7 +1185,7 @@ export default function CustomersPage() {
                   size="sm"
                   onClick={() => setActiveMoneyAction('transfer')}
                 >
-                  + Transfer
+                  {t('customer:transfer')}
                 </Button>
                 <Button
                   type="button"
@@ -1149,7 +1194,7 @@ export default function CustomersPage() {
                   disabled={cardOwnedCurrencyOptions.length < 2}
                   onClick={() => setActiveMoneyAction('exchange')}
                 >
-                  + Exchange
+                  {t('customer:exchange')}
                 </Button>
               </div>
 
@@ -1162,24 +1207,26 @@ export default function CustomersPage() {
                   <div className={styles.editFields}>
                     <TextField
                       id="deposit-amount"
-                      label="Amount"
+                      label={t('common:amount')}
                       type="number"
                       step="0.01"
                       required
                       error={depositErrors.amountToDeposit?.message}
                       {...registerDeposit('amountToDeposit', {
-                        required: 'Amount is required.',
-                        min: { value: 0.01, message: 'Amount must be greater than 0.' },
+                        required: t('common:amount_required'),
+                        min: { value: 0.01, message: t('common:amount_positive') },
                       })}
                     />
                     <Select
                       id="deposit-currency"
-                      label="Currency"
-                      placeholder="Choose currency"
+                      label={t('common:currency')}
+                      placeholder={t('common:choose_currency')}
                       options={cardOwnedCurrencyOptions}
                       error={depositErrors.currencyCode?.message}
                       required
-                      {...registerDeposit('currencyCode', { required: 'Currency is required.' })}
+                      {...registerDeposit('currencyCode', {
+                        required: t('common:currency_required'),
+                      })}
                     />
                   </div>
 
@@ -1193,7 +1240,7 @@ export default function CustomersPage() {
                       size="sm"
                       isLoading={depositMutation.isPending || isDepositSubmitting}
                     >
-                      Confirm deposit
+                      {t('customer:confirm_deposit')}
                     </Button>
                     <Button
                       type="button"
@@ -1205,7 +1252,7 @@ export default function CustomersPage() {
                         setActiveMoneyAction(null);
                       }}
                     >
-                      Cancel
+                      {t('common:cancel')}
                     </Button>
                   </div>
                 </form>
@@ -1220,24 +1267,26 @@ export default function CustomersPage() {
                   <div className={styles.editFields}>
                     <TextField
                       id="withdraw-amount"
-                      label="Amount"
+                      label={t('common:amount')}
                       type="number"
                       step="0.01"
                       required
                       error={withdrawErrors.amountToWithdraw?.message}
                       {...registerWithdraw('amountToWithdraw', {
-                        required: 'Amount is required.',
-                        min: { value: 0.01, message: 'Amount must be greater than 0.' },
+                        required: t('common:amount_required'),
+                        min: { value: 0.01, message: t('common:amount_positive') },
                       })}
                     />
                     <Select
                       id="withdraw-currency"
-                      label="Currency"
-                      placeholder="Choose currency"
+                      label={t('common:currency')}
+                      placeholder={t('common:choose_currency')}
                       options={cardOwnedCurrencyOptions}
                       error={withdrawErrors.currencyCode?.message}
                       required
-                      {...registerWithdraw('currencyCode', { required: 'Currency is required.' })}
+                      {...registerWithdraw('currencyCode', {
+                        required: t('common:currency_required'),
+                      })}
                     />
                   </div>
 
@@ -1251,7 +1300,7 @@ export default function CustomersPage() {
                       size="sm"
                       isLoading={withdrawMutation.isPending || isWithdrawSubmitting}
                     >
-                      Confirm withdrawal
+                      {t('customer:confirm_withdrawal')}
                     </Button>
                     <Button
                       type="button"
@@ -1263,7 +1312,7 @@ export default function CustomersPage() {
                         setActiveMoneyAction(null);
                       }}
                     >
-                      Cancel
+                      {t('common:cancel')}
                     </Button>
                   </div>
                 </form>
@@ -1278,36 +1327,36 @@ export default function CustomersPage() {
                   <div className={styles.editFields}>
                     <TextField
                       id="exchange-amount"
-                      label="Amount"
+                      label={t('common:amount')}
                       type="number"
                       step="0.01"
                       required
                       error={exchangeErrors.amount?.message}
                       {...registerExchange('amount', {
-                        required: 'Amount is required.',
-                        min: { value: 0.01, message: 'Amount must be greater than 0.' },
+                        required: t('common:amount_required'),
+                        min: { value: 0.01, message: t('common:amount_positive') },
                       })}
                     />
                     <Select
                       id="exchange-from-currency"
-                      label="From currency"
-                      placeholder="Choose currency"
+                      label={t('cards:lbl_from_currency') || t('customer:from_currency')}
+                      placeholder={t('common:choose_currency')}
                       options={cardOwnedCurrencyOptions}
                       error={exchangeErrors.fromCurrencyCode?.message}
                       required
                       {...registerExchange('fromCurrencyCode', {
-                        required: 'From currency is required.',
+                        required: t('customer:from_currency_required'),
                       })}
                     />
                     <Select
                       id="exchange-to-currency"
-                      label="To currency"
-                      placeholder="Choose currency"
+                      label={t('cards:lbl_to_currency') || t('customer:to_currency')}
+                      placeholder={t('common:choose_currency')}
                       options={cardOwnedCurrencyOptions}
                       error={exchangeErrors.toCurrencyCode?.message}
                       required
                       {...registerExchange('toCurrencyCode', {
-                        required: 'To currency is required.',
+                        required: t('customer:to_currency_required'),
                       })}
                     />
                   </div>
@@ -1322,7 +1371,7 @@ export default function CustomersPage() {
                       size="sm"
                       isLoading={exchangeMutation.isPending || isExchangeSubmitting}
                     >
-                      Confirm exchange
+                      {t('customer:confirm_exchange')}
                     </Button>
                     <Button
                       type="button"
@@ -1334,7 +1383,7 @@ export default function CustomersPage() {
                         setActiveMoneyAction(null);
                       }}
                     >
-                      Cancel
+                      {t('common:cancel')}
                     </Button>
                   </div>
                 </form>
@@ -1345,12 +1394,12 @@ export default function CustomersPage() {
                   <div className={styles.editFields}>
                     <TextField
                       id="transfer-receiver-email"
-                      label="Recipient email"
+                      label={t('customer:recipient_email')}
                       type="email"
                       required
                       error={transferErrors.receiverEmail?.message}
                       {...registerTransfer('receiverEmail', {
-                        required: 'Enter an email to search.',
+                        required: t('customer:recipient_email_required'),
                       })}
                     />
                   </div>
@@ -1362,7 +1411,7 @@ export default function CustomersPage() {
                       isLoading={searchRecipientMutation.isPending}
                       onClick={searchRecipient}
                     >
-                      Search
+                      {t('common:search')}
                     </Button>
                     <Button
                       type="button"
@@ -1376,15 +1425,14 @@ export default function CustomersPage() {
                         setActiveMoneyAction(null);
                       }}
                     >
-                      Cancel
+                      {t('common:cancel')}
                     </Button>
                   </div>
 
                   {transferRecipient && (
                     <div className={styles.editForm}>
                       <p className={styles.mutedText}>
-                        Sending to: {getCustomerName(transferRecipient)} -- choose a card to receive
-                        the funds.
+                        {t('customer:sending_to', { name: getCustomerName(transferRecipient) })}
                       </p>
 
                       <ScrollStrip
@@ -1393,8 +1441,8 @@ export default function CustomersPage() {
                         renderItem={renderRecipientCardChip}
                         selectedKey={resolvedReceiverCardId}
                         onSelect={(pickedCard) => setResolvedReceiverCardId(getId(pickedCard))}
-                        emptyMessage="This customer has no active cards."
-                        ariaLabel="Recipient's cards"
+                        emptyMessage={t('customer:no_active_cards')}
+                        ariaLabel={t('customer:cards')}
                       />
 
                       {resolvedReceiverCardId && (
@@ -1406,25 +1454,25 @@ export default function CustomersPage() {
                           <div className={styles.editFields}>
                             <TextField
                               id="transfer-amount"
-                              label="Amount"
+                              label={t('common:amount')}
                               type="number"
                               step="0.01"
                               required
                               error={transferErrors.amount?.message}
                               {...registerTransfer('amount', {
-                                required: 'Amount is required.',
-                                min: { value: 0.01, message: 'Amount must be greater than 0.' },
+                                required: t('common:amount_required'),
+                                min: { value: 0.01, message: t('common:amount_positive') },
                               })}
                             />
                             <Select
                               id="transfer-currency"
-                              label="Currency"
-                              placeholder="Choose currency"
+                              label={t('common:currency')}
+                              placeholder={t('common:choose_currency')}
                               options={cardOwnedCurrencyOptions}
                               error={transferErrors.currencyCode?.message}
                               required
                               {...registerTransfer('currencyCode', {
-                                required: 'Currency is required.',
+                                required: t('common:currency_required'),
                               })}
                             />
                           </div>
@@ -1439,7 +1487,7 @@ export default function CustomersPage() {
                               size="sm"
                               isLoading={transferMutation.isPending || isTransferSubmitting}
                             >
-                              Confirm transfer
+                              {t('customer:confirm_transfer')}
                             </Button>
                           </div>
                         </form>
@@ -1457,12 +1505,14 @@ export default function CustomersPage() {
                 >
                   <Select
                     id="add-currency-code"
-                    label="Currency"
-                    placeholder="Choose currency"
+                    label={t('common:currency')}
+                    placeholder={t('common:choose_currency')}
                     options={availableCurrencyOptions}
                     error={addCurrencyErrors.currencyCode?.message}
                     required
-                    {...registerAddCurrency('currencyCode', { required: 'Currency is required.' })}
+                    {...registerAddCurrency('currencyCode', {
+                      required: t('common:currency_required'),
+                    })}
                   />
 
                   {addCurrencyErrors.root && (
@@ -1475,7 +1525,7 @@ export default function CustomersPage() {
                       size="sm"
                       isLoading={addCurrencyMutation.isPending || isAddCurrencySubmitting}
                     >
-                      Save
+                      {t('common:save')}
                     </Button>
                     <Button
                       type="button"
@@ -1487,12 +1537,12 @@ export default function CustomersPage() {
                         setShowAddCurrency(false);
                       }}
                     >
-                      Cancel
+                      {t('common:cancel')}
                     </Button>
                   </div>
                 </form>
               ) : availableCurrencyOptions.length === 0 ? (
-                <p className={styles.mutedText}>All available currencies have been added.</p>
+                <p className={styles.mutedText}>{t('customer:all_currencies_added')}</p>
               ) : (
                 <div className={styles.actionsRow}>
                   <Button
@@ -1501,7 +1551,7 @@ export default function CustomersPage() {
                     size="sm"
                     onClick={() => setShowAddCurrency(true)}
                   >
-                    + Add currency
+                    {t('customer:add_currency')}
                   </Button>
                 </div>
               )}
