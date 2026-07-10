@@ -4,7 +4,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import ErrorPage from '../pages/ErrorPage';
 import LoginPage from '../pages/LoginPage';
 import CustomersPage from '../pages/CustomersPage';
-import ManagerCustomersPage from '../pages/ManagerCustomersPage';
+import ManagerPage from '../pages/ManagerPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import RegisterPage from '../pages/RegisterPage';
 import UnauthorizedPage from '../pages/UnauthorizedPage';
@@ -25,10 +25,7 @@ export const appRoutes = [
       },
       {
         element: <ProtectedRoute requiredRole="MANAGER" />,
-        children: [
-          { path: 'admin', element: <ManagerCustomersPage title="Admin" /> },
-          { path: 'admin/delete', element: <ManagerCustomersPage title="Delete Records" /> },
-        ],
+        children: [{ path: 'manager', element: <ManagerPage /> }],
       },
       { path: '*', element: <NotFoundPage /> },
     ],

@@ -147,6 +147,10 @@ public class CustomerServiceImpl implements CustomerService {
             specification = specification.and((root, query, cb) ->
                     cb.equal(root.get("lastName"), customerFilterRequest.getLastName()));
         }
+        if (customerFilterRequest.getEmail() != null && !customerFilterRequest.getEmail().isEmpty()) {
+            specification = specification.and((root, query, cb) ->
+                    cb.equal(root.get("email"), customerFilterRequest.getEmail()));
+        }
 
         return customerRepository.findAll(specification, PageUtils.buildPageable(pageRequest));
     }

@@ -938,7 +938,7 @@ class CustomerProfileResponseTest {
     private CustomerProfileResponse createCustomerProfileResponse() {
         return new CustomerProfileResponse(1, "Giorgi", "Maisuradze", LocalDate.of(1995, 3, 20),
                 "Tbilisi, Rustaveli 1", "giorgi@example.com", "555123456",
-                List.of(new AccountSummaryResponse()));
+                List.of(new AccountSummaryResponse()), true);
     }
 
     @Test
@@ -1058,7 +1058,7 @@ class CustomerProfileResponseTest {
 class CustomerSummaryResponseTest {
 
     private CustomerSummaryResponse createCustomerSummaryResponse() {
-        return new CustomerSummaryResponse("Giorgi", "Maisuradze", "giorgi@example.com");
+        return new CustomerSummaryResponse(1, "Giorgi", "Maisuradze", "giorgi@example.com");
     }
 
     @Test

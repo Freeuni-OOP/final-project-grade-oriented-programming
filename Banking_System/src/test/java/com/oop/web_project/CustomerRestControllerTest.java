@@ -76,7 +76,7 @@ class CustomerRestControllerTest {
         Customer customer = mock(Customer.class);
         CustomerProfileResponse response = new CustomerProfileResponse(1,
                 "John", "Doe", LocalDate.of(2000, 1, 1),
-                "123 Main St", "john@example.com", "1234567890", List.of());
+                "123 Main St", "john@example.com", "1234567890", List.of(), true);
 
         when(customerService.getCustomerByEmail("john@example.com")).thenReturn(customer);
         when(customerApiMapper.toProfileResponse(customer)).thenReturn(response);
@@ -109,7 +109,7 @@ class CustomerRestControllerTest {
         Customer customer = mock(Customer.class);
         CustomerProfileResponse response = new CustomerProfileResponse(1,
                 "John", "Doe", LocalDate.of(2000, 1, 1),
-                "123 Main St", "john@example.com", "1234567890", List.of());
+                "123 Main St", "john@example.com", "1234567890", List.of(), true);
 
         when(customerService.getCustomersByAccount(1L)).thenReturn(List.of(customer));
         when(customerApiMapper.toProfileResponse(customer)).thenReturn(response);
@@ -142,7 +142,7 @@ class CustomerRestControllerTest {
         Customer customer = mock(Customer.class);
         CustomerProfileResponse response = new CustomerProfileResponse(1,
                 "John", "Doe", LocalDate.of(2000, 1, 1),
-                "123 Main St", "john@example.com", "1234567890", List.of());
+                "123 Main St", "john@example.com", "1234567890", List.of(), true);
 
         when(customerService.getCustomerById(1L)).thenReturn(customer);
         when(customerApiMapper.toProfileResponse(customer)).thenReturn(response);
@@ -175,7 +175,7 @@ class CustomerRestControllerTest {
         Customer customer = mock(Customer.class);
         CustomerProfileResponse response = new CustomerProfileResponse(1,
                 "Jane", "Smith", LocalDate.of(1995, 5, 5),
-                "456 Oak Ave", "jane@example.com", "0987654321", List.of());
+                "456 Oak Ave", "jane@example.com", "0987654321", List.of(), true);
 
         when(customerService.getCustomerById(1L)).thenReturn(customer);
         when(customerApiMapper.toProfileResponse(customer)).thenReturn(response);

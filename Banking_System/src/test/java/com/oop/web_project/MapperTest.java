@@ -683,6 +683,7 @@ class CustomerSummaryApiMapperTest {
 
     private Customer createCustomer() {
         Customer customer = new Customer();
+        customer.setId(1L);
         customer.setFirstName("Giorgi");
         customer.setLastName("Maisuradze");
         customer.setEmail("giorgi@example.com");

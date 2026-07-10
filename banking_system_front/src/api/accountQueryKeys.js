@@ -9,4 +9,5 @@ export const accountKeys = {
     String(id),
     String(currencyCode).trim().toUpperCase(),
   ],
+  filter: (params, page) => [...accountKeys.all, 'filter', JSON.stringify(params ?? {}), page],
 };

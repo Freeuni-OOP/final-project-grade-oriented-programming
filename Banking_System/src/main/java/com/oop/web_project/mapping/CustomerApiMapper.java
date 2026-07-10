@@ -50,6 +50,7 @@ public class CustomerApiMapper {
             summaryAccounts.add(accountSummaryApiMapper.toAccountSummaryResponse(account));
         }
         response.setAccounts(summaryAccounts);
+        response.setActive(customer.isActive());
         return response;
     }
 
