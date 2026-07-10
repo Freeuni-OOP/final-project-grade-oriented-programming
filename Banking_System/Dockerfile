@@ -8,7 +8,12 @@ WORKDIR /app
 # cache this (slow) layer and skip it on rebuilds that only touch src/.
 COPY mvnw pom.xml ./
 COPY .mvn .mvn
-RUN chmod +x mvnw && ./mvnw -B dependency:go-offline
+
+# Uncomment this on windows
+#RUN dos2unix mvnw && chmod +x mvnw
+
+# Now run the maven command
+RUN ./mvnw -B dependency:go-offline
 
 # Now copy the actual source and build the executable jar.
 # Tests are skipped here on purpose - they run in CI / locally, not on every
