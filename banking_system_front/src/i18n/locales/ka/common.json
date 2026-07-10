@@ -77,6 +77,7 @@
   "no_customers_for_account": "ამ ანგარიშისთვის მომხმარებლები ვერ მოიძებნა.",
   "view": "ნახვა",
   "role_manager": "მენეჯერი",
+  "role_standard": "სტანდარტული",
   "col_id": "ID",
   "col_actions": "მოქმედებები",
   "col_brand_type": "ბრენდი / ტიპი",
