@@ -15,5 +15,5 @@ public class CustomerSummaryResponse {
     private String firstName;
     private String lastName;
     private String email;
-    boolean isActive;
+    private boolean isActive;
 }
