@@ -12,6 +12,7 @@ public class CustomerSummaryApiMapper {
         response.setEmail(customer.getEmail());
         response.setFirstName(customer.getFirstName());
         response.setLastName(customer.getLastName());
+        response.setActive(customer.isActive());
         return response;
     }
 }
