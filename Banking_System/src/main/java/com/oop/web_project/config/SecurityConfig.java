@@ -2,6 +2,7 @@ package com.oop.web_project.config;
 
 import com.oop.web_project.filters.JWTFilter;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +33,9 @@ import java.util.Locale;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
+    @Value("${spring.h2.console.enabled:false}")
+    private boolean h2ConsoleEnabled;
+
     private final JWTFilter jwtFilter;
 
     public SecurityConfig(JWTFilter jwtFilter) {
@@ -56,16 +60,15 @@ public class SecurityConfig {
         csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PathRequest.toH2Console()).permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/api-docs",
-                                "/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html")
-                        .permitAll()
-                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                        .anyRequest().authenticated());
+                .authorizeHttpRequests(auth -> {
+                    if (h2ConsoleEnabled) {
+                        auth.requestMatchers(PathRequest.toH2Console()).permitAll();
+                    }
+                    auth.requestMatchers("/actuator/**").permitAll()
+                            .requestMatchers("/api-docs", "/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                            .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                            .anyRequest().authenticated();
+                });
 
 
         http.exceptionHandling(e -> e.authenticationEntryPoint(
