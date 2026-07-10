@@ -1,4 +1,22 @@
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: banking-system-mysql
+    environment:
+      MYSQL_DATABASE: Banking_System_db
+      MYSQL_USER: banking_user
+      MYSQL_PASSWORD: banking_password
+      MYSQL_ROOT_PASSWORD: banking_root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   backend:
     build:
       context: ./Banking_System
@@ -6,7 +24,14 @@ services:
     image: banking-system-backend:local
     container_name: banking-system-backend
     environment:
-      SPRING_PROFILES_ACTIVE: local
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/Banking_System_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: banking_user
+      SPRING_DATASOURCE_PASSWORD: banking_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      mysql:
+        condition: service_healthy
     ports:
       - "8080:8080"
 
@@ -22,3 +47,6 @@ services:
       - backend
     ports:
       - "5173:80"
+
+volumes:
+  mysql_data:
