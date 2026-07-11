@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class CurrencyExchange {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Currency_exchange_id")
     private Long id;
 

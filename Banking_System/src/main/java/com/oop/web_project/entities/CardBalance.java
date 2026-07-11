@@ -23,7 +23,7 @@ public class CardBalance {
 
     @Column(name = "Card_balance_id")
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "Card_balance_amount", nullable = false)

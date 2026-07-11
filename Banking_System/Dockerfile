@@ -9,8 +9,8 @@ WORKDIR /app
 COPY mvnw pom.xml ./
 COPY .mvn .mvn
 
-# Uncomment this on windows
-#RUN dos2unix mvnw && chmod +x mvnw
+# Necessary for running on the windows
+RUN dos2unix mvnw && chmod +x mvnw
 
 # Now run the maven command
 RUN ./mvnw -B dependency:go-offline
