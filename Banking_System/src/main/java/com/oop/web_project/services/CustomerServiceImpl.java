@@ -11,11 +11,11 @@ import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException
 import com.oop.web_project.exceptions.customerExceptions.*;
 import com.oop.web_project.persistence.*;
 import com.oop.web_project.utils.PageUtils;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -51,6 +51,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Customer getCustomerByEmail(String email) {
         return customerRepository.getCustomerByEmail(email)
                 .orElseThrow(
@@ -59,9 +60,10 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @CustomerAccessPermissionRequired(idArgName = "customerId")
     public Customer getCustomerById(long customerId) {
-        return customerRepository.findById(customerId)
+        return customerRepository.findByIdWithDetails(customerId)
                 .orElseThrow(
                         () -> new CustomerNotFoundException("could not find customer with id!")
                 );
@@ -123,6 +125,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Customer> getCustomersByAccount(long accountId) {
         List<Customer> customers =  customerRepository.getCustomersByAccounts_Id(accountId);
 
@@ -134,6 +137,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @CustomerAccessPermissionRequired
     public Page<Customer> filterCustomers(CustomerFilterRequest customerFilterRequest, PageRequest pageRequest) {
 

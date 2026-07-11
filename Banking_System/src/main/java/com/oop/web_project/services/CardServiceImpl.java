@@ -87,9 +87,10 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @CardAccessPermissionRequired(idArgName = "cardId")
     public Card selectCardById(long cardId) {
-        return cardRepository.findById(cardId)
+        return cardRepository.findByIdWithDetails(cardId)
                 .orElseThrow(
                         () -> new CardNotFoundException("Could could not be found!")
                 );
@@ -250,12 +251,14 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @AccountAccessPermissionRequired(idArgName = "accountId")
     public List<Card> getAllCardsForAccount(long accountId) {
         return cardRepository.getAllByAccountId(accountId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     @CardAccessPermissionRequired(idArgName = "cardId")
     public boolean checkCardExpiration(long cardId) {
         Card card = cardRepository.findById(cardId)
@@ -266,6 +269,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @CardAccessPermissionRequired
     public Page<Card> filterCards(CardFilterRequest cardFilterRequest, PageRequest pageRequest) {
 

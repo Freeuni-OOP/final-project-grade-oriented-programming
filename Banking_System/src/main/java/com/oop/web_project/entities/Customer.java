@@ -42,7 +42,7 @@ public class Customer {
     @Column(name = "Email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "Hashed_password", nullable = false, unique = true)
+    @Column(name = "Hashed_password", nullable = false)
     private String hashedPassword;
 
     @Column(name = "Is_active")
