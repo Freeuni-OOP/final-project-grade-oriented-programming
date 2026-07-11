@@ -17,7 +17,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.annotation.AnnotationTemplateExpressionDefaults;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -33,6 +33,9 @@ import java.util.Locale;
 public class SecurityConfig {
 
     private final JWTFilter jwtFilter;
+
+    @Value("${spring.h2.console.enabled:false}")
+    private boolean h2ConsoleEnabled;
 
     public SecurityConfig(JWTFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
@@ -56,16 +59,19 @@ public class SecurityConfig {
         csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PathRequest.toH2Console()).permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/api-docs",
-                                "/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html")
-                        .permitAll()
-                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                        .anyRequest().authenticated());
+                .authorizeHttpRequests(auth -> {
+            if (h2ConsoleEnabled) {
+                auth.requestMatchers(PathRequest.toH2Console()).permitAll();
+            }
+            auth.requestMatchers("/actuator/**").permitAll()
+                    .requestMatchers("/api-docs",
+                            "/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html")
+                    .permitAll()
+                    .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                    .anyRequest().authenticated();
+        });
 
 
         http.exceptionHandling(e -> e.authenticationEntryPoint(
