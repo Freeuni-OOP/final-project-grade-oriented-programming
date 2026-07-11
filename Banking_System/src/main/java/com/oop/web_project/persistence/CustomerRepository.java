@@ -1,5 +1,6 @@
 package com.oop.web_project.persistence;
 
+import com.oop.web_project.entities.Card;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.entities.Role;
 import jakarta.persistence.LockModeType;
@@ -16,8 +17,21 @@ import java.util.Optional;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long>, JpaSpecificationExecutor<Customer> {
 
+    @Query("""
+    SELECT DISTINCT c FROM Customer c
+    LEFT JOIN FETCH c.accounts
+    WHERE c.id = :id
+""")
+    Optional<Customer> findByIdWithDetails(@Param("id") Long id);
+
+    @Query("SELECT c FROM Customer c LEFT JOIN FETCH c.accounts WHERE c.email = :email")
     Optional<Customer> getCustomerByEmail(String email);
 
+    @Query("""
+    SELECT DISTINCT c FROM Customer c
+    JOIN FETCH c.accounts a
+    WHERE a.id = :accountId
+""")
     List<Customer> getCustomersByAccounts_Id(long accountId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

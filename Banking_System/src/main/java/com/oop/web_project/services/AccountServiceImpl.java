@@ -87,13 +87,15 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Account selectAccountById(long accountId) {
-        return accountRepository.findById(accountId).orElseThrow(
+        return accountRepository.findByIdWithDetails(accountId).orElseThrow(
                 () -> new AccountNotFoundException("Could not find account!")
         );
     }
 
     @Override
+    @Transactional(readOnly = true)
     @CardAccessPermissionRequired(idArgName = "cardId")
     public Account selectAccountByCardId(long cardId) {
         return accountRepository.findByCardsId(cardId)
@@ -103,6 +105,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @CustomerAccessPermissionRequired
     public List<Account> selectAccountsByCustomerEmail(String customerEmail) {
         List<Account> accountList = accountRepository.findAllByCustomersEmail(customerEmail);
@@ -113,6 +116,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @CustomerAccessPermissionRequired(idArgName = "customerId")
     public List<Account> selectAccountsByCustomerId(long customerId) {
         List<Account> accountList = accountRepository.findAllByCustomersId(customerId);
@@ -159,6 +163,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @AccountAccessPermissionRequired
     public Page<Account> filterAccounts(AccountFilterRequest accountFilterRequest, PageRequest pageRequest) {
         Specification<Account> specification = Specification.unrestricted();

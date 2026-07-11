@@ -26,10 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -61,7 +58,7 @@ class AccountServiceImplTest {
         account.setId(1L);
         account.setName("Main Account");
         account.setActive(false);
-        account.setCustomers(new ArrayList<>());
+        account.setCustomers(new HashSet<>());
     }
 
     @Test
@@ -120,8 +117,8 @@ class AccountServiceImplTest {
     @Test
     void testDeleteAccountFoundDeletesAccount() {
         when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
-        account.setCards(new ArrayList<>());
-        account.setTransactions(new ArrayList<>());
+        account.setCards(new HashSet<>());
+        account.setTransactions(new HashSet<>());
 
         accountService.deleteAccount(1L);
         verify(accountRepository, times(1)).delete(account);
@@ -129,14 +126,14 @@ class AccountServiceImplTest {
 
     @Test
     void testSelectAccountByIdFound() {
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+        when(accountRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(account));
         Account result = accountService.selectAccountById(1L);
         assertEquals(account, result);
     }
 
     @Test
     void testSelectAccountByIdNotFoundThrowsException() {
-        when(accountRepository.findById(1L)).thenReturn(Optional.empty());
+        when(accountRepository.findByIdWithDetails(1L)).thenReturn(Optional.empty());
         assertThrows(AccountNotFoundException.class, () -> accountService.selectAccountById(1L));
     }
 

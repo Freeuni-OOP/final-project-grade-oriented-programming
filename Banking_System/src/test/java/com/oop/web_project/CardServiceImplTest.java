@@ -68,13 +68,13 @@ class CardServiceImplTest {
 
     @Test
     void testSelectCardByIdNotFoundThrowsException() {
-        when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+        when(cardRepository.findByIdWithDetails(1L)).thenReturn(Optional.empty());
         assertThrows(CardNotFoundException.class, () -> cardService.selectCardById(1L));
     }
 
     @Test
     void testSelectCardByIdFoundReturnsCard() {
-        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        when(cardRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(card));
         Card result = cardService.selectCardById(1L);
         assertEquals(card, result);
     }

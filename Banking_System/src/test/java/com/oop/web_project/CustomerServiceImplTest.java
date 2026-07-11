@@ -95,14 +95,14 @@ class CustomerServiceImplTest {
 
     @Test
     void testGetCustomerByIdFound() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(customer));
         Customer result = customerService.getCustomerById(1L);
         assertEquals(customer, result);
     }
 
     @Test
     void testGetCustomerByIdNotFoundThrowsException() {
-        when(customerRepository.findById(2L)).thenReturn(Optional.empty());
+        when(customerRepository.findByIdWithDetails(2L)).thenReturn(Optional.empty());
         assertThrows(CustomerNotFoundException.class, () -> customerService.getCustomerById(2L));
     }
 

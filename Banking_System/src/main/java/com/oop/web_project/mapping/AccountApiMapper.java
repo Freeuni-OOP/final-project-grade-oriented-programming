@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class AccountApiMapper {
@@ -32,19 +33,19 @@ public class AccountApiMapper {
         response.setCategory(account.getCategory());
         response.setDateOpened(account.getDateOpened());
         response.setActive(account.isActive());
-        List<Transaction> transactions = account.getTransactions();
+        Set<Transaction> transactions = account.getTransactions();
         List<TransactionResponse> transactionResponses = new ArrayList<>();
         for(Transaction transaction : transactions){
             transactionResponses.add(transactionApiMapper.toTransactionResponse(transaction));
         }
         response.setTransactions(transactionResponses);
-        List<Card> cards = account.getCards();
+        Set<Card> cards = account.getCards();
         List<CardSummaryResponse> cardSummaryResponses = new ArrayList<>();
         for(Card card : cards){
             cardSummaryResponses.add(cardApiMapper.toCardSummaryResponse(card));
         }
         response.setCards(cardSummaryResponses);
-        List<Customer> customers = account.getCustomers();
+        Set<Customer> customers = account.getCustomers();
         List<CustomerSummaryResponse> customerResponses = new ArrayList<>();
         for(Customer customer : customers){
             customerResponses.add(customerSummaryApiMapper.toSummaryResponse(customer));

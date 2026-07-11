@@ -16,7 +16,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -45,7 +47,7 @@ class AccountApiMapperTest {
         customer.setId(1L);
         return new Account(1L, "Main Account", AccountCategory.CHECKING,
                 LocalDate.of(2022, 1, 1), true,
-                List.of(transaction), List.of(card), List.of(customer));
+                Set.of(transaction), Set.of(card), Set.of(customer));
     }
 
     private AccountCreationRequest createAccountCreationRequest() {
@@ -146,7 +148,7 @@ class AccountApiMapperTest {
     void testToProfileResponseWithEmptyListsReturnsEmptyLists() {
         Account account = new Account(1L, "Main Account", AccountCategory.CHECKING,
                 LocalDate.of(2022, 1, 1), true,
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+                new HashSet<>(), new HashSet<>(), new HashSet<>());
 
         AccountProfileResponse response = accountApiMapper.toProfileResponse(account);
 

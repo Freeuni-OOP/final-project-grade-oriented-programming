@@ -17,6 +17,13 @@ import java.util.Optional;
 @Repository
 public interface CardRepository extends JpaRepository<Card, Long>, JpaSpecificationExecutor<Card> {
 
+    @Query("""
+    SELECT DISTINCT c FROM Card c
+    LEFT JOIN FETCH c.balances
+    WHERE c.id = :id
+""")
+    Optional<Card> findByIdWithDetails(@Param("id") Long id);
+
     @Query("SELECT SUM(b.amount) FROM CardBalance b WHERE b.card.account.id = :accountId AND b.currency.code = :currencyCode")
     Optional<BigDecimal> getBalanceForAccount(@Param("accountId")long accountId,
                                               @Param("currencyCode") String currencyCode);
