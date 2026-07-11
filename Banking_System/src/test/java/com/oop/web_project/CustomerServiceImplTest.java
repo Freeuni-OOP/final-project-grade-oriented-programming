@@ -1,9 +1,12 @@
 package com.oop.web_project;
 
+import com.oop.web_project.dto.requests.CustomerFilterRequest;
+import com.oop.web_project.dto.requests.PageRequest;
 import com.oop.web_project.entities.Customer;
 import com.oop.web_project.exceptions.accountExceptions.AccountNotFoundException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyActiveException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyDeactivatedException;
+import com.oop.web_project.exceptions.customerExceptions.CustomerAlreadyRegisteredException;
 import com.oop.web_project.exceptions.customerExceptions.CustomerNotFoundException;
 import com.oop.web_project.persistence.AccountRepository;
 import com.oop.web_project.persistence.CustomerRepository;
@@ -14,6 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
@@ -55,6 +62,13 @@ class CustomerServiceImplTest {
     @Test
     void testRegisterCustomerNullCustomerThrowsException() {
         assertThrows(IllegalArgumentException.class, () -> customerService.registerCustomer(null));
+        verify(customerRepository, never()).save(any());
+    }
+
+    @Test
+    void testRegisterCustomerAlreadyRegisteredThrowsException() {
+        when(customerRepository.existsByEmail(customer.getEmail())).thenReturn(true);
+        assertThrows(CustomerAlreadyRegisteredException.class, () -> customerService.registerCustomer(customer));
         verify(customerRepository, never()).save(any());
     }
 
@@ -186,5 +200,15 @@ class CustomerServiceImplTest {
         when(customerRepository.getCustomersByAccounts_Id(1L)).thenReturn(new ArrayList<>());
         when(accountRepository.existsById(1L)).thenReturn(false);
         assertThrows(AccountNotFoundException.class, () -> customerService.getCustomersByAccount(1L));
+    }
+
+    @Test
+    void testFilterCustomersReturnsPage() {
+        Page<Customer> page = new PageImpl<>(List.of(customer));
+        when(customerRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+        CustomerFilterRequest filterRequest = new CustomerFilterRequest();
+        PageRequest pageRequest = new PageRequest(1, 1, "apa", "apa");
+        Page<Customer> result = customerService.filterCustomers(filterRequest, pageRequest);
+        assertEquals(page, result);
     }
 }
