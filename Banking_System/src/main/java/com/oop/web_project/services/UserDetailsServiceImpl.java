@@ -50,8 +50,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(role.name());
 
-        System.out.println("granted authority: " + grantedAuthority.getAuthority());
-
         return List.of(grantedAuthority);
     }
 
